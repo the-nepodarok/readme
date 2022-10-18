@@ -1,7 +1,7 @@
 # Личный проект «Readme»
 
 * Студент: [Александр Малашкин](https://up.htmlacademy.ru/php/12/user/1921613).
-* Наставник: [Анвар Кабиров](https://github.com/akabirov).
+* Наставник: [Анвар Кабиров](https://htmlacademy.ru/profile/id1452397).
 
 ---
 
