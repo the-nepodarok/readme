@@ -2,7 +2,7 @@
 require_once 'helpers.php';
 $is_auth = rand(0, 1);
 
-$user_name = ''; // укажите здесь ваше имя
+$user_name = 'the-nepodarok'; // укажите здесь ваше имя
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -42,6 +42,7 @@ $user_name = ''; // укажите здесь ваше имя
         </form>
         <div class="header__nav-wrapper">
             <!-- здесь должен быть PHP код, который показывает следующий тег по условию -->
+            <?php if ($is_auth == 1): ?>
             <nav class="header__nav">
                 <ul class="header__my-nav">
                     <li class="header__my-page header__my-page--popular">
@@ -68,9 +69,10 @@ $user_name = ''; // укажите здесь ваше имя
                                 <img class="header__profile-avatar" src="img/userpic-medium.jpg" alt="Аватар профиля">
                             </div>
                             <div class="header__profile-name">
-                                <span>
-                                    <!--здесь должно быть имя пользователя-->
-                                </span>
+                            <span>
+                                <!--здесь должно быть имя пользователя-->
+                                <?=$user_name; ?>
+                            </span>
                                 <svg class="header__link-arrow" width="10" height="6">
                                     <use xlink:href="#icon-arrow-right-ad"></use>
                                 </svg>
@@ -81,25 +83,25 @@ $user_name = ''; // укажите здесь ваше имя
                                 <ul class="header__profile-nav">
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="#">
-                          <span class="header__profile-nav-text">
-                            Мой профиль
-                          </span>
+                      <span class="header__profile-nav-text">
+                        Мой профиль
+                      </span>
                                         </a>
                                     </li>
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="#">
-                          <span class="header__profile-nav-text">
-                            Сообщения
-                            <i class="header__profile-indicator">2</i>
-                          </span>
+                      <span class="header__profile-nav-text">
+                        Сообщения
+                        <i class="header__profile-indicator">2</i>
+                      </span>
                                         </a>
                                     </li>
 
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="#">
-                          <span class="header__profile-nav-text">
-                            Выход
-                          </span>
+                      <span class="header__profile-nav-text">
+                        Выход
+                      </span>
                                         </a>
                                     </li>
                                 </ul>
@@ -111,6 +113,7 @@ $user_name = ''; // укажите здесь ваше имя
                     </li>
                 </ul>
             </nav>
+            <?php endif; ?>
         </div>
     </div>
 </header>
