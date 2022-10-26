@@ -40,7 +40,7 @@ function slice_string($string, $max_post_length = 300) {
 
 print(slice_string($text));
 
-//  Второй (более ранний) вариант функции, громоздкий, на рабочий
+//  Второй (более ранний) вариант функции, громоздкий, но рабочий
 //
 //function slice_string($string, $max_post_length = 300) {
 //
