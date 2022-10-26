@@ -321,16 +321,18 @@ $posts = [
                             <span class="visually-hidden">Запустить проигрыватель</span>
                         </a>
                     </div>
-                    <?php break; ?>
-                    <?php endswitch; ?>
-                    <?php endif; ?>
+                    <?php
+                                break;
+                            endswitch;
+                        endif;
+                    ?>
                 </div>
                 <footer class="post__footer">
                     <div class="post__author">
                         <a class="post__author-link" href="#" title="Автор">
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
-                                <img class="post__author-avatar" src="img/<?= $post["post_avatar"]; ?>" alt="Аватар пользователя">
+                                <img class="post__author-avatar" src="img/<?= $post['post_avatar']; ?>" alt="Аватар пользователя">
                             </div>
                             <div class="post__info">
                                 <b class="post__author-name">
@@ -364,8 +366,10 @@ $posts = [
                     </div>
                 </footer>
             </article>
-            <?php endforeach; ?>
-            <?php endif; ?>
+            <?php
+                    endforeach;
+                endif;
+            ?>
         </div>
     </div>
 </section>
