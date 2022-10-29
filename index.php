@@ -6,41 +6,41 @@ $user_name = 'the-nepodarok'; // укажите здесь ваше имя
 
 $posts = [
     [
-        "title" => "Цитата",
-        "type" => "post-quote",
-        "description" => "Мы в жизни любим только раз, а после ищем лишь похожих",
-        "user" => "Лариса",
-        "avatar" => "userpic-larisa-small.jpg"
+        'post_title' => 'Цитата',
+        'post_type' => 'post-quote',
+        'post_content' => 'Мы в жизни любим только раз, а после ищем лишь похожих',
+        'post_user' => 'Лариса',
+        'post_avatar' => 'userpic-larisa-small.jpg',
     ],
     [
-        "title" => "Игра Престолов",
-        "type" => "post-text",
-        "description" => "Не могу дождаться начала финального сезона своего любимого сериала!",
-        "user" => "Владик",
-        "avatar" => "userpic.jpg"
+        'post_title' => 'Игра Престолов',
+        'post_type' => 'post-text',
+        'post_content' => 'Не могу дождаться начала финального сезона своего любимого сериала!',
+        'post_user' => 'Владик',
+        'post_avatar' => 'userpic.jpg',
     ],
     [
-        "title" => "Наконец, обработал фотки!",
-        "type" => "post-photo",
-        "description" => "rock-medium.jpg",
-        "user" => "Виктор",
-        "avatar" => "userpic-mark.jpg"
+        'post_title' => 'Наконец, обработал фотки!',
+        'post_type' => 'post-photo',
+        'post_content' => 'rock-medium.jpg',
+        'post_user' => 'Виктор',
+        'post_avatar' => 'userpic-mark.jpg',
     ],
     [
-        "title" => "Моя мечта",
-        "type" => "post-photo",
-        "description" => "coast-medium.jpg",
-        "user" => "Лариса",
-        "avatar" => "userpic-larisa-small.jpg"
+        'post_title' => 'Моя мечта',
+        'post_type' => 'post-photo',
+        'post_content' => 'coast-medium.jpg',
+        'post_user' => 'Лариса',
+        'post_avatar' => 'userpic-larisa-small.jpg',
     ],
     [
-        "title" => "Лучшие курсы",
-        "type" => "post-link",
-        "description" => "www.htmlacademy.ru",
-        "user" => "Владик",
-        "avatar" => "userpic.jpg"
-    ]
-]
+        'post_title' => 'Лучшие курсы',
+        'post_type' => 'post-link',
+        'post_content' => 'www.htmlacademy.ru',
+        'post_user' => 'Владик',
+        'post_avatar' => 'userpic.jpg',
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -245,42 +245,46 @@ $posts = [
         <div class="popular__posts">
             <?php if (isset($posts)): ?>
             <?php foreach ($posts as $post): ?>
-            <article class="popular__post post <?= $post["type"]; ?>">
+            <article class="popular__post post <?= $post['post_type']; ?>">
                 <header class="post__header">
                     <h2>
                         <!--здесь заголовок-->
-                        <?= $post["title"]; ?>
+                        <?= $post['post_title']; ?>
                     </h2>
                 </header>
                 <div class="post__main">
-                    <?php if (isset($post["description"])): ?> <!--Проверка на наличие у поста содержимого | the-nepodarok-->
-                    <?php if ($post["type"] === "post-quote"): ?>
+                    <?php if (isset($post['post_content'])): ?> <!--Проверка на наличие у поста содержимого | the-nepodarok-->
+                    <?php switch ($post['post_type']):
+                          case 'post-quote': ?> <!-- switch не работает, если разделить запись на два тега-->
                     <!--содержимое для поста-цитаты-->
                     <blockquote>
                         <p>
                             <!--здесь текст-->
-                            <?= $post["description"]; ?>
+                            <?= $post['post_content']; ?>
                         </p>
                         <cite>Неизвестный Автор</cite>
                     </blockquote>
+                    <?php break; ?>
 
-                    <?php elseif ($post["type"] === "post-text"): ?>
+                    <?php case 'post-text': ?>
                     <!--содержимое для поста-текста-->
                     <p>
                         <!--здесь текст-->
-                        <?= $post["description"]; ?>
+                        <?= $post['post_content']; ?>
                     </p>
+                    <?php break; ?>
 
-                    <?php elseif ($post["type"] === "post-photo"): ?>
+                    <?php case 'post-photo': ?>
                     <!--содержимое для поста-фото-->
                     <div class="post-photo__image-wrapper">
-                        <img src="img/<?= $post["description"]; ?>" alt="Фото от пользователя" width="360" height="240">
+                        <img src="img/<?= $post['post_content']; ?>" alt="Фото от пользователя" width="360" height="240">
                     </div>
+                    <?php break; ?>
 
-                    <?php elseif ($post["type"] === "post-link"): ?>
+                    <?php case 'post-link': ?>
                     <!--содержимое для поста-ссылки-->
                     <div class="post-link__wrapper">
-                        <a class="post-link__external" href="http://<?= $post["description"]; ?>" title="Перейти по ссылке">
+                        <a class="post-link__external" href="http://<?= $post['post_content']; ?>" title="Перейти по ссылке">
                             <div class="post-link__info-wrapper">
                                 <div class="post-link__icon-wrapper">
                                     <img src="https://www.google.com/s2/favicons?domain=vitadental.ru" alt="Иконка">
@@ -288,24 +292,25 @@ $posts = [
                                 <div class="post-link__info">
                                     <h3>
                                         <!--здесь заголовок-->
-                                        <?= $post["title"]; ?>
+                                        <?= $post['post_title']; ?>
                                     </h3>
                                 </div>
                             </div>
                             <span>
                                 <!--здесь ссылка-->
-                                <?= $post["description"]; ?>
+                                <?= $post['post_content']; ?>
                             </span>
                         </a>
                     </div>
+                    <?php break; ?>
 
-                    <?php elseif ($post["type"] === "post-video"): ?>
+                    <?php case 'post-video': ?>
                     <!--содержимое для поста-видео-->
                     <div class="post-video__block">
                         <div class="post-video__preview">
                             <?= embed_youtube_cover(
                                 /* вставьте ссылку на видео */
-                                 $post["description"]
+                                 $post['post_content']
                             ); ?>
                             <img src="img/coast-medium.jpg" alt="Превью к видео" width="360" height="188">
                         </div>
@@ -316,20 +321,23 @@ $posts = [
                             <span class="visually-hidden">Запустить проигрыватель</span>
                         </a>
                     </div>
-                    <?php endif; ?>
-                    <?php endif; ?>
+                    <?php
+                                break;
+                            endswitch;
+                        endif;
+                    ?>
                 </div>
                 <footer class="post__footer">
                     <div class="post__author">
                         <a class="post__author-link" href="#" title="Автор">
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
-                                <img class="post__author-avatar" src="img/<?= $post["avatar"]; ?>" alt="Аватар пользователя">
+                                <img class="post__author-avatar" src="img/<?= $post['post_avatar']; ?>" alt="Аватар пользователя">
                             </div>
                             <div class="post__info">
                                 <b class="post__author-name">
                                     <!--здесь имя пользоателя-->
-                                    <?= $post["user"]; ?>
+                                    <?= $post['post_user']; ?>
                                 </b>
                                 <time class="post__time" datetime="">дата</time>
                             </div>
@@ -358,8 +366,10 @@ $posts = [
                     </div>
                 </footer>
             </article>
-            <?php endforeach; ?>
-            <?php endif; ?>
+            <?php
+                    endforeach;
+                endif;
+            ?>
         </div>
     </div>
 </section>
