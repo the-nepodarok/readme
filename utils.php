@@ -45,5 +45,5 @@ function slice_string_2($string, $max_post_length = 300)
             '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
     }
 
-    return trim($result_string);
+    return $result_string;
 }
