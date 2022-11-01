@@ -11,18 +11,21 @@
 
 function slice_string($string, $max_post_length = 300)
 {
-    if (mb_strlen($string) > $max_post_length) {
-        $words = explode(' ', $string);
+    $result_string = trim($string);
+
+    if (mb_strlen($result_string) > $max_post_length) {
+        $words = explode(' ', $result_string);
         $i = 0;
         $result_string = '';
 
         while (mb_strlen($result_string . ' ' . $words[$i]) < $max_post_length) {
-            $result_string = $result_string . ' ' . $words[$i];
+            $result_string .= ' ' . $words[$i];
             $i++;
         }
-        $result_string = '<p>' . trim($result_string) . '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
-    } else {
-        $result_string = '<p>' . trim($string) . '</p>';
+
+        $result_string = '<p>' . trim($result_string, '/ :–-,;') . '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
+        // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
+        // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
 
     return $result_string;
@@ -30,15 +33,28 @@ function slice_string($string, $max_post_length = 300)
 
 //  Второй вариант функции
 
-function alt_slice_string($string, $max_post_length = 300)
+function slice_string_2($string, $max_post_length = 300)
 {
-    if (mb_strlen($string) <= $max_post_length) {
-        $result_string = '<p>' . trim($string) . '</p>';
-    } else {
+    $result_string = trim($string);
+
+    if (mb_strlen($result_string) > $max_post_length) {
         $temp_string = mb_substr($string, 0, $max_post_length);
-        $result_string = '<p>' . trim(mb_substr($temp_string, 0, mb_strripos($temp_string, ' '))) .
+        $result_string = '<p>' . mb_substr($temp_string, 0, mb_strripos($temp_string, ' ')) .
             '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
     }
 
-    return trim($result_string);
+    return $result_string;
+}
+
+/**
+ * Заменяет потенциально опасные символы на HTML-мнемоники
+ *
+ * @param string $string Входящий текст в виде строки
+ *
+ * @return string Возвращает безопасный для вывода на страницу текст
+ */
+
+function secure($string)
+{
+    return htmlspecialchars($string);
 }
