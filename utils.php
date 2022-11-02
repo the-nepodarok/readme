@@ -49,12 +49,12 @@ function slice_string_2($string, $max_post_length = 300)
 /**
  * Заменяет потенциально опасные символы на HTML-мнемоники
  *
- * @param string $string Входящий текст в виде строки
+ * @param string $string Входящий текст в виде reference-строки
  *
- * @return string Возвращает безопасный для вывода на страницу текст
+ * Превращает текст в безопасный для вывода на страницу
  */
 
-function secure($string)
+function secure(string &$string)
 {
-    return htmlspecialchars($string);
+    $string = htmlspecialchars($string);
 }

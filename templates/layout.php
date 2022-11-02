@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $page_title; ?></title>
+    <title>readme: <?= $page_title; ?></title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body class="page">
@@ -112,9 +112,7 @@
     </div>
 </header>
 
-<section class="page__main page__main--popular">
-    <?= $page_content; ?>
-</section>
+<?= $main_content; ?>
 
 <footer class="footer">
     <div class="footer__wrapper">

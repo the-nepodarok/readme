@@ -3,7 +3,7 @@ require_once 'helpers.php';
 require_once 'utils.php';
 
 $is_auth = rand(0, 1);
-$page_title = 'readme: популярное';
+$page_title = 'популярное';
 $user_name = 'the-nepodarok'; // укажите здесь ваше имя
 
 $posts = [
@@ -44,14 +44,16 @@ $posts = [
     ],
 ];
 
-$page_content = include_template('main.php', [
-    'posts' => $posts
+array_walk_recursive($posts, 'secure');
+
+$main_content = include_template('main.php', [
+    'posts' => $posts,
 ]);
 $layout_template = include_template('layout.php', [
-    'page_content' => $page_content,
-    'user_name' => $user_name,
     'page_title' => $page_title,
     'is_auth' => $is_auth,
+    'user_name' => $user_name,
+    'main_content' => $main_content,
 ]);
 
 print($layout_template);
