@@ -181,7 +181,7 @@
                                     <!--здесь имя пользоателя-->
                                     <?= $post['post_user']; ?>
                                 </b>
-                                <time class="post__time" datetime="">дата</time>
+                                <time class="post__time" title="<?= date('d.m.Y H:i', strtotime($post['date'])); ?>" datetime="<?= $post['date']; ?>"><?= formatDate($post['date']); ?></time>
                             </div>
                         </a>
                     </div>
