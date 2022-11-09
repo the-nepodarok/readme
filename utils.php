@@ -1,11 +1,6 @@
 <?php
 
-// Временные отрезки в виде констант
-define('MINUTES_IN_HOUR', 60);
-define('HOURS_IN_DAY', 24);
-define('DAYS_IN_WEEK', 7);
-define('DAYS_IN_MONTH', 30);
-define('FIVE_WEEKS', 35);
+date_default_timezone_set('Europe/Moscow');
 
 /**
  * Обрезает текст до заданного предела
@@ -71,53 +66,127 @@ function secure(string &$string)
  *
  * @param array $array Массив с данными
  *
- * @return array Массив со случайными датами в паре 'date' => 'дата'
+ * @return array Массив с псевдослучайными датами в паре 'date' => 'дата' в формате ГГГГ-ММ-ДД ЧЧ: ММ: СС
  */
 
-function getDates($array)
+function get_dates($array)
 {
-    for ($i = 0; $i < count($array); $i++) {
-        $array[$i]['date'] = generate_random_date($i);
+    $id = 0;
+    foreach ($array as &$item) {
+        $item['id'] = $id;
+        $item['date'] = generate_random_date($id);
+        $id++;
     }
     return $array;
 }
 
 /**
- * Приводит дату к формату "n минут/часов/etc. назад"
+ * Преобразует дату в формат «дд.мм.гггг чч: мм», необходимый для атрибута title
  *
- * @param string $date Массив с данными
+ * @param string $date Дата в виде строки
+ *
+ * @return string Строка с датой в формате «дд.мм.гггг чч: мм»
+ */
+
+function get_title_date($date)
+{
+    $date = strtotime($date);
+    return date('d.m.Y H:i', $date);
+}
+
+/**
+ * Получает интервал времени с прошедшего до текущего момента времени в формате "n минут/часов/etc. назад"
+ *
+ * - если до текущего времени прошло меньше 60 минут, то формат будет вида «% минут назад»;
+ * - если до текущего времени прошло больше 60 минут, но меньше 24 часов, то формат будет вида «% часов назад»;
+ * - если до текущего времени прошло больше 24 часов, но меньше 7 дней, то формат будет вида «% дней назад»;
+ * - если до текущего времени прошло больше 7 дней, но меньше 5 недель, то формат будет вида «% недель назад»;
+ * - если до текущего времени прошло больше 5 недель, то формат будет вида «% месяцев назад».
+ * - если до текущего времени прошло больше 1 года, то формат будет вида «% лет назад».
+ *
+ * @param string $date Дата, с которой начинается отсчёт
  *
  * @return string Строка, отражающая количество времени, прошедшего с $date
  */
 
-function formatDate($date)
+function format_date($date)
+{
+    $minutes_in_hour = 60; // Кол-во минут в 1 часе
+    $hours_in_day = 24; // Кол-во часов в 1 сутках;
+    $days_in_week = 7; // Кол-во дней в 1 неделе;
+    $days_in_month = 30; // Кол-во дней в 1 месяце;
+    $five_weeks = 35; // 5 недель;
+
+    $post_date = date_create($date);
+    $current_date = date_create('now');
+    $diff = date_diff($current_date, $post_date); // Разница между current_date и post_date в виде объекта
+
+    $minutes = $diff->i;
+    $hours = $diff->h;
+    $days = $diff->days;
+    $years = $diff->y;
+
+    $result = $date;
+
+    if ($diff->invert === 0) {
+        $result = "Дата ещё не наступила!";
+    } else {
+        if ($years > 0) {
+            $result = $years . ' ' . get_noun_plural_form($years, 'год', 'года', 'лет');
+        } elseif ($days >= $five_weeks) {
+            $months = ceil($days / $days_in_month);
+            $result = $months . ' месяц' . get_noun_plural_form($months, '', 'а', 'ев');
+        } elseif ($days >= $days_in_week && $days < $five_weeks) {
+            $weeks = ceil($days / $days_in_week);
+            $result = $weeks . ' недел' . get_noun_plural_form($weeks, 'ю', 'и', 'ь');
+        } elseif ($days > 0 && $days <= $days_in_week) {
+            $result = $days . ' ' . get_noun_plural_form($days, 'день', 'дня', 'дней');
+        } elseif ($hours > 0 && $hours < $hours_in_day) {
+            $result = $hours . ' час' . get_noun_plural_form($hours, '', 'а', 'ов');
+        } elseif ($minutes > 0 && $minutes < $minutes_in_hour) {
+            $result = $minutes . ' минут' . get_noun_plural_form($minutes, 'у', 'ы', '');
+        }
+
+        $result .= ' назад';
+    }
+
+    return $result;
+}
+
+// Второй вариант функции, почти целиком на объектах
+
+function format_date_2($date)
 {
     $post_date = date_create($date);
     $current_date = date_create('now');
     $diff = date_diff($current_date, $post_date);
 
-    $days = date_interval_format($diff, '%a');
-    $minutes = date_interval_format($diff, '%i');
-    $hours = date_interval_format($diff, '%h');
+    $hour = DateInterval::createFromDateString('60 minutes');
+    $day = DateInterval::createFromDateString('24 hours');
+    $week = DateInterval::createFromDateString('1 week');
+    $five_weeks = DateInterval::createFromDateString('5 weeks');
+    $year = DateInterval::createFromDateString('1 year');
 
     $result = $date;
 
-    if ($minutes > 0 && $minutes <= MINUTES_IN_HOUR) {
-        $result = ($minutes . ' ' . get_noun_plural_form($minutes, 'минута', 'минуты', 'минут') . ' назад');
-    }
-    if ($hours > 0 && $hours <= HOURS_IN_DAY) {
-        $result = ($hours . ' ' . get_noun_plural_form($hours, 'час', 'часа', 'часов') . ' назад');
-    }
-    if ($days > 0 && $days <= DAYS_IN_WEEK) {
-        $result = ($days . ' ' . get_noun_plural_form($days, 'день', 'дня', 'дней') . ' назад');
-    }
-    if ($days > DAYS_IN_WEEK && $days <= FIVE_WEEKS) {
-        $weeks = floor($days / DAYS_IN_WEEK);
-        $result = ($weeks . ' ' . get_noun_plural_form($weeks, 'неделю', 'недели', 'недель') . ' назад');
-    }
-    if ($days > FIVE_WEEKS) {
-        $months = floor($days / DAYS_IN_MONTH);
-        $result = ($months . ' ' . get_noun_plural_form($months, 'месяц', 'месяца', 'месяцев') . ' назад');
+    if ($diff->invert === 0) {
+        $result = "Дата ещё не наступила";
+    } else {
+        if ($diff->y >= $year->y) {
+            $result = $diff->y . ' ' . get_noun_plural_form($diff->y, 'год', 'года', 'лет');
+        } elseif ($diff->days >= $five_weeks->d) {
+            $result = $diff->m . ' месяц' . get_noun_plural_form($diff->m, '', 'а', 'ев');
+        } elseif ($diff->days >= $week->d && $diff->days < $five_weeks->d) {
+            $result = ceil($diff->days / 7) . ' недел' . get_noun_plural_form(ceil($diff->days / 7), 'ю', 'и', 'ь');
+        } elseif ($diff->days > 0 && $diff->days < $week->d) {
+            $result = $diff->days . ' ' . get_noun_plural_form($diff->days, 'день', 'дня', 'дней');
+        } elseif ($diff->h > 0 && $diff->h < $day->h) {
+            $result = $diff->h . ' час' . get_noun_plural_form($diff->days, '', 'а', 'ов');
+        } elseif ($diff->i > 0 && $diff->i < $hour->i) {
+            $result = $diff->i . ' минут' . get_noun_plural_form($diff->i, 'у', 'ы', '');
+        }
+
+        $result .= ' назад';
     }
 
     return $result;

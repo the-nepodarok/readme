@@ -102,7 +102,7 @@
                     <blockquote>
                         <p>
                             <!--здесь текст-->
-                            <?= $post['post_content']; ?>
+                            <?= slice_string($post['post_content']); ?>
                         </p>
                         <cite>Неизвестный Автор</cite>
                     </blockquote>
@@ -181,7 +181,8 @@
                                     <!--здесь имя пользоателя-->
                                     <?= $post['post_user']; ?>
                                 </b>
-                                <time class="post__time" title="<?= date('d.m.Y H:i', strtotime($post['date'])); ?>" datetime="<?= $post['date']; ?>"><?= formatDate($post['date']); ?></time>
+                                <?php $pd = $post['date']; // alias для $post['date'] ?>
+                                <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?></time>
                             </div>
                         </a>
                     </div>

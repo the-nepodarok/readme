@@ -2,8 +2,6 @@
 require_once 'helpers.php';
 require_once 'utils.php';
 
-date_default_timezone_set('Europe/Moscow');
-
 $is_auth = rand(0, 1);
 $page_title = 'популярное';
 $user_name = 'the-nepodarok'; // укажите здесь ваше имя
@@ -47,10 +45,10 @@ $posts = [
 ];
 
 array_walk_recursive($posts, 'secure'); // защита от XXS
-$posts_with_dates = getDates($posts); // создаём копию массива, чтобы не модифицировать изначальный - the-nepodarok
+$posts = get_dates($posts); // создаём копию массива, чтобы не модифицировать изначальный - the-nepodarok
 
 $main_content = include_template('main.php', [
-    'posts' => $posts_with_dates,
+    'posts' => $posts,
 ]);
 
 $layout_template = include_template('layout.php', [
