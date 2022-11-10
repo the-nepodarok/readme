@@ -44,11 +44,13 @@ $posts = [
     ],
 ];
 
-array_walk_recursive($posts, 'secure');
+array_walk_recursive($posts, 'secure'); // защита от XXS
+$posts = get_dates($posts); // создаём копию массива, чтобы не модифицировать изначальный - the-nepodarok
 
 $main_content = include_template('main.php', [
     'posts' => $posts,
 ]);
+
 $layout_template = include_template('layout.php', [
     'page_title' => $page_title,
     'is_auth' => $is_auth,
