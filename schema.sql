@@ -4,76 +4,96 @@ CREATE DATABASE readme
 
 USE readme;
 
-CREATE TABLE users (
+CREATE TABLE user (
   id        INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt DATETIME,
+  create_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
   email     VARCHAR(128) NOT NULL UNIQUE,
-  login     VARCHAR(64)  NOT NULL UNIQUE,
+  user_name VARCHAR(64)  NOT NULL, # имя пользователя
   password  CHAR(64)     NOT NULL,
-  avatar    TEXT
+  avatar    VARCHAR(255),
+  UNIQUE INDEX (email, user_name)
 );
 
-CREATE TABLE hashtags (
+CREATE TABLE hashtag ( # таблица со всеми хэштегами
   id      INT AUTO_INCREMENT PRIMARY KEY,
-  hashtag VARCHAR(128)
+  hashtag VARCHAR(20) UNIQUE
 );
 
-CREATE TABLE content_types (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
-  type_name VARCHAR(64),
-  type_icon VARCHAR(64)
+CREATE TABLE content_type ( # таблица со всеми типами постов
+  id        TINYINT AUTO_INCREMENT PRIMARY KEY,
+  type_name VARCHAR(20), # название типа
+  type_icon_class VARCHAR(16), # класс иконки типа
+  UNIQUE INDEX (type_name)
 );
 
-CREATE TABLE posts (
+CREATE TABLE post (
   id           INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt    DATETIME,
-  header       VARCHAR(128),
+  create_dt    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  header       VARCHAR(128), # заголовок поста
   text_content TEXT,
-  quote_origin VARCHAR(128),
-  picture      TEXT,
-  video        VARCHAR(128),
-  link         TEXT,
-  view_count   INT,
-  author_id    INT,
-  type_id      INT,
-  hashtag_id   INT,
-  FOREIGN KEY (author_id) REFERENCES users (id),
-  FOREIGN KEY (type_id) REFERENCES content_types (id),
-  FOREIGN KEY (hashtag_id) REFERENCES hashtags (id)
+  quote_origin VARCHAR(128), # автор/источник цитаты
+  picture      VARCHAR(255),
+  video        VARCHAR(255), # ссылка на видео на YouTube
+  link         VARCHAR(255),
+  view_count   INT DEFAULT 0,
+  user_id      INT,
+  content_type_id      INT,
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  FOREIGN KEY (content_type_id) REFERENCES content_type (id),
+  INDEX (header)
 );
 
-CREATE TABLE comments (
+CREATE TABLE post_hashtag_list ( # связывание хэштегов и постов
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT,
+  hashtag_id INT,
+  FOREIGN KEY (post_id) REFERENCES post (id),
+  FOREIGN KEY (hashtag_id) REFERENCES hashtag (id)
+);
+
+CREATE TABLE comment (
   id              INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt       DATETIME,
+  create_dt       DATETIME DEFAULT CURRENT_TIMESTAMP,
   comment_content TEXT,
-  author_id       INT,
+  user_id         INT,
   post_id         INT,
-  FOREIGN KEY (author_id) REFERENCES users (id),
-  FOREIGN KEY (post_id) REFERENCES posts (id)
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  FOREIGN KEY (post_id) REFERENCES post (id)
 );
 
-CREATE TABLE likes (
+CREATE TABLE fav_list ( # лайки (избранное)
   id           INT AUTO_INCREMENT PRIMARY KEY,
-  like_user_id INT,
-  like_post_id INT,
-  FOREIGN KEY (like_user_id) REFERENCES users (id),
-  FOREIGN KEY (like_post_id) REFERENCES posts (id)
+  user_id INT, # кто лайкает
+  post_id INT, # что лайкают
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  FOREIGN KEY (post_id) REFERENCES post (id)
 );
 
-CREATE TABLE followers (
+CREATE TABLE follower_list ( # подписки на пользователей
   id                INT AUTO_INCREMENT PRIMARY KEY,
-  following_user_id INT,
-  followed_user_id  INT,
-  FOREIGN KEY (following_user_id) REFERENCES users (id),
-  FOREIGN KEY (followed_user_id) REFERENCES users (id)
+  following_user_id INT UNIQUE, # кто подписывается
+  followed_user_id  INT UNIQUE, # на кого подписывается
+  FOREIGN KEY (following_user_id) REFERENCES user (id),
+  FOREIGN KEY (followed_user_id) REFERENCES user (id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE message (
   id              INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt       DATETIME,
+  create_dt       DATETIME DEFAULT CURRENT_TIMESTAMP,
   message_content TEXT,
-  sender_id       INT,
-  receiver_id     INT,
-  FOREIGN KEY (sender_id) REFERENCES users (id),
-  FOREIGN KEY (receiver_id) REFERENCES users (id)
+  sender_id       INT, # отправитель
+  receiver_id     INT, # получатель
+  FOREIGN KEY (sender_id) REFERENCES user (id),
+  FOREIGN KEY (receiver_id) REFERENCES user (id),
+  INDEX (message_content)
+);
+
+CREATE TABLE repost ( # репосты
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT,
+  user_id INT, # кто репостит
+  author_id INT, # от кого репостят
+  FOREIGN KEY (post_id) REFERENCES post (id),
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  FOREIGN KEY (author_id) REFERENCES user (id)
 );

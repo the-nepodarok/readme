@@ -65,24 +65,6 @@ function secure(string &$string)
 }
 
 /**
- * Генерирует случайные даты и добавляет их в виде новой записи в обрабатываемом ассоциативном массиве
- *
- * @param array $array Массив с данными
- * @return array Массив с псевдослучайными датами в паре 'date' => 'дата' в формате ГГГГ-ММ-ДД ЧЧ:ММ:СС
- */
-
-function get_dates($array)
-{
-    $index = 0;
-    foreach ($array as &$item) {
-        $item['date'] = generate_random_date($index);
-        $index++;
-    }
-    unset($item); // сбрасываем ссылку на последний элемент
-    return $array;
-}
-
-/**
  * Преобразует дату в формат «дд.мм.гггг чч:мм», необходимый для атрибута title
  *
  * @param string $date Дата в виде строки
@@ -128,8 +110,9 @@ function format_date($date)
         $hours = $diff->h;
         $days = $diff->days;
 
-        if (!$days) {
-            $hours = ($minutes >= $minutes_in_hour / 2) ? $hours++ : $hours;
+        if ($days === 0) {
+            ($minutes >= $minutes_in_hour / 2) ?: $hours++; // часы округляются вверх
+
             $result = $hours ?
                 $hours . ' час' . get_noun_plural_form($hours, '', 'а', 'ов')
                 :
@@ -143,13 +126,14 @@ function format_date($date)
 
             $years = $diff->y;
 
-            $days = ($hours >= $hours_in_day / 2) ? $days++ : $days;
-            $result = $days . ' ' . get_noun_plural_form($days, 'день', 'дня', 'дней');
+            ($hours >= $hours_in_day / 2) ?: $days++; // дни округляются вверх
 
-            if ($days >= $days_in_week & $days < $five_weeks) {
+            if ($days < $days_in_week) {
+                $result = $days . ' ' . get_noun_plural_form($days, 'день', 'дня', 'дней');
+            } elseif ($days < $five_weeks) {
                 $weeks = round($days / $days_in_week);
                 $result = $weeks . ' недел' . get_noun_plural_form($weeks, 'ю', 'и', 'ь');
-            } elseif ($days >= $five_weeks & $days < $days_in_year) {
+            } elseif ($days < $days_in_year) {
                 $months = round($days / $days_in_month);
                 $result = $months . ' месяц' . get_noun_plural_form($months, '', 'а', 'ев');
             } elseif ($years) {
