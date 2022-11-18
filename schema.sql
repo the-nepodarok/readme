@@ -14,16 +14,16 @@ CREATE TABLE user (
   UNIQUE INDEX (email, user_name)
 );
 
-CREATE TABLE hashtag ( # таблица со всеми хэштегами
-  id      INT AUTO_INCREMENT PRIMARY KEY,
-  hashtag VARCHAR(20) UNIQUE
-);
-
 CREATE TABLE content_type ( # таблица со всеми типами постов
   id        TINYINT AUTO_INCREMENT PRIMARY KEY,
   type_name VARCHAR(20), # название типа
   type_icon_class VARCHAR(16), # класс иконки типа
   UNIQUE INDEX (type_name)
+);
+
+CREATE TABLE hashtag ( # таблица со всеми хэштегами
+  id      INT AUTO_INCREMENT PRIMARY KEY,
+  hashtag VARCHAR(20) UNIQUE
 );
 
 CREATE TABLE post (
@@ -37,7 +37,7 @@ CREATE TABLE post (
   link         VARCHAR(255),
   view_count   INT DEFAULT 0,
   user_id      INT,
-  content_type_id      INT,
+  content_type_id      TINYINT,
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (content_type_id) REFERENCES content_type (id),
   INDEX (header)
@@ -84,8 +84,7 @@ CREATE TABLE message (
   sender_id       INT, # отправитель
   receiver_id     INT, # получатель
   FOREIGN KEY (sender_id) REFERENCES user (id),
-  FOREIGN KEY (receiver_id) REFERENCES user (id),
-  INDEX (message_content)
+  FOREIGN KEY (receiver_id) REFERENCES user (id)
 );
 
 CREATE TABLE repost ( # репосты
