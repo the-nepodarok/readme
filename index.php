@@ -45,7 +45,11 @@ $posts = [
 ];
 
 array_walk_recursive($posts, 'secure'); // защита от XXS
-$posts = get_dates($posts); // создаём копию массива, чтобы не модифицировать изначальный - the-nepodarok
+//$posts = get_dates($posts); // добавляем постам в массиве рандомные даты - the-nepodarok
+
+foreach ($posts as $key => $post) {
+    $posts[$key]['date'] = generate_random_date($key);
+}
 
 $main_content = include_template('main.php', [
     'posts' => $posts,
