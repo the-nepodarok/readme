@@ -112,7 +112,7 @@
                     <!--содержимое для поста-текста-->
                     <p>
                         <!--здесь текст-->
-                        <?= $post['post_content']; ?>
+                        <?= slice_string($post['post_content']); ?>
                     </p>
                             <?php break; ?>
 
