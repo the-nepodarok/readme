@@ -46,7 +46,7 @@ $posts = [
 
 array_walk_recursive($posts, 'secure'); // защита от XXS
 
-foreach ($posts as $key => $post) {
+foreach ($posts as $key => $post) { // добавляем постам в массиве рандомные даты - the-nepodarok
     $posts[$key]['date'] = generate_random_date($key);
 }
 
