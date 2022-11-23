@@ -85,7 +85,7 @@
             </div>
         </div>
         <div class="popular__posts">
-            <?php if (isset($posts)): ?>
+        <?php if (isset($posts)): ?>
             <?php foreach ($posts as $post): ?>
             <article class="popular__post post <?= $post['post_type']; ?>">
                 <header class="post__header">
@@ -95,9 +95,9 @@
                     </h2>
                 </header>
                 <div class="post__main">
-                    <?php if (isset($post['post_content'])): // Проверка на наличие у поста содержимого | the-nepodarok ?>
+                <?php if (isset($post['post_content'])): // Проверка на наличие у поста содержимого | the-nepodarok ?>
                     <?php switch ($post['post_type']):
-                          case 'post-quote': ?>
+                        case 'post-quote': ?>
                     <!--содержимое для поста-цитаты-->
                     <blockquote>
                         <p>
@@ -106,24 +106,24 @@
                         </p>
                         <cite>Неизвестный Автор</cite>
                     </blockquote>
-                    <?php break; ?>
+                            <?php break; ?>
 
-                    <?php case 'post-text': ?>
+                        <?php case 'post-text': ?>
                     <!--содержимое для поста-текста-->
                     <p>
                         <!--здесь текст-->
-                        <?= $post['post_content']; ?>
+                        <?= slice_string($post['post_content']); ?>
                     </p>
-                    <?php break; ?>
+                            <?php break; ?>
 
-                    <?php case 'post-photo': ?>
+                        <?php case 'post-photo': ?>
                     <!--содержимое для поста-фото-->
                     <div class="post-photo__image-wrapper">
                         <img src="img/<?= $post['post_content']; ?>" alt="Фото от пользователя" width="360" height="240">
                     </div>
-                    <?php break; ?>
+                            <?php break; ?>
 
-                    <?php case 'post-link': ?>
+                        <?php case 'post-link': ?>
                     <!--содержимое для поста-ссылки-->
                     <div class="post-link__wrapper">
                         <a class="post-link__external" href="http://<?= $post['post_content']; ?>" title="Перейти по ссылке">
@@ -144,9 +144,9 @@
                             </span>
                         </a>
                     </div>
-                    <?php break; ?>
+                            <?php break; ?>
 
-                    <?php case 'post-video': ?>
+                        <?php case 'post-video': ?>
                     <!--содержимое для поста-видео-->
                     <div class="post-video__block">
                         <div class="post-video__preview">
@@ -164,9 +164,9 @@
                         </a>
                     </div>
                     <?php
-                                break;
-                            endswitch;
-                        endif;
+                            break;
+                    endswitch;
+                endif;
                     ?>
                 </div>
                 <footer class="post__footer">
