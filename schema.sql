@@ -10,15 +10,14 @@ CREATE TABLE user (
   email     VARCHAR(128) NOT NULL UNIQUE,
   user_name VARCHAR(64) NOT NULL COMMENT 'имя пользователя',
   password  CHAR(255)    NOT NULL,
-  avatar    VARCHAR(255),
-  INDEX (user_name)
-);
+  avatar    VARCHAR(255)
+) COMMENT 'таблица зарегистрированных пользователей';
 
 CREATE TABLE content_type (
   id        TINYINT AUTO_INCREMENT PRIMARY KEY,
   type_name VARCHAR(20) UNIQUE COMMENT 'название типа',
-  type_icon_class VARCHAR(16) UNIQUE COMMENT 'класс иконки типа'
-);
+  type_val  VARCHAR(16) UNIQUE COMMENT 'класс иконки типа'
+) COMMENT 'типы постов';
 
 CREATE TABLE hashtag (
   id      INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,18 +40,24 @@ CREATE TABLE post (
   content_type_id      TINYINT,
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (content_type_id) REFERENCES content_type (id),
-  INDEX (view_count) COMMENT 'индекс для сортировки по просмотрам'
-);
+  INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
+  INDEX (content_type_id) COMMENT 'индекс для поиска по типу',
+  INDEX (view_count) COMMENT 'индекс для поиска по просмотрам',
+  INDEX (like_count) COMMENT 'индекс для поиска по лайкам',
+  INDEX (is_repost) COMMENT 'индекс для поиска по репостам'
+) COMMENT 'таблица постов';
 
-CREATE TABLE post_hashtag_list (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  post_id INT,
+CREATE TABLE post_hashtag_link
+(
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  post_id    INT,
   hashtag_id INT,
   FOREIGN KEY (post_id) REFERENCES post (id),
   FOREIGN KEY (hashtag_id) REFERENCES hashtag (id),
   UNIQUE KEY (post_id, hashtag_id),
-  INDEX post_hashtag (post_id, hashtag_id) COMMENT 'индекс пар пост-хэштег'
-) COMMENT 'связывание хэштегов и постов';
+  INDEX (post_id) COMMENT 'индекс для поиска по постам',
+  INDEX (hashtag_id) COMMENT 'индекс для поиска по хэштегам'
+) COMMENT 'связка хэштегов и постов';
 
 CREATE TABLE comment (
   id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,8 +66,10 @@ CREATE TABLE comment (
   user_id         INT,
   post_id         INT,
   FOREIGN KEY (user_id) REFERENCES user (id),
-  FOREIGN KEY (post_id) REFERENCES post (id)
-);
+  FOREIGN KEY (post_id) REFERENCES post (id),
+  INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
+  INDEX (post_id) COMMENT 'индекс для поиска по постам'
+) COMMENT 'таблица комментариев к постам';
 
 CREATE TABLE fav_list (
   id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,8 +78,9 @@ CREATE TABLE fav_list (
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (post_id) REFERENCES post (id),
   UNIQUE KEY (user_id, post_id),
-  INDEX likes (user_id, post_id) COMMENT 'индекс для сортировки по лайкам'
-) COMMENT 'лайки (избранное)';
+  INDEX (user_id) COMMENT 'индекс для поиска по постам',
+  INDEX (post_id) COMMENT 'индекс для поиска по лайкам'
+) COMMENT 'таблица лайков';
 
 CREATE TABLE follower_list (
   id                INT AUTO_INCREMENT PRIMARY KEY,
@@ -81,8 +89,9 @@ CREATE TABLE follower_list (
   FOREIGN KEY (following_user_id) REFERENCES user (id),
   FOREIGN KEY (followed_user_id) REFERENCES user (id),
   UNIQUE KEY (followed_user_id, following_user_id) COMMENT 'уникальные пары пользователь-подписчик',
-  INDEX subscription (following_user_id, followed_user_id) COMMENT 'индекс пар пользователь-подписчик'
-) COMMENT 'подписки на пользователей';
+  INDEX (following_user_id) COMMENT 'индекс для поиска по подписчикам',
+  INDEX (followed_user_id) COMMENT 'индекс для поиска по подпискам'
+) COMMENT 'таблица подписок на пользователей';
 
 CREATE TABLE message (
   id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -91,5 +100,7 @@ CREATE TABLE message (
   sender_id       INT COMMENT 'отправитель',
   receiver_id     INT COMMENT 'получатель',
   FOREIGN KEY (sender_id) REFERENCES user (id),
-  FOREIGN KEY (receiver_id) REFERENCES user (id)
-);
+  FOREIGN KEY (receiver_id) REFERENCES user (id),
+  INDEX (sender_id) COMMENT 'индекс для поиска по отправителю',
+  INDEX (receiver_id) COMMENT 'индекс для поиска по получателю'
+) COMMENT 'таблица личных сообщений';
