@@ -38,7 +38,6 @@ CREATE TABLE post
   video           VARCHAR(255) COMMENT 'ссылка на видео на YouTube',
   link            VARCHAR(255) COMMENT 'ссылка на сторонний ресурс',
   view_count      INT      DEFAULT 0 COMMENT 'кол-во просмотров',
-  like_count      INT      DEFAULT 0 COMMENT 'кол-во лайков',
   user_id         INT,
   is_repost       TINYINT  DEFAULT 0 COMMENT 'является ли репостом',
   origin_post_id  INT COMMENT 'ссылка на оригинальный пост при репосте',
