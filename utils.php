@@ -111,7 +111,9 @@ function format_date($date)
         $days = $diff->days;
 
         if ($days === 0) {
-            $hours += ($minutes >= $minutes_in_hour / 2) ? 1 : 0; // часы округляются вверх
+            if ($minutes >= $minutes_in_hour / 2) { // часы округляются вверх
+                $hours++;
+            }
 
             $result = $hours ?
                 $hours . ' час' . get_noun_plural_form($hours, '', 'а', 'ов')
@@ -126,7 +128,9 @@ function format_date($date)
 
             $years = $diff->y;
 
-            $days += ($hours >= $hours_in_day / 2) ? 1 : 0; // дни округляются вверх
+            if ($hours >= $hours_in_day / 2) { // дни округляются вверх
+                $days++;
+            }
 
             if ($days < $days_in_week) {
                 $result = $days . ' ' . get_noun_plural_form($days, 'день', 'дня', 'дней');
