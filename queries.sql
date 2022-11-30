@@ -33,7 +33,7 @@ INSERT INTO comment
     ('Зря ждали, расходимся. Весь сериал запороли, как только могли', 3, 2),
     ('Если я правильно помню, автор цитаты - Дэвид Бекхэм', 1, 1);
 
--- Выводим список постов, отсортированных по популярности, с именами пользователей и типом поста
+-- Получаем список постов, отсортированных по популярности, с именами пользователей и типом поста
 SELECT p.*,
        user_name,
        type_name,
@@ -45,39 +45,29 @@ FROM post AS p
             ON p.content_type_id = c.id
 ORDER BY p.view_count DESC;
 
--- Выводим список постов конкретного пользователя
-SELECT p.id,
-       header,
-       user_name
-FROM post AS p
-       JOIN user AS u
-            ON p.user_id = u.id
-WHERE user_id = '1';
+-- Получаем список постов конкретного пользователя
+SELECT * FROM post WHERE user_id = '1';
 
--- Выводим список комментариев к конкретному посту с отображением имени пользователя
+-- Получаем список комментариев к конкретному посту с отображением имени пользователя
 SELECT c.id,
        comment_content,
        user_name
 FROM comment AS c
-        JOIN post AS p
-              ON c.post_id = p.id
         JOIN user AS u
               ON c.user_id = u.id
-WHERE post_id = 1;
+WHERE c.post_id = 1;
 
 -- Добавлем один лайк от пользователя 2 к посту под номером 3
 INSERT INTO fav_list
-    (user_id, post_id)
-  VALUES
-    (2, 3);
+    SET user_id = 2,
+        post_id = 3;
 
 -- Добавляем пользователю 2 в подписчики пользователя 1
 INSERT INTO follower_list
-    (following_user_id, followed_user_id)
-  VALUES
-    (1, 2);
+    SET following_user_id = 1,
+        followed_user_id = 2;
 
--- Выводим таблицу с пользователями, у которых есть хотя бы один подписчик, отсортированную по убыванию
+-- Получаем таблицу с пользователями, у которых есть хотя бы один подписчик, отсортированную по убыванию
 SELECT user_name,
        COUNT(following_user_id) AS f_count
 FROM follower_list

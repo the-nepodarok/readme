@@ -47,7 +47,6 @@ CREATE TABLE post
   INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
   INDEX (content_type_id) COMMENT 'индекс для поиска по типу',
   INDEX (view_count) COMMENT 'индекс для поиска по просмотрам',
-  INDEX (like_count) COMMENT 'индекс для поиска по лайкам',
   INDEX (is_repost) COMMENT 'индекс для поиска по репостам'
 ) COMMENT 'таблица постов';
 
