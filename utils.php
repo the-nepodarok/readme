@@ -55,13 +55,17 @@ function slice_string_2($string, $max_post_length = 300)
 }
 
 /**
- * Заменяет потенциально опасные символы на HTML-мнемоники, делая текст безопасным для вывода на страницу
- * @param string $string Входящий текст в виде reference-строки
+ * Заменяет потенциально опасные символы в являющемся строкой элементе на HTML-мнемоники, делая текст безопасным для вывода на страницу
+ * @param mixed $value Входящий элемент любого типа
  */
 
-function secure(string &$string)
+function secure($value)
 {
-    $string = htmlspecialchars($string);
+    if (gettype($value) === 'string') {
+        $value = htmlspecialchars($value);
+    } else {
+        return $value;
+    }
 }
 
 /**
