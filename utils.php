@@ -63,9 +63,8 @@ function secure($value)
 {
     if (gettype($value) === 'string') {
         $value = htmlspecialchars($value);
-    } else {
-        return $value;
     }
+        return $value;
 }
 
 /**
