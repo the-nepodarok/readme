@@ -4,7 +4,7 @@ require_once 'utils.php';
 require_once 'db.php';
 
 $query = 'SELECT * FROM content_type'; // запрос для вывода типов контента
-$content_types = send_query($db_connection, $query);
+$content_types = get_data_from_db($db_connection, $query);
 
 $query = 'SELECT p.*,
            p.header,
@@ -18,8 +18,7 @@ $query = 'SELECT p.*,
             JOIN content_type ct
                 ON p.content_type_id = ct.id
         ORDER BY p.view_count DESC'; // запрос для вывода постов с типом контента и именами пользователей
-
-$posts = send_query($db_connection, $query);
+$posts = get_data_from_db($db_connection, $query);
 
 $is_auth = rand(0, 1);
 $page_title = 'популярное';

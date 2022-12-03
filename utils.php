@@ -161,7 +161,7 @@ function format_date($date)
  * @param string $query Переменная запроса
  * @return array Полученные данные из базы данных в виде массива
  */
-function send_query(mysqli $src_db, string $query) {
+function get_data_from_db(mysqli $src_db, string $query) {
     $result = mysqli_query($src_db, $query);
 
     if ($result) {
