@@ -18,13 +18,13 @@ INSERT INTO content_type
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO post
-    (header, view_count, user_id, content_type_id, text_content, quote_origin, picture, link)
+    (header, create_dt, view_count, user_id, content_type_id, text_content, quote_origin, picture, link)
   VALUES
-    ('Цитата', 42, 2, 2, 'Мы в жизни любим только раз, а после ищем лишь похожих', 'Неизвестный автор', NULL, NULL),
-    ('Игра Престолов', 32, 1, 1, 'Не могу дождаться начала финального сезона своего любимого сериала!', NULL, NULL, NULL),
-    ('Наконец, обработал фотки!', 22, 3, 3, NULL, NULL, 'rock-medium.jpg', NULL),
-    ('Моя мечта', 12, 1, 3, NULL, NULL, 'coast-medium.jpg', NULL),
-    ('Лучшие курсы', 10, 2, 5, NULL, NULL, NULL, 'http://www.htmlacademy.ru/');
+    ('Цитата', '2022-12-04 07:58:52', 42, 2, 2, 'Мы в жизни любим только раз, а после ищем лишь похожих', 'Неизвестный автор', NULL, NULL),
+    ('Игра Престолов', '2022-12-01 11:16:42', 32, 1, 1, 'Не могу дождаться начала финального сезона своего любимого сериала!', NULL, NULL, NULL),
+    ('Наконец, обработал фотки!', '2022-11-29 23:33:17', 22, 3, 3, NULL, NULL, 'rock-medium.jpg', NULL),
+    ('Моя мечта', '2022-10-02 12:20:35', 12, 1, 3, NULL, NULL, 'coast-medium.jpg', NULL),
+    ('Лучшие курсы', '2022-07-14 16:23:09', 10, 2, 5, NULL, NULL, NULL, 'http://www.htmlacademy.ru/');
 
 -- "пишем" по комментарию к двум разным записям
 INSERT INTO comment
@@ -46,7 +46,7 @@ FROM post AS p
 ORDER BY p.view_count DESC;
 
 -- Получаем список постов конкретного пользователя
-SELECT * FROM post WHERE user_id = '1';
+SELECT * FROM post WHERE user_id = 1;
 
 -- Получаем список комментариев к конкретному посту с отображением имени пользователя
 SELECT c.id,

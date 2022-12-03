@@ -153,3 +153,24 @@ function format_date($date)
     }
     return $result;
 }
+
+/**
+ * Выполняет запрос типа SELECT в базу данных
+ *
+ * @param mysqli $src_db Переменная подключения к БД
+ * @param string $query Переменная запроса
+ * @return array Полученные данные из базы данных в виде массива
+ */
+function send_query(mysqli $src_db, string $query) {
+    $result = mysqli_query($src_db, $query);
+
+    if ($result) {
+        $result = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    } else {
+        $err = mysqli_error($src_db);
+        echo($err);
+        exit();
+    }
+
+    return $result;
+}
