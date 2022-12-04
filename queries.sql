@@ -8,13 +8,13 @@ INSERT INTO user
 
 -- заполняем таблицу типов всеми возможными типами будущих записей
 INSERT INTO content_type
-    (type_name, type_val)
+    (type_name, type_val, icon_width, icon_height)
   VALUES
-    ('Текст', 'text'),
-    ('Цитата', 'quote'),
-    ('Картинка', 'photo'),
-    ('Видео', 'video'),
-    ('Ссылка',  'link');
+    ('Текст', 'text', 20, 21),
+    ('Цитата', 'quote', 21, 20),
+    ('Картинка', 'photo', 22, 18),
+    ('Видео', 'video', 24, 16),
+    ('Ссылка',  'link', 21, 18);
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO post

@@ -59,9 +59,9 @@ function slice_string_2($string, $max_post_length = 300)
  * @param mixed $value Входящий элемент любого типа
  */
 
-function secure($value)
+function secure(&$value)
 {
-    if (gettype($value) === 'string') {
+    if (is_string($value)) {
         $value = htmlspecialchars($value);
     }
         return $value;
@@ -164,13 +164,12 @@ function format_date($date)
 function get_data_from_db(mysqli $src_db, string $query) {
     $result = mysqli_query($src_db, $query);
 
-    if ($result) {
-        $result = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    } else {
-        $err = mysqli_error($src_db);
-        echo($err);
+    if (!$result) {
+        echo mysqli_error($src_db);
         exit();
     }
 
-    return $result;
+    $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+    return $arr;
 }

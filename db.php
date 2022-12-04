@@ -14,10 +14,9 @@ $db_connection = mysqli_connect($db['host'],
     $db['password'],
     $db['database']); // устанавливается соединение с БД
 
-mysqli_set_charset($db_connection, 'utf8'); // Установка кодировки по ум.
-
 if (!$db_connection) {
-    $err = mysqli_connect_error();
-    echo $err;
+    echo mysqli_connect_error();
     exit();
 }
+
+mysqli_set_charset($db_connection, 'utf8'); // Установка кодировки по ум.

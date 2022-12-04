@@ -3,11 +3,16 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db.php';
 
-$query = 'SELECT * FROM content_type'; // запрос для вывода типов контента
+$is_auth = rand(0, 1);
+$page_title = 'популярное';
+$user_name = 'the-nepodarok'; // укажите здесь ваше имя
+
+// получение типов контента
+$query = 'SELECT * FROM content_type';
 $content_types = get_data_from_db($db_connection, $query);
 
+// получение постов с типом и именем автора
 $query = 'SELECT p.*,
-           p.header,
            u.avatar,
            u.user_name,
            ct.type_val,
@@ -17,12 +22,8 @@ $query = 'SELECT p.*,
                 ON p.user_id = u.id
             JOIN content_type ct
                 ON p.content_type_id = ct.id
-        ORDER BY p.view_count DESC'; // запрос для вывода постов с типом контента и именами пользователей
+        ORDER BY p.view_count DESC';
 $posts = get_data_from_db($db_connection, $query);
-
-$is_auth = rand(0, 1);
-$page_title = 'популярное';
-$user_name = 'the-nepodarok'; // укажите здесь ваше имя
 
 //$posts = [
 //    [

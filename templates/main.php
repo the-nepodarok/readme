@@ -46,7 +46,7 @@
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button filters__button--<?= $type['type_val']; ?> button" href="#">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
-                            <svg class="filters__icon" width="24" height="21">
+                            <svg class="filters__icon" width="<?= $type['icon_width']; ?>" height="<?= $type['icon_height']; ?>">
                                 <use xlink:href="#icon-filter-<?= $type['type_val']; ?>"></use>
                             </svg>
                         </a>
