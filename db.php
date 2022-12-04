@@ -9,10 +9,12 @@ $db = [
     'database' => 'readme',
 ];
 
-$db_connection = mysqli_connect($db['host'],
+$db_connection = mysqli_connect( // устанавливается соединение с БД
+    $db['host'],
     $db['user'],
     $db['password'],
-    $db['database']); // устанавливается соединение с БД
+    $db['database']
+);
 
 if (!$db_connection) {
     echo mysqli_connect_error();
