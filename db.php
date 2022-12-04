@@ -2,12 +2,10 @@
 
 // Параметры для подключения к БД
 
-$db = [
-    'host' => 'localhost',
-    'user' => 'root',
-    'password' => '',
-    'database' => 'readme',
-];
+$db_connection = mysqli_connect($db['host'],
+    $db['user'],
+    $db['password'],
+    $db['database']); // устанавливается соединение с БД
 
 $db_connection = mysqli_connect( // устанавливается соединение с БД
     $db['host'],
