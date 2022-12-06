@@ -1,7 +1,6 @@
 <?php
 
 // Параметры для подключения к БД
-
 $db = [
     'host' => 'localhost',
     'user' => 'root',
@@ -9,16 +8,18 @@ $db = [
     'database' => 'readme',
 ];
 
-$db_connection = mysqli_connect( // устанавливается соединение с БД
-    $db['host'],
+// Соединение с БД
+$db_connection = mysqli_connect($db['host'],
     $db['user'],
     $db['password'],
     $db['database']
 );
 
+// Обработка ошибки подключения
 if (!$db_connection) {
     echo mysqli_connect_error();
     exit();
 }
 
-mysqli_set_charset($db_connection, 'utf8'); // Установка кодировки по ум.
+// Установка кодировки для работы с БД
+mysqli_set_charset($db_connection, 'utf8');

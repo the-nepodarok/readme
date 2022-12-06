@@ -19,8 +19,8 @@ CREATE TABLE content_type
   id        TINYINT AUTO_INCREMENT PRIMARY KEY,
   type_name VARCHAR(20) UNIQUE COMMENT 'название типа',
   type_val  VARCHAR(16) UNIQUE COMMENT 'класс иконки типа',
-  icon_width INT COMMENT 'ширина иконки',
-  icon_height INT COMMENT 'высота иконки'
+  icon_width TINYINT COMMENT 'ширина иконки',
+  icon_height TINYINT COMMENT 'высота иконки'
 ) COMMENT 'типы постов';
 
 CREATE TABLE hashtag

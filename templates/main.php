@@ -41,7 +41,7 @@
                             <span>Все</span>
                         </a>
                     </li>
-                    <?php if (isset($content_types) && count($content_types)):
+                    <?php if ($content_types ?? false):
                               foreach ($content_types as $type): ?>
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button filters__button--<?= $type['type_val']; ?> button" href="#">
