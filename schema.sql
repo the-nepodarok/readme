@@ -18,7 +18,9 @@ CREATE TABLE content_type
 (
   id        TINYINT AUTO_INCREMENT PRIMARY KEY,
   type_name VARCHAR(20) UNIQUE COMMENT 'название типа',
-  type_val  VARCHAR(16) UNIQUE COMMENT 'класс иконки типа'
+  type_val  VARCHAR(16) UNIQUE COMMENT 'класс иконки типа',
+  icon_width TINYINT COMMENT 'ширина иконки',
+  icon_height TINYINT COMMENT 'высота иконки'
 ) COMMENT 'типы постов';
 
 CREATE TABLE hashtag
@@ -34,9 +36,9 @@ CREATE TABLE post
   header          VARCHAR(128) COMMENT 'заголовок поста',
   text_content    TEXT,
   quote_origin    VARCHAR(128) COMMENT 'автор/источник цитаты',
-  picture         VARCHAR(255),
-  video           VARCHAR(255) COMMENT 'ссылка на видео на YouTube',
-  link            VARCHAR(255) COMMENT 'ссылка на сторонний ресурс',
+  photo_content         VARCHAR(255),
+  video_content           VARCHAR(255) COMMENT 'ссылка на видео на YouTube',
+  link_text_content            VARCHAR(255) COMMENT 'ссылка на сторонний ресурс',
   view_count      INT      DEFAULT 0 COMMENT 'кол-во просмотров',
   user_id         INT,
   is_repost       TINYINT  DEFAULT 0 COMMENT 'является ли репостом',
@@ -47,7 +49,6 @@ CREATE TABLE post
   INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
   INDEX (content_type_id) COMMENT 'индекс для поиска по типу',
   INDEX (view_count) COMMENT 'индекс для поиска по просмотрам',
-  INDEX (like_count) COMMENT 'индекс для поиска по лайкам',
   INDEX (is_repost) COMMENT 'индекс для поиска по репостам'
 ) COMMENT 'таблица постов';
 

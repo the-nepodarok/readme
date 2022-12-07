@@ -55,13 +55,16 @@ function slice_string_2($string, $max_post_length = 300)
 }
 
 /**
- * Заменяет потенциально опасные символы на HTML-мнемоники, делая текст безопасным для вывода на страницу
- * @param string $string Входящий текст в виде reference-строки
+ * Заменяет потенциально опасные символы в являющемся строкой элементе на HTML-мнемоники, делая текст безопасным для вывода на страницу
+ * @param mixed $value Входящий элемент любого типа
  */
 
-function secure(string &$string)
+function secure(&$value)
 {
-    $string = htmlspecialchars($string);
+    if (is_string($value)) {
+        $value = htmlspecialchars($value);
+    }
+        return $value;
 }
 
 /**
@@ -149,4 +152,24 @@ function format_date($date)
         }
     }
     return $result;
+}
+
+/**
+ * Выполняет запрос типа SELECT в базу данных
+ *
+ * @param mysqli $src_db Переменная подключения к БД
+ * @param string $query Переменная запроса
+ * @return array Полученные данные из базы данных в виде массива
+ */
+function get_data_from_db(mysqli $src_db, string $query) {
+    $result = mysqli_query($src_db, $query);
+
+    if (!$result) {
+        echo mysqli_error($src_db);
+        exit();
+    }
+
+    $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+    return $arr;
 }
