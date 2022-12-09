@@ -59,7 +59,7 @@
             </div>
         </div>
         <div class="popular__posts">
-        <?php if (isset($posts) && count($posts)): ?>
+        <?php if ($posts ?? false): ?>
             <?php foreach ($posts as $post): ?>
             <article class="popular__post post post-<?= $post['type_val']; ?>">
                 <header class="post__header">
