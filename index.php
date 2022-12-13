@@ -11,18 +11,13 @@ $user_name = 'the-nepodarok'; // укажите здесь ваше имя
 $query = 'SELECT * FROM content_type';
 $content_types = get_data_from_db($db_connection, $query);
 
+$type_param = filter_input(INPUT_GET, 'type'); // Получаем параметр запроса фильтрации по типу контента
+$sort_param = filter_input(INPUT_GET, 'sortby'); // Получаем параметр запроса сортировки
+
+// составление запроса с учётом параметров запроса
+$query = show_posts($type_param, $sort_param);
+
 // получение постов с типом и именем автора
-$query = 'SELECT p.*,
-           u.avatar,
-           u.user_name,
-           ct.type_val,
-           ct.type_name
-        FROM post AS p
-            JOIN user AS u
-                ON p.user_id = u.id
-            JOIN content_type ct
-                ON p.content_type_id = ct.id
-        ORDER BY p.view_count DESC';
 $posts = get_data_from_db($db_connection, $query);
 
 //$posts = [
@@ -71,6 +66,8 @@ array_walk_recursive($posts, 'secure'); // защита от XXS
 
 $main_content = include_template('main.php', [
     'content_types' => $content_types,
+    'type_param' => $type_param,
+    'sort_param' => $sort_param,
     'posts' => $posts,
 ]);
 
