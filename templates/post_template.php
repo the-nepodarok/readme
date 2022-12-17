@@ -5,66 +5,7 @@
       <h2 class="visually-hidden">Публикация</h2>
       <div class="post-details__wrapper post-<?= $post['type_val']; ?>">
         <div class="post-details__main-block post post--details">
-        <?php switch ($post['type_val']):
-                  case 'photo': ?>
-            <!-- пост-изображение -->
-            <div class="post-details__image-wrapper post-photo__image-wrapper">
-              <img src="img/<?= $post['photo_content']; ?>" alt="Фото от пользователя" width="760" height="507">
-            </div>
-                  <?php break; ?>
-
-                  <?php case 'quote': ?>
-            <!-- пост-цитата -->
-            <div class="post-details__image-wrapper post-quote">
-                <div class="post__main">
-                    <blockquote>
-                        <p>
-                            <?=$post['text_content'];?>
-                        </p>
-                        <cite><?=$post['quote_origin'];?></cite>
-                    </blockquote>
-                </div>
-            </div>
-                  <?php break; ?>
-
-                  <?php case 'text': ?>
-            <!-- пост-текст -->
-            <div class="post-details__image-wrapper post-text">
-                <div class="post__main">
-                    <p>
-                        <?=$post['text_content'];?>
-                    </p>
-                </div>
-            </div>
-                  <?php break; ?>
-
-                  <?php case 'link': ?>
-                      <!-- пост-ссылка -->
-            <div class="post__main">
-                <div class="post-link__wrapper">
-                    <a class="post-link__external" href="http://<?= $post['link_text_content']; ?>" title="Перейти по ссылке">
-                        <div class="post-link__info-wrapper">
-                            <div class="post-link__icon-wrapper">
-                                <img src="https://www.google.com/s2/favicons?domain=<?= $post['link_text_content']; ?>" alt="Иконка">
-                            </div>
-                            <div class="post-link__info">
-                                <h3><?= $post['header']; ?></h3>
-                                <span><?= $post['link_text_content']; ?></span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-                  <?php break; ?>
-
-                  <?php case 'video': ?>
-            <!-- пост-видео -->
-            <div class="post-details__image-wrapper post-photo__image-wrapper">
-                <?= embed_youtube_video($post['video_content']); ?>
-            </div>
-                  <?php break;
-        endswitch;
-        ?>
+          <?=$post_type_template; ?>
           <div class="post__indicators">
             <div class="post__buttons">
               <a class="post__indicator post__indicator--likes button" href="#" title="Лайк">
@@ -74,7 +15,7 @@
                 <svg class="post__indicator-icon post__indicator-icon--like-active" width="20" height="17">
                   <use xlink:href="#icon-heart-active"></use>
                 </svg>
-                <span><?= $like_count ?? 0; ?></span>
+                <span><?= $count_arr['like_count'] ?? 0; ?></span>
                 <span class="visually-hidden">количество лайков</span>
               </a>
               <a class="post__indicator post__indicator--comments button" href="#" title="Комментарии">
@@ -88,11 +29,11 @@
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-repost"></use>
                 </svg>
-                <span><?= $repost_count ?? 0; ?></span>
+                <span><?= $count_arr['repost_count'] ?? 0; ?></span>
                 <span class="visually-hidden">количество репостов</span>
               </a>
             </div>
-            <?php $vc = $post['view_count']; // алиас для числа просмотров ?>
+            <?php $vc = $post['view_count']; // alias для числа просмотров ?>
             <span class="post__view"><?= $vc . ' просмотр' . get_noun_plural_form($vc, '', 'а', 'ов'); ?></span>
           </div>
           <ul class="post__tags">
@@ -118,47 +59,36 @@
             </form>
             <div class="comments__list-wrapper">
               <ul class="comments__list">
+              <?php foreach ($comment_list as $comment): ?>
                 <li class="comments__item user">
                   <div class="comments__avatar">
                     <a class="user__avatar-link" href="#">
-                      <img class="comments__picture" src="img/userpic-larisa.jpg" alt="Аватар пользователя">
+                      <img class="comments__picture" src="img/<?= $comment['avatar']; ?>" alt="Аватар пользователя">
                     </a>
                   </div>
                   <div class="comments__info">
                     <div class="comments__name-wrapper">
                       <a class="comments__user-name" href="#">
-                        <span>Лариса Роговая</span>
+                        <span>
+                            <?= $comment['user_name']; ?>
+                        </span>
                       </a>
-                      <time class="comments__time" datetime="2019-03-20">1 ч назад</time>
+                      <?php $cd = $comment['create_dt']; // alias для даты комментария ?>
+                      <time class="comments__time" datetime="<?= $cd; ?>"><?= format_date($cd); ?></time>
                     </div>
                     <p class="comments__text">
-Красота!!!1!
+                        <?= $comment['comment_content']; ?>
                     </p>
                   </div>
                 </li>
-                <li class="comments__item user">
-                  <div class="comments__avatar">
-                    <a class="user__avatar-link" href="#">
-                      <img class="comments__picture" src="img/userpic-larisa.jpg" alt="Аватар пользователя">
-                    </a>
-                  </div>
-                  <div class="comments__info">
-                    <div class="comments__name-wrapper">
-                      <a class="comments__user-name" href="#">
-                        <span>Лариса Роговая</span>
-                      </a>
-                      <time class="comments__time" datetime="2019-03-18">2 дня назад</time>
-                    </div>
-                    <p class="comments__text">
-Озеро Байкал – огромное древнее озеро в горах Сибири к северу от монгольской границы. Байкал считается самым глубоким озером в мире. Он окружен сетью пешеходных маршрутов, называемых Большой байкальской тропой. Деревня Листвянка, расположенная на западном берегу озера, – популярная отправная точка для летних экскурсий. Зимой здесь можно кататься на коньках и собачьих упряжках.
-                    </p>
-                  </div>
-                </li>
+              <?php endforeach; ?>
               </ul>
-              <a class="comments__more-link" href="#">
+              <?php if ($count_arr['comment_count'] > $comment_limit && is_null($show_all_comments)): ?>
+              <a class="comments__more-link" href="?<?= "post_id=$post[id]"; ?>&show_all_comments">
                 <span>Показать все комментарии</span>
-                <sup class="comments__amount">45</sup>
+                <sup class="comments__amount"><?= $count_arr['comment_count']; ?></sup>
               </a>
+              <?php endif; ?>
             </div>
           </div>
         </div>
@@ -178,12 +108,12 @@
           </div>
           <div class="post-details__rating user__rating">
             <p class="post-details__rating-item user__rating-item user__rating-item--subscribers">
-              <span class="post-details__rating-amount user__rating-amount"><?= $follower_count ?? 0; ?></span>
-              <span class="post-details__rating-text user__rating-text">подписчик<?= $follower_count ? get_noun_plural_form($follower_count, '', 'а', 'ов') : 'ов'; ?></span>
+              <span class="post-details__rating-amount user__rating-amount"><?= $count_arr['follower_count'] ?? 0; ?></span>
+              <span class="post-details__rating-text user__rating-text">подписчик<?= $count_arr['follower_count'] ? get_noun_plural_form($count_arr['follower_count'], '', 'а', 'ов') : 'ов'; ?></span>
             </p>
             <p class="post-details__rating-item user__rating-item user__rating-item--publications">
-              <span class="post-details__rating-amount user__rating-amount"><?= $post_count; ?></span>
-              <span class="post-details__rating-text user__rating-text">публикаци<?= get_noun_plural_form($post_count, 'я', 'и', 'й'); ?></span>
+              <span class="post-details__rating-amount user__rating-amount"><?= $count_arr['post_count']; ?></span>
+              <span class="post-details__rating-text user__rating-text">публикаци<?= get_noun_plural_form($count_arr['post_count'], 'я', 'и', 'й'); ?></span>
             </p>
           </div>
           <div class="post-details__user-buttons user__buttons">

@@ -146,9 +146,9 @@ function format_date($date)
                 $years = ($days >= $days_in_year / 2) ? $years++ : $years;
                 $result = $years . ' ' . get_noun_plural_form($years, 'год', 'года', 'лет');
             }
-
-            $result .= ' назад';
         }
+
+        $result .= ' назад';
     }
     return $result;
 }
@@ -158,9 +158,12 @@ function format_date($date)
  *
  * @param mysqli $src_db Переменная подключения к БД
  * @param string $query Переменная запроса
- * @return array Полученные данные из базы данных в виде двумерного массива
+ * @param string $mode Режим выполнения функции:
+ *        'all' - для вывода всех данных в виде двумерного массива,
+ *        'row' - для вывода одной строки данных в виде одномерного ассоц. массива
+ * @return array Полученная строка данных в виде, заданном режимом $mode
  */
-function get_data_from_db(mysqli $src_db, string $query) {
+function fetch_from_db(mysqli $src_db, string $query, string $mode = 'all') {
     $result = mysqli_query($src_db, $query);
 
     if (!$result) {
@@ -168,75 +171,24 @@ function get_data_from_db(mysqli $src_db, string $query) {
         exit();
     }
 
-    $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-    return $arr;
-}
-
-/**
- * Выполняет запрос в базу данных
- *
- * @param mysqli $src_db Переменная подключения к БД
- * @param string $query Переменная запроса
- * @return array Полученная строка данных в виде одномерного ассоц. массива
- */
-function get_row_from_db(mysqli $src_db, string $query) {
-    $result = mysqli_query($src_db, $query);
-
-    if (!$result) {
-        echo mysqli_error($src_db);
-        exit();
+    switch ($mode) {
+        case 'all':
+            $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            break;
+        case 'row':
+            $arr = mysqli_fetch_assoc($result);
+            break;
     }
 
-    $arr = mysqli_fetch_assoc($result);
-
     return $arr;
 }
 
 /**
- * Конструирует запрос для отображения постов
+ * Выдаёт числовое значение из запроса в базу данных
  *
- * @param string $type_param Параметр запроса фильтрации по типу
- * @param string $sort_param Параметр запроса сортировки
- * @return string Запрос с параметрами для фильтрации и/или сортировки
+ * @param mysqli $db Переменная подключения к БД
+ * @param string $query Переменная запроса в БД
  */
-function show_posts($type_param, $sort_param)
-{
-    $type_filter_query = $type_param ? "WHERE p.content_type_id = $type_param" : '';
-    $sort_query = $sort_param ? $sort_param : 'view_count';
-
-    if ($sort_param === 'like_count') {
-        $query = "SELECT p.*,
-                         u.avatar,
-                         u.user_name,
-                         ct.type_val,
-                         ct.type_name,
-                         fl.post_id,
-                         COUNT(fl.user_id) AS like_count
-                   FROM post AS p
-                       JOIN user AS u
-                           ON p.user_id = u.id
-                       JOIN content_type AS ct
-                           ON p.content_type_id = ct.id
-                       JOIN fav_list AS fl
-                           ON fl.post_id = p.id
-                   $type_filter_query
-                   GROUP BY post_id
-                   ORDER BY like_count";
-    } else {
-        $query = "SELECT p.*,
-           u.avatar,
-           u.user_name,
-           ct.type_val,
-           ct.type_name
-        FROM post AS p
-            JOIN user AS u
-                ON p.user_id = u.id
-            JOIN content_type AS ct
-                ON p.content_type_id = ct.id
-            $type_filter_query
-            ORDER BY p.$sort_query DESC";
-        }
-
-    return $query;
+function count_values($db, $query) {
+    return fetch_from_db($db, $query, 'row')['count'];
 }

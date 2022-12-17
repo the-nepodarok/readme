@@ -8,7 +8,7 @@
                 <b class="popular__sorting-caption sorting__caption">Сортировка:</b>
                 <ul class="popular__sorting-list sorting__list">
                     <li class="sorting__item sorting__item--popular">
-                        <a class="sorting__link sorting__link--active" href="/?sortby=view_count<?=  $type_param ? "&type=$type_param" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'view_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=view_count<?= $type_id ? "&type=$type_id" : ''; ?>">
                             <span>Популярность</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -16,7 +16,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link" href="/?sortby=like_count<?=  $type_param ? "&type=$type_param" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'like_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=like_count<?= $type_id ? "&type=$type_id" : ''; ?>">
                             <span>Лайки</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -24,7 +24,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link" href="/?sortby=create_dt<?=  $type_param ? "&type=$type_param" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= $type_id ? "&type=$type_id" : ''; ?>">
                             <span>Дата</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -37,16 +37,16 @@
                 <b class="popular__filters-caption filters__caption">Тип контента:</b>
                 <ul class="popular__filters-list filters__list">
                     <li class="popular__filters-item popular__filters-item--all filters__item filters__item--all">
-                        <a class="filters__button filters__button--ellipse filters__button--all <?= !$type_param ? 'filters__button--active' : ''; ?>"
-                           href="/<?= $sort_param ? "?sortby=$sort_param" : ''; ?>">
+                        <a class="filters__button filters__button--ellipse filters__button--all <?= $type_id ? '' : 'filters__button--active'; ?>"
+                           href="?sort_by=<?= $sort_by; ?>">
                             <span>Все</span>
                         </a>
                     </li>
                     <?php if ($content_types ?? false):
                               foreach ($content_types as $type): ?>
                     <li class="popular__filters-item filters__item">
-                        <a class="filters__button <?= $type_param === $type['id'] ? 'filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button"
-                           href="/?<?= http_build_query(['type' => $type['id'], 'sortby' => $_GET['sortby'] ?? 'view_count'], '', '&amp;'); ?>">
+                        <a class="filters__button <?= $type_id === $type['id'] ? 'filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button"
+                           href="?<?= "sort_by=$sort_by&type=$type[id]"; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
                             <svg class="filters__icon" width="<?= $type['icon_width']; ?>"
                                  height="<?= $type['icon_height']; ?>">
@@ -67,7 +67,7 @@
             <article class="popular__post post post-<?= $post['type_val']; ?>">
                 <header class="post__header">
                     <h2>
-                        <a href="post.php?id=<?= $post['id']; ?>">
+                        <a href="post.php?post_id=<?= $post['id']; ?>">
                             <!--здесь заголовок-->
                             <?= $post['header']; ?>
                         </a>
@@ -193,5 +193,11 @@
             </div>
         <?php endif; ?>
         </div>
+        <?php if ($pagination['all_posts_count'] > $show_limit): // кнопки скрыты, если страница всего одна ?>
+        <div class="popular__page-links">
+            <a class="popular__page-link popular__page-link--prev button button--gray" href="?<?= $pagination['prev_page']; ?>">Предыдущая страница</a>
+            <a class="popular__page-link popular__page-link--next button button--gray" href="?<?= $pagination['next_page']; ?>">Следующая страница</a>
+        </div>
+        <?php endif; ?>
     </div>
 </section>
