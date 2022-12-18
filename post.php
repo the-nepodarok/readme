@@ -17,10 +17,10 @@ $error_page = include_template('layout.php', [
 ]);
 
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT); // параметр запроса id поста
-settype($post_id, 'int');
+$post_id = intval($post_id); // обработка неправильного типа параметра url
 
 // проверка на существование поста, соответствующего id из параметра запроса
-$post_exists = fetch_from_db($db_connection, "SELECT id FROM post WHERE id = $post_id;", 'row');
+$post_exists = fetch_from_db($db_connection, "SELECT id FROM post WHERE id = $post_id", 'row');
 
 // обработка ошибки существовании публикации
 if (!$post_exists) {

@@ -85,7 +85,7 @@ $pagination = array(
     'all_posts_count' => $all_posts_count,
 );
 
-// защита от XXS
+// защита от XSS
 array_walk_recursive($posts, 'secure');
 
 //foreach ($posts as $key => $post) { // добавляем постам в массиве рандомные даты - the-nepodarok
