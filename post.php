@@ -8,8 +8,6 @@ $page_title = 'публикация';
 $user_name = 'the-nepodarok'; // укажите здесь ваше имя
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
-// подключение шаблона страницы об ошибке
-
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT); // параметр запроса id поста
 $post_id = intval($post_id); // приведение к целочисленному типу
 
