@@ -8,7 +8,7 @@
                 <b class="popular__sorting-caption sorting__caption">Сортировка:</b>
                 <ul class="popular__sorting-list sorting__list">
                     <li class="sorting__item sorting__item--popular">
-                        <a class="sorting__link <?= $sort_by === 'view_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=view_count<?= $type_id ? "&type=$type_id" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'view_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=view_count<?= $type_id ? "&type_id=$type_id" : ''; ?>">
                             <span>Популярность</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -16,7 +16,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link <?= $sort_by === 'like_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=like_count<?= $type_id ? "&type=$type_id" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'like_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=like_count<?= $type_id ? "&type_id=$type_id" : ''; ?>">
                             <span>Лайки</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -24,7 +24,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= $type_id ? "&type=$type_id" : ''; ?>">
+                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= $type_id ? "&type_id=$type_id" : ''; ?>">
                             <span>Дата</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -46,7 +46,7 @@
                               foreach ($content_types as $type): ?>
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button <?= $type_id === $type['id'] ? 'filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button"
-                           href="?<?= "sort_by=$sort_by&type=$type[id]"; ?>">
+                           href="?<?= "sort_by=$sort_by&type_id=$type[id]"; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
                             <svg class="filters__icon" width="<?= $type['icon_width']; ?>"
                                  height="<?= $type['icon_height']; ?>">
@@ -104,10 +104,10 @@
                         <?php case 'link': ?>
                 <!--содержимое для поста-ссылки-->
                 <div class="post-link__wrapper">
-                    <a class="post-link__external" href="http://<?= $post['link_text_content']; ?>" title="Перейти по ссылке">
+                    <a class="post-link__external" href="http://<?= prepare_link($post['link_text_content']); ?>" title="Перейти по ссылке">
                         <div class="post-link__info-wrapper">
                             <div class="post-link__icon-wrapper">
-                                <img src="https://www.google.com/s2/favicons?domain=<?= $post['link_text_content']; ?>" alt="Иконка">
+                                <img src="https://www.google.com/s2/favicons?domain=<?= prepare_link($post['link_text_content']); ?>" alt="Иконка">
                             </div>
                             <div class="post-link__info">
                                 <h3>
@@ -118,7 +118,7 @@
                         </div>
                         <span>
                             <!--здесь ссылка-->
-                            <?= $post['link_text_content']; ?>
+                            <?= prepare_link($post['link_text_content']); ?>
                         </span>
                     </a>
                 </div>
@@ -151,7 +151,9 @@
                         <a class="post__author-link" href="#" title="Автор">
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
+                                <?php if ($post['avatar']): ?>
                                 <img class="post__author-avatar" src="img/<?= $post['avatar']; ?>" alt="Аватар пользователя">
+                                <?php endif; ?>
                             </div>
                             <div class="post__info">
                                 <b class="post__author-name">
@@ -159,7 +161,7 @@
                                     <?= $post['user_name']; ?>
                                 </b>
                                 <?php $pd = $post['create_dt']; // alias для $post['date'] ?>
-                                <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?></time>
+                                <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd) . ' назад'; ?></time>
                             </div>
                         </a>
                     </div>
@@ -172,14 +174,14 @@
                                 <svg class="post__indicator-icon post__indicator-icon--like-active" width="20" height="17">
                                     <use xlink:href="#icon-heart-active"></use>
                                 </svg>
-                                <span>0</span>
+                                <span><?= $post['like_count']; ?></span>
                                 <span class="visually-hidden">количество лайков</span>
                             </a>
                             <a class="post__indicator post__indicator--comments button" href="#" title="Комментарии">
                                 <svg class="post__indicator-icon" width="19" height="17">
                                     <use xlink:href="#icon-comment"></use>
                                 </svg>
-                                <span>0</span>
+                                <span><?= $post['comment_count']; ?></span>
                                 <span class="visually-hidden">количество комментариев</span>
                             </a>
                         </div>

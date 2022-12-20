@@ -9,22 +9,18 @@ $user_name = 'the-nepodarok'; // укажите здесь ваше имя
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
 // подключение шаблона страницы об ошибке
-$error_page = include_template('layout.php', [
-    'is_auth' => $is_auth,
-    'user_name' => $user_name,
-    'page_title' => 'Ошибка 404',
-    'main_content' => include_template('page-404.php'),
-]);
 
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT); // параметр запроса id поста
-$post_id = intval($post_id); // обработка неправильного типа параметра url
-
-// проверка на существование поста, соответствующего id из параметра запроса
-$post_exists = fetch_from_db($db_connection, "SELECT id FROM post WHERE id = $post_id", 'row');
+$post_id = intval($post_id); // приведение к целочисленному типу
 
 // обработка ошибки существовании публикации
-if (!$post_exists) {
-    die(print $error_page);
+if (!isset($post_id)) {
+    die(print include_template('layout.php', [
+        'is_auth' => $is_auth,
+        'user_name' => $user_name,
+        'page_title' => 'Ошибка 404',
+        'main_content' => include_template('page-404.php', ['text_content' => 'Страница не существует']),
+    ]));
 }
 
 // получаем данные поста
@@ -32,6 +28,7 @@ $query = "
     SELECT p.*,
            u.avatar,
            u.user_name,
+           u.create_dt AS reg_date,
            ct.type_val
     FROM post AS p
         JOIN user AS u
@@ -43,62 +40,70 @@ $query = "
 
 $post = fetch_from_db($db_connection, $query, 'row');
 
+if (!$post) {
+    die(print include_template('layout.php', [
+        'is_auth' => $is_auth,
+        'user_name' => $user_name,
+        'page_title' => 'Ошибка 404',
+        'main_content' => include_template('page-404.php', ['text_content' => 'Публикация не найдена']),
+    ]));
+}
+
 $page_title = htmlspecialchars($post['header']); // обезопасить название страницы
+
+// массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
+$count_arr = [];
 
 // получаем кол-во публикаций от пользователя
 $user_id = $post['user_id'];
 $query = "
-    SELECT user_id,
-           COUNT(id) AS count
+    SELECT COUNT(id)
     FROM post
     WHERE user_id = $user_id
 ";
 
-$post_count = count_values($db_connection, $query);
+$count_arr['post_count'] = fetch_from_db($db_connection, $query, 'col', 'COUNT(id)');
 
 // получаем кол-во подписчиков у пользователя
 $query = "
-    SELECT followed_user_id,
-           COUNT(following_user_id) AS count
+    SELECT COUNT(id)
     FROM follower_list
     WHERE followed_user_id = $user_id
 ";
 
-$follower_count = count_values($db_connection, $query);
+$count_arr['follower_count'] = fetch_from_db($db_connection, $query, 'col', 'COUNT(id)');
 
 // получаем кол-во лайков у записи
 $query = "
-    SELECT post_id,
-        COUNT(user_id) AS count
+    SELECT COUNT(user_id)
     FROM fav_list
     WHERE post_id = $post_id
 ";
 
-$like_count = count_values($db_connection, $query);
+$count_arr['like_count'] = fetch_from_db($db_connection, $query, 'col', 'COUNT(user_id)');
 
 // получаем кол-во репостов записи
 $query = "
-    SELECT origin_post_id,
-        COUNT(id) AS count
+    SELECT COUNT(id)
     FROM post
     WHERE origin_post_id = $post_id
 ";
 
-$repost_count = count_values($db_connection, $query);
+$count_arr['repost_count'] = fetch_from_db($db_connection, $query, 'col', 'COUNT(id)');
 
 // получаем кол-во комментариев к записи
 $query = "
-    SELECT post_id,
-        COUNT(id) AS count
+    SELECT COUNT(id)
     FROM comment AS c
     WHERE post_id = $post_id
 ";
 
-$comment_count = count_values($db_connection, $query);
+$count_arr['comment_count'] = fetch_from_db($db_connection, $query, 'col', 'COUNT(id)');
 
 // получаем хэштеги записи
 $query = "
-    SELECT post_id, hashtag_name
+    SELECT post_id,
+           hashtag_name
     FROM post AS p
         JOIN post_hashtag_link AS phl
             ON post_id = p.id
@@ -107,47 +112,41 @@ $query = "
     WHERE post_id = $post_id
 ";
 
-$post_hashtag_list = fetch_from_db($db_connection, $query, 'all');
+$post_hashtag_list = fetch_from_db($db_connection, $query);
 
-// установка режима отображения комментариев
-$show_all_comments = filter_input(INPUT_GET, 'show_all_comments', FILTER_SANITIZE_STRING);
-// отображение всех комментариев при соответствующем запросе или их обрезание до $comment_limit
-$limit = $show_all_comments ?? "LIMIT $comment_limit";
+// проверка отображения комментариев
+$show_all_comments = isset($_GET['show_all_comments']);
 
 // получаем комментарии к записи
 $query = "
-    SELECT c.*, u.avatar, u.user_name
+    SELECT c.*,
+           u.avatar,
+           u.user_name
     FROM comment AS c
         JOIN user AS u
             ON c.user_id = u.id
     WHERE post_id = $post_id
-    ORDER BY c.create_dt DESC
-    $limit
-";
+    ORDER BY c.create_dt DESC" .
+    ($show_all_comments ? '' : " LIMIT $comment_limit") // отображение всех комментариев при соответствующем запросе или их обрезание до $comment_limit
+;
 
-$comment_list = fetch_from_db($db_connection, $query, 'all');
+$comment_list = fetch_from_db($db_connection, $query);
 
-// массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
-$count_arr = array(
-    'post_count' => $post_count,
-    'follower_count' => $follower_count,
-    'like_count' => $like_count,
-    'repost_count' => $repost_count,
-    'comment_count' => $comment_count,
-);
+// условие для скрытия комментариев при превышение лимита
+$hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comments;
 
 // отображение поста
 $post_type_template = include_template("post-$post[type_val]_template.php", ['post' => $post]);
 
 // подключение шаблонов
 $main_content = include_template('post_template.php', [
-        'comment_limit' => $comment_limit,
-        'post' => $post,
-        'post_type_template' => $post_type_template,
-        'count_arr' => $count_arr,
-        'post_hashtag_list' => $post_hashtag_list,
-        'comment_list' => $comment_list,
-        'show_all_comments' => $show_all_comments,
+    'comment_limit' => $comment_limit,
+    'post' => $post,
+    'post_type_template' => $post_type_template,
+    'count_arr' => $count_arr,
+    'post_hashtag_list' => $post_hashtag_list,
+    'comment_list' => $comment_list,
+    'hide_comments' => $hide_comments,
 ]);
 
 $layout_template = include_template('layout.php', [

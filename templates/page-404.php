@@ -3,7 +3,7 @@
     <section class="search">
         <div class="search__results-wrapper">
             <div class="search__no-results container">
-                <h2>Страница не найдена!</h2>
+                <h2><?= $text_content; ?></h2>
                     <p class="search__no-results-desc">
                         Попробуйте воспользоваться поиском или просто зайти в раздел &laquo;Популярное&raquo;, там живет самый крутой контент.
                     </p>

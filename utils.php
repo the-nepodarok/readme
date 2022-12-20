@@ -147,8 +147,6 @@ function format_date($date)
                 $result = $years . ' ' . get_noun_plural_form($years, 'год', 'года', 'лет');
             }
         }
-
-        $result .= ' назад';
     }
     return $result;
 }
@@ -156,14 +154,15 @@ function format_date($date)
 /**
  * Выполняет запрос в базу данных
  *
- * @param mysqli $src_db Переменная подключения к БД
- * @param string $query Переменная запроса
+ * @param mysqli $src_db Подключение к БД
+ * @param string $query Текст запроса
  * @param string $mode Режим выполнения функции:
- *        'all' - для вывода всех данных в виде двумерного массива,
- *        'row' - для вывода одной строки данных в виде одномерного ассоц. массива
- * @return array Полученная строка данных в виде, заданном режимом $mode
+ *        'default' - для вывода всех данных в виде двумерного массива,
+ *        'row' - для вывода одной строки данных в виде одномерного ассоц. массива,
+ *        'col' - для вывода значений указанного поля
+ * @return array Полученные данные в виде, заданном режимом $mode
  */
-function fetch_from_db(mysqli $src_db, string $query, string $mode = 'all') {
+function fetch_from_db(mysqli $src_db, string $query, string $mode = 'default', $col = '') {
     $result = mysqli_query($src_db, $query);
 
     if (!$result) {
@@ -172,11 +171,14 @@ function fetch_from_db(mysqli $src_db, string $query, string $mode = 'all') {
     }
 
     switch ($mode) {
-        case 'all':
-            $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
-            break;
         case 'row':
             $arr = mysqli_fetch_assoc($result);
+            break;
+        case 'col':
+            $arr = mysqli_fetch_assoc($result)[$col];
+            break;
+        default:
+            $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
             break;
     }
 
@@ -184,11 +186,10 @@ function fetch_from_db(mysqli $src_db, string $query, string $mode = 'all') {
 }
 
 /**
- * Выдаёт числовое значение из запроса в базу данных
+ * Приводит ссылки к единому виду, обрезая протокол
  *
- * @param mysqli $db Переменная подключения к БД
- * @param string $query Переменная запроса в БД
+ * @param string $link_text Текст ссылки
  */
-function count_values($db, $query) {
-    return fetch_from_db($db, $query, 'row')['count'];
+function prepare_link(string $link_text):string {
+    return str_replace(['http://', 'https://'], '', $link_text);
 }
