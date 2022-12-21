@@ -80,7 +80,7 @@
                 <blockquote>
                     <p>
                         <!--здесь текст-->
-                        <?= slice_string($post['text_content']); ?>
+                        <?= slice_string($post['text_content']); ?> 
                     </p>
                     <cite><?= $post['quote_origin'] ?></cite>
                 </blockquote>
