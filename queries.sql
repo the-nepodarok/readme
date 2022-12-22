@@ -1,10 +1,10 @@
 -- заполняем таблицу типов всеми возможными типами будущих записей
 INSERT INTO user
-    (user_email, user_name, user_password, user_avatar)
+    (user_email, user_name, user_password, user_avatar, user_reg_dt)
   VALUES
-    ('vladik@gmail.com', 'Владик', 'oiuy45', 'userpic.jpg'),
-    ('larisa@yandex.com', 'Лариса', 'shj4-sk', 'userpic-larisa-small.jpg'),
-    ('viktor@yahoo.com', 'Виктор', 'fb2656', 'userpic-mark.jpg');
+    ('vladik@gmail.com', 'Владик', 'oiuy45', 'userpic.jpg', '2020-11-04 17:58:52'),
+    ('larisa@yandex.com', 'Лариса', 'shj4-sk', 'userpic-larisa-small.jpg', '2016-02-09 09:18:22'),
+    ('viktor@yahoo.com', 'Виктор', 'fb2656', 'userpic-mark.jpg', '2022-10-11 11:18:22');
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO content_type
