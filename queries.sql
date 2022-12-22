@@ -1,6 +1,6 @@
 -- заполняем таблицу типов всеми возможными типами будущих записей
 INSERT INTO user
-    (email, user_name, password, avatar)
+    (user_email, user_name, user_password, user_avatar)
   VALUES
     ('vladik@gmail.com', 'Владик', 'oiuy45', 'userpic.jpg'),
     ('larisa@yandex.com', 'Лариса', 'shj4-sk', 'userpic-larisa-small.jpg'),
@@ -8,7 +8,7 @@ INSERT INTO user
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO content_type
-    (type_name, type_val, icon_width, icon_height)
+    (type_name, type_val, type_icon_width, type_icon_height)
   VALUES
     ('Текст', 'text', 20, 21),
     ('Цитата', 'quote', 21, 20),
@@ -18,7 +18,7 @@ INSERT INTO content_type
 
 -- "пишем" по комментарию к двум разным записям
 INSERT INTO post
-    (header, create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content)
+    (post_header, post_create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content)
   VALUES
     ('Цитата', '2022-12-04 07:58:52', 23, 2, 2, 'Мы в жизни любим только раз, а после ищем лишь похожих', 'Неизвестный автор', NULL, NULL),
     ('Игра Престолов', '2022-12-01 11:16:42', 32, 1, 1, 'Не могу дождаться начала финального сезона своего любимого сериала!', NULL, NULL, NULL),
@@ -51,17 +51,17 @@ VALUES
 
 -- создаём трёх пользователей
 INSERT INTO comment
-(comment_content, user_id, post_id, create_dt)
+(comment_content, user_id, post_id, comment_create_dt)
 VALUES
   ('Зря ждали, расходимся. Весь сериал запороли, как только могли', 1, 2, DEFAULT),
-  ('Если я правильно помню, автор цитаты - Дэвид Бекхэм', 2, 1, '2022-12-14 16:20:09'),
-  ('Красота!!!1!', 3, 3, '2022-07-14 16:23:09'),
-  ('Озеро Байкал – огромное древнее озеро в горах Сибири к северу от монгольской границы. Байкал считается самым глубоким озером в мире. Он окружен сетью пешеходных маршрутов, называемых Большой байкальской тропой. Деревня Листвянка, расположенная на западном берегу озера, – популярная отправная точка для летних экскурсий. Зимой здесь можно кататься на коньках и собачьих упряжках.', 3, 3, '2022-07-14 23:23:09'),
-  ('Я сам немного фотограф', 3, 3, DEFAULT);
+  ('Если я правильно помню, автор цитаты - Дэвид Бекхэм', 1, 1, '2022-12-14 16:20:09'),
+  ('Красота!!!1!', 2, 3, '2022-07-14 16:23:09'),
+  ('Озеро Байкал – огромное древнее озеро в горах Сибири к северу от монгольской границы. Байкал считается самым глубоким озером в мире. Он окружен сетью пешеходных маршрутов, называемых Большой байкальской тропой. Деревня Листвянка, расположенная на западном берегу озера, – популярная отправная точка для летних экскурсий. Зимой здесь можно кататься на коньках и собачьих упряжках.', 2, 3, '2022-07-14 23:23:09'),
+  ('Я сам немного фотограф', 1, 3, DEFAULT);
 
 -- добавляем один репост записи с рекламой академии
 INSERT INTO post
-  (header, create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content, is_repost, origin_post_id)
+  (post_header, post_create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content, is_repost, origin_post_id)
 VALUES
   ('Лучшие курсы', '2022-12-13 22:43:01', 24, 2, 5, NULL, NULL, NULL, 'http://www.htmlacademy.ru/', 1, 5);
 

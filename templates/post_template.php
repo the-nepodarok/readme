@@ -1,10 +1,10 @@
 <main class="page__main page__main--publication">
   <div class="container">
-    <h1 class="page__title page__title--publication"><?= $post['header']; ?></h1>
+    <h1 class="page__title page__title--publication"><?= $post['post_header']; ?></h1>
     <section class="post-details">
       <h2 class="visually-hidden">Публикация</h2>
-      <div class="post-details__wrapper">
-        <div class="post-details__main-block post post-<?= $post['type_val']; ?> post--details">
+      <div class="post-details__wrapper post-<?= $post['type_val']; ?>">
+        <div class="post-details__main-block post post--details">
           <?=$post_type_template; ?>
           <div class="post__indicators">
             <div class="post__buttons">
@@ -38,13 +38,13 @@
           </div>
           <ul class="post__tags">
             <?php foreach ($post_hashtag_list as $hashtag): // отображение списка хэштегов ?>
-            <li><a href="#"><?= '#' . $hashtag['hashtag_name'] ?? ''; ?></a></li>
+            <li><a href="#"><?= '#' . $hashtag['hashtag_name']; ?></a></li>
             <?php endforeach; ?>
           </ul>
           <div class="comments">
             <form class="comments__form form" action="#" method="post">
               <div class="comments__my-avatar">
-                <?php if ($post['avatar']): ?>
+                <?php if ($post['user_avatar']): ?>
                 <img class="comments__picture" src="img/userpic-medium.jpg" alt="Аватар пользователя">
                 <?php endif; ?>
               </div>
@@ -65,8 +65,8 @@
                 <li class="comments__item user">
                   <div class="comments__avatar">
                     <a class="user__avatar-link" href="#">
-                      <?php if ($comment['avatar']): ?>
-                      <img class="comments__picture" src="img/<?= $comment['avatar']; ?>" alt="Аватар пользователя">
+                      <?php if ($comment['user_avatar']): ?>
+                      <img class="comments__picture" src="img/<?= $comment['user_avatar']; ?>" alt="Аватар пользователя">
                       <?php endif; ?>
                     </a>
                   </div>
@@ -77,8 +77,8 @@
                             <?= $comment['user_name']; ?>
                         </span>
                       </a>
-                      <?php $cd = $comment['create_dt']; // alias для даты комментария ?>
-                      <time class="comments__time" datetime="<?= $cd; ?>"><?= format_date($cd) . ' назад'; ?></time>
+                      <?php $cd = $comment['comment_create_dt']; // alias для даты комментария ?>
+                      <time class="comments__time" datetime="<?= $cd; ?>"><?= format_date($cd); ?> назад</time>
                     </div>
                     <p class="comments__text">
                         <?= $comment['comment_content']; ?>
@@ -88,7 +88,7 @@
               <?php endforeach; ?>
               </ul>
               <?php if ($hide_comments): ?>
-              <a class="comments__more-link" href="?<?= "post_id=$post[id]"; ?>&show_all_comments">
+              <a class="comments__more-link" href="?<?= "post_id={$post['id']}"; ?>&show_all_comments">
                 <span>Показать все комментарии</span>
                 <sup class="comments__amount"><?= $count_arr['comment_count']; ?></sup>
               </a>
@@ -100,8 +100,8 @@
           <div class="post-details__user-info user__info">
             <div class="post-details__avatar user__avatar">
               <a class="post-details__avatar-link user__avatar-link" href="#">
-                <?php if ($post['avatar']): ?>
-                <img class="post-details__picture user__picture" src="img/<?= $post['avatar']; ?>" alt="Аватар пользователя">
+                <?php if ($post['user_avatar']): ?>
+                <img class="post-details__picture user__picture" src="img/<?= $post['user_avatar']; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </a>
             </div>

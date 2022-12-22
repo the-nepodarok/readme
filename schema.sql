@@ -6,21 +6,21 @@ USE readme;
 
 CREATE TABLE user
 (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  email     VARCHAR(128) NOT NULL UNIQUE,
-  user_name VARCHAR(64)  NOT NULL COMMENT 'имя пользователя',
-  password  CHAR(255)    NOT NULL,
-  avatar    VARCHAR(255)
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  user_reg_dt   DATETIME DEFAULT CURRENT_TIMESTAMP,
+  user_email    VARCHAR(128) NOT NULL UNIQUE,
+  user_name     VARCHAR(64)  NOT NULL COMMENT 'имя пользователя',
+  user_password CHAR(255)    NOT NULL,
+  user_avatar   VARCHAR(255)
 ) COMMENT 'таблица зарегистрированных пользователей';
 
 CREATE TABLE content_type
 (
-  id        TINYINT AUTO_INCREMENT PRIMARY KEY,
-  type_name VARCHAR(20) UNIQUE COMMENT 'название типа',
-  type_val  VARCHAR(16) UNIQUE COMMENT 'класс иконки типа',
-  icon_width TINYINT COMMENT 'ширина иконки',
-  icon_height TINYINT COMMENT 'высота иконки'
+  id               TINYINT AUTO_INCREMENT PRIMARY KEY,
+  type_name        VARCHAR(20) UNIQUE COMMENT 'название типа',
+  type_val         VARCHAR(16) UNIQUE COMMENT 'класс иконки типа',
+  type_icon_width  TINYINT COMMENT 'ширина иконки',
+  type_icon_height TINYINT COMMENT 'высота иконки'
 ) COMMENT 'типы постов';
 
 CREATE TABLE hashtag
@@ -31,19 +31,19 @@ CREATE TABLE hashtag
 
 CREATE TABLE post
 (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  header          VARCHAR(128) COMMENT 'заголовок поста',
-  text_content    TEXT,
-  quote_origin    VARCHAR(128) COMMENT 'автор/источник цитаты',
-  photo_content         VARCHAR(255),
-  video_content           VARCHAR(255) COMMENT 'ссылка на видео на YouTube',
-  link_text_content            VARCHAR(255) COMMENT 'ссылка на сторонний ресурс',
-  view_count      INT      DEFAULT 0 COMMENT 'кол-во просмотров',
-  user_id         INT,
-  is_repost       TINYINT  DEFAULT 0 COMMENT 'является ли репостом',
-  origin_post_id  INT COMMENT 'ссылка на оригинальный пост при репосте',
-  content_type_id TINYINT,
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  post_create_dt    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  post_header       VARCHAR(128) COMMENT 'заголовок поста',
+  text_content      TEXT,
+  quote_origin      VARCHAR(128) COMMENT 'автор/источник цитаты',
+  photo_content     VARCHAR(255),
+  video_content     VARCHAR(255) COMMENT 'ссылка на видео на YouTube',
+  link_text_content VARCHAR(255) COMMENT 'ссылка на сторонний ресурс',
+  view_count        INT      DEFAULT 0 COMMENT 'кол-во просмотров',
+  user_id           INT,
+  is_repost         TINYINT  DEFAULT 0 COMMENT 'является ли репостом',
+  origin_post_id    INT COMMENT 'ссылка на оригинальный пост при репосте',
+  content_type_id   TINYINT,
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (content_type_id) REFERENCES content_type (id),
   INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
@@ -66,11 +66,11 @@ CREATE TABLE post_hashtag_link
 
 CREATE TABLE comment
 (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  comment_content TEXT,
-  user_id         INT,
-  post_id         INT,
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  comment_create_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  comment_content   TEXT,
+  user_id           INT,
+  post_id           INT,
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (post_id) REFERENCES post (id),
   INDEX (user_id) COMMENT 'индекс для поиска по пользователям',
@@ -103,13 +103,13 @@ CREATE TABLE follower_list
 
 CREATE TABLE message
 (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  create_dt       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  message_content TEXT,
-  sender_id       INT COMMENT 'отправитель',
-  receiver_id     INT COMMENT 'получатель',
-  FOREIGN KEY (sender_id) REFERENCES user (id),
-  FOREIGN KEY (receiver_id) REFERENCES user (id),
-  INDEX (sender_id) COMMENT 'индекс для поиска по отправителю',
-  INDEX (receiver_id) COMMENT 'индекс для поиска по получателю'
+  id                  INT AUTO_INCREMENT PRIMARY KEY,
+  message_create_dt   DATETIME DEFAULT CURRENT_TIMESTAMP,
+  message_content     TEXT,
+  message_sender_id   INT COMMENT 'отправитель',
+  message_receiver_id INT COMMENT 'получатель',
+  FOREIGN KEY (message_sender_id) REFERENCES user (id),
+  FOREIGN KEY (message_receiver_id) REFERENCES user (id),
+  INDEX (message_sender_id) COMMENT 'индекс для поиска по отправителю',
+  INDEX (message_receiver_id) COMMENT 'индекс для поиска по получателю'
 ) COMMENT 'таблица личных сообщений';
