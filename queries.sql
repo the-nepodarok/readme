@@ -4,7 +4,8 @@ INSERT INTO user
   VALUES
     ('vladik@gmail.com', 'Владик', 'oiuy45', 'userpic.jpg', '2020-11-04 17:58:52'),
     ('larisa@yandex.com', 'Лариса', 'shj4-sk', 'userpic-larisa-small.jpg', '2016-02-09 09:18:22'),
-    ('viktor@yahoo.com', 'Виктор', 'fb2656', 'userpic-mark.jpg', '2022-10-11 11:18:22');
+    ('viktor@yahoo.com', 'Виктор', 'fb2656', 'userpic-mark.jpg', '2022-10-11 11:18:22'),
+    ('a.glu@mail.ru', 'Антон Глуханько', 't7znf5', 'userpic-medium.jpg', '2019-01-21 13:18:45');
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO content_type
@@ -18,7 +19,7 @@ INSERT INTO content_type
 
 -- "пишем" по комментарию к двум разным записям
 INSERT INTO post
-    (post_header, post_create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content)
+    (post_header, create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content)
   VALUES
     ('Цитата', '2022-12-04 07:58:52', 23, 2, 2, 'Мы в жизни любим только раз, а после ищем лишь похожих', 'Неизвестный автор', NULL, NULL),
     ('Игра Престолов', '2022-12-01 11:16:42', 32, 1, 1, 'Не могу дождаться начала финального сезона своего любимого сериала!', NULL, NULL, NULL),
@@ -61,7 +62,7 @@ VALUES
 
 -- добавляем один репост записи с рекламой академии
 INSERT INTO post
-  (post_header, post_create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content, is_repost, origin_post_id)
+  (post_header, create_dt, view_count, user_id, content_type_id, text_content, quote_origin, photo_content, link_text_content, is_repost, origin_post_id)
 VALUES
   ('Лучшие курсы', '2022-12-13 22:43:01', 24, 2, 5, NULL, NULL, NULL, 'http://www.htmlacademy.ru/', 1, 5);
 

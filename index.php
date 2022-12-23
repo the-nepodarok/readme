@@ -20,7 +20,7 @@ if (!in_array($type_id, $type_options)) {
 
 // Параметр запроса сортировки; по умолчанию задаётся сортировка по кол-ву просмотров
 $sort_by = filter_input(INPUT_GET, 'sort_by', FILTER_SANITIZE_SPECIAL_CHARS);
-$sort_options = array('view_count', 'like_count', 'post_create_dt');
+$sort_options = array('view_count', 'like_count', 'create_dt');
 if (!in_array($sort_by, $sort_options)) {
     $sort_by = $sort_options[0];
 }
@@ -60,7 +60,12 @@ if ($sort_by_likes) {
     $query .= ' GROUP BY fl.post_id';
 } // сортировка по лайкам
 
-$query .= " ORDER BY $sort_by DESC";
+// добавление префикса таблицы
+if ($sort_by === 'like_count') {
+    $query .= " ORDER BY $sort_by DESC";
+} else {
+    $query .= " ORDER BY p.$sort_by DESC";
+}
 // запрос сформирован
 
 // список всех постов
@@ -99,26 +104,18 @@ if ($current_page < 1) {
 $posts = array_slice($all_posts, (($current_page - 1) * $show_limit), $show_limit, true);
 
 // параметры текущего адреса
-$url_param = array('type_id' => $type_id,
-                   'sort_by' => $sort_by);
-
-// массив со всеми возможными страницами перед текущей
-$url_less = range(1, $current_page - 1);
-if (in_array(0, $url_less)) {
-    $url_less = array_diff($url_less, [0]);
-}
-
-// массив со всеми возможными страницами после текущей
-$url_more = range($current_page + 1, $page_count);
-if (in_array($page_count + 1, $url_more)) {
-    $url_more = array_diff($url_more, [$page_count + 1]);
-}
+$url_param = array(
+    'type_id' => $type_id,
+    'sort_by' => $sort_by
+);
 
 // формирование адреса для предыдущей страницы
-$prev_page = http_build_query($url_param + ['page' => $url_less[array_key_last($url_less)]], '', '&');
+$url_less = $url_param + ['page' => ($current_page - (int)($current_page > 1))];
+$prev_page = http_build_query($url_less , '', '&');
 
-// формирование адреса для следующей страницы
-$next_page = http_build_query($url_param + ['page' => $url_more[array_key_first($url_more)]], '', '&');
+//// формирование адреса для следующей страницы
+$url_more = $url_param + ['page' => ($current_page + (int)($current_page < $page_count))];
+$next_page = http_build_query($url_more, '', '&');
 
 // массив с данными для пагинации
 $pagination = array(
@@ -156,4 +153,3 @@ $layout_template = include_template('layout.php', [
 ]);
 
 print($layout_template);
-?>

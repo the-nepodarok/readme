@@ -29,7 +29,7 @@
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-repost"></use>
                 </svg>
-                <span><?= $count_arr['repost_count'] ?? 0; ?></span>
+                <span><?= $count_arr['repost_count']; ?></span>
                 <span class="visually-hidden">количество репостов</span>
               </a>
             </div>
@@ -38,14 +38,14 @@
           </div>
           <ul class="post__tags">
             <?php foreach ($post_hashtag_list as $hashtag): // отображение списка хэштегов ?>
-            <li><a href="#"><?= '#' . $hashtag['hashtag_name']; ?></a></li>
+            <li><a href="#"><?= '#' . $hashtag; ?></a></li>
             <?php endforeach; ?>
           </ul>
           <div class="comments">
             <form class="comments__form form" action="#" method="post">
               <div class="comments__my-avatar">
                 <?php if ($post['user_avatar']): ?>
-                <img class="comments__picture" src="img/userpic-medium.jpg" alt="Аватар пользователя">
+                <img class="comments__picture" src="img/<?= $post['user_avatar']; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </div>
               <div class="form__input-section _form__input-section--error"> <!-- не забыть вернуть -->
@@ -88,7 +88,7 @@
               <?php endforeach; ?>
               </ul>
               <?php if ($hide_comments): ?>
-              <a class="comments__more-link" href="?<?= "post_id={$post['id']}"; ?>&show_all_comments">
+              <a class="comments__more-link" href="?<?= 'post_id=' . $post['id']; ?>&show_all_comments">
                 <span>Показать все комментарии</span>
                 <sup class="comments__amount"><?= $count_arr['comment_count']; ?></sup>
               </a>

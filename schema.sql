@@ -32,7 +32,7 @@ CREATE TABLE hashtag
 CREATE TABLE post
 (
   id                INT AUTO_INCREMENT PRIMARY KEY,
-  post_create_dt    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  create_dt         DATETIME DEFAULT CURRENT_TIMESTAMP,
   post_header       VARCHAR(128) COMMENT 'заголовок поста',
   text_content      TEXT,
   quote_origin      VARCHAR(128) COMMENT 'автор/источник цитаты',

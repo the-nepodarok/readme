@@ -158,7 +158,8 @@ function format_date($date)
  * @param string $mode Режим выполнения функции:
  *        'all' - для вывода всех данных в виде двумерного массива,
  *        'row' - для вывода одной строки данных в виде одномерного ассоц. массива,
- *        'col' - для вывода значений указанного поля
+ *        'col' - для вывода всех значений искомого поля в виде нумерованного массива,
+ *        'one' - для вывода одного значения поля в виде строки
  * @return mixed Полученные данные в виде, заданном режимом $mode
  */
 function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
@@ -184,7 +185,7 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
             $data = array_column($data, 0);
             break;
         case 'one':
-            $data = mysqli_fetch_row($result)[1];
+            $data = mysqli_fetch_row($result)[0];
             break;
     }
 
@@ -198,11 +199,12 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
  */
 function trim_link(string $link_text): string
 {
-    if (parse_url($link_text, PHP_URL_SCHEME)) {
-        $link_text = str_replace([
-            'http://',
-            'https://'
-        ], '', $link_text);
+    $scheme = parse_url($link_text, PHP_URL_SCHEME);
+
+    if ($scheme) {
+        $link_text = 'https' . str_replace($scheme, '', $link_text);
+    } else {
+        $link_text = 'https://' . $link_text;
     }
 
     return $link_text;

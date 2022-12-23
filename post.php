@@ -13,11 +13,11 @@ $post_id = intval($post_id); // приведение к целочисленно
 
 // обработка ошибки существовании публикации
 if (!isset($post_id) || $post_id === 0) {
-    die(print include_template('layout.php', [
+    die(include_template('layout.php', [
         'is_auth' => $is_auth,
         'user_name' => $user_name,
-        'page_title' => 'Ошибка 404',
-        'main_content' => include_template('page-404.php', ['text_content' => 'Страница не существует']),
+        'page_title' => 'Ошибка идентификатора',
+        'main_content' => include_template('page-404.php', ['text_content' => 'Запрос сформирован неверно!']),
     ]));
 }
 
@@ -39,7 +39,7 @@ $query = "
 $post = get_data_from_db($db_connection, $query, 'row');
 
 if (!$post) {
-    die(print include_template('layout.php', [
+    die(include_template('layout.php', [
         'is_auth' => $is_auth,
         'user_name' => $user_name,
         'page_title' => 'Ошибка 404',
@@ -48,7 +48,7 @@ if (!$post) {
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
-$page_title = 'публикация. ' . htmlspecialchars($post['post_header']); // сформировать заголовок страницы
+$page_title = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
 
 // приведение ссылок к формату
 if ($post['link_text_content']) {
@@ -60,53 +60,23 @@ $count_arr = [];
 
 // получаем кол-во публикаций от пользователя
 $user_id = $post['user_id'];
-$query = "
-    SELECT user_id,
-           COUNT(id)
-    FROM post
-    WHERE user_id = $user_id
-";
-
+$query = "SELECT COUNT(id) FROM post WHERE user_id = $user_id";
 $count_arr['post_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во подписчиков у пользователя
-$query = "
-    SELECT followed_user_id,
-           COUNT(id)
-    FROM follower_list
-    WHERE followed_user_id = $user_id
-";
-
+$query = "SELECT COUNT(id) FROM follower_list WHERE followed_user_id = $user_id";
 $count_arr['follower_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во лайков у записи
-$query = "
-    SELECT post_id,
-           COUNT(user_id)
-    FROM fav_list
-    WHERE post_id = $post_id
-";
-
+$query = "SELECT COUNT(id) FROM fav_list WHERE post_id = $post_id";
 $count_arr['like_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во репостов записи
-$query = "
-    SELECT origin_post_id,
-           COUNT(id)
-    FROM post
-    WHERE origin_post_id = $post_id
-";
-
+$query = "SELECT COUNT(id) FROM post WHERE origin_post_id = $post_id";
 $count_arr['repost_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во комментариев к записи
-$query = "
-    SELECT post_id,
-           COUNT(id)
-    FROM comment AS c
-    WHERE post_id = $post_id
-";
-
+$query = "SELECT COUNT(id) FROM comment AS c WHERE post_id = $post_id";
 $count_arr['comment_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем хэштеги записи
@@ -120,7 +90,7 @@ $query = "
     WHERE phl.post_id = $post_id
 ";
 
-$post_hashtag_list = get_data_from_db($db_connection, $query);
+$post_hashtag_list = get_data_from_db($db_connection, $query, 'col');
 array_walk_recursive($post_hashtag_list, 'secure'); // очистка хэштегов от вредоносного кода
 
 // проверка отображения комментариев
@@ -135,9 +105,12 @@ $query = "
         JOIN user AS u
             ON c.user_id = u.id
     WHERE post_id = $post_id
-    ORDER BY c.comment_create_dt DESC" .
-    ($show_all_comments ? '' : " LIMIT $comment_limit") // отображение всех комментариев при соответствующем запросе или их обрезание до $comment_limit
-;
+    ORDER BY c.comment_create_dt DESC";
+
+// отображение всех комментариев при соответствующем запросе или их обрезание до $comment_limit
+if (!$show_all_comments) {
+    $query.= " LIMIT $comment_limit";
+}
 
 $comment_list = get_data_from_db($db_connection, $query);
 array_walk_recursive($comment_list, 'secure'); // очистка комментариев от вредоносного кода
@@ -146,7 +119,7 @@ array_walk_recursive($comment_list, 'secure'); // очистка коммент�
 $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comments;
 
 // отображение поста
-$post_type_template = include_template("post-{$post['type_val']}_template.php", ['post' => $post]);
+$post_type_template = include_template('post-' . $post['type_val'] . '_template.php', ['post' => $post]);
 
 // подключение шаблонов
 $main_content = include_template('post_template.php', [

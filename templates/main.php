@@ -24,7 +24,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link <?= $sort_by === 'post_create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=post_create_dt<?= "$type_filter_url"; ?>">
+                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= "$type_filter_url"; ?>">
                             <span>Дата</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -44,8 +44,7 @@
                     <?php if ($content_types ?? false):
                               foreach ($content_types as $type): ?>
                     <li class="popular__filters-item filters__item">
-                        <a class="filters__button<?= $type_id === $type['id'] ? ' filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button"
-                           href="?<?= "sort_by=$sort_by&type_id={$type['id']}"; ?>">
+                        <a class="filters__button<?= $type_id === $type['id'] ? ' filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button" href="?<?= 'sort_by=' . $sort_by . '&type_id=' . $type['id']; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
                             <svg class="filters__icon" width="<?= $type['type_icon_width']; ?>" height="<?= $type['type_icon_height']; ?>">
                                 <use xlink:href="#icon-filter-<?= $type['type_val']; ?>"></use>
@@ -78,7 +77,7 @@
                 <blockquote>
                     <p>
                         <!--здесь текст-->
-                        <?= slice_string($post['text_content'], "post.php?post_id={$post['id']}"); ?>
+                        <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
                     </p>
                     <cite><?= $post['quote_origin'] ?></cite>
                 </blockquote>
@@ -88,7 +87,7 @@
                 <!--содержимое для поста-текста-->
                 <p>
                     <!--здесь текст-->
-                    <?= slice_string($post['text_content'], "post.php?post_id={$post['id']}"); ?>
+                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
                 </p>
                         <?php break; ?>
 
@@ -102,10 +101,10 @@
                         <?php case 'link': ?>
                 <!--содержимое для поста-ссылки-->
                 <div class="post-link__wrapper">
-                    <a class="post-link__external" href="https://<?= $post['link_text_content']; ?>" target="_blank" title="Перейти по ссылке">
+                    <a class="post-link__external" href="<?= $post['link_text_content']; ?>" target="_blank" title="Перейти по ссылке">
                         <div class="post-link__info-wrapper">
                             <div class="post-link__icon-wrapper">
-                                <img src="https://www.google.com/s2/favicons?domain=<?= parse_url('https://' . $post['link_text_content'], PHP_URL_HOST); ?>" alt="Иконка">
+                                <img src="https://www.google.com/s2/favicons?domain=<?= parse_url($post['link_text_content'], PHP_URL_HOST); ?>" alt="Иконка">
                             </div>
                             <div class="post-link__info">
                                 <h3>
@@ -158,7 +157,7 @@
                                     <!--здесь имя пользоателя-->
                                     <?= $post['user_name']; ?>
                                 </b>
-                                <?php $pd = $post['post_create_dt']; // alias для $post['date'] ?>
+                                <?php $pd = $post['create_dt']; // alias для $post['date'] ?>
                                 <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?> назад</time>
                             </div>
                         </a>
