@@ -3,9 +3,12 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db.php';
 
-$is_auth = rand(0, 1);
-$page_title = 'популярное';
-$user_name = 'the-nepodarok'; // укажите здесь ваше имя
+// массив с данными страницы и пользователя
+$params = array(
+    'is_auth' => $is_auth = rand(0, 1),
+    'page_title' => $page_title = 'популярное',
+    'user_name' => $user_name = 'the-nepodarok', // укажите здесь ваше имя
+);
 
 // получение типов контента
 $query = 'SELECT * FROM content_type';
@@ -33,13 +36,8 @@ $query = 'SELECT p.*,
              u.user_name,
              ct.type_val,
              ct.type_name,
-             (SELECT COUNT(user_id) FROM fav_list AS fl WHERE post_id = p.id) AS like_count,
+             (SELECT COUNT(id) FROM fav_list AS fl WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment AS c WHERE c.post_id = p.id) AS comment_count';
-
-if ($sort_by_likes) {
-    $query .= ", fl.post_id,
-               COUNT(fl.user_id) AS like_count";
-} // сортировка по лайкам
 
 $query .= " FROM post AS p
                JOIN user AS u
@@ -56,16 +54,8 @@ if ($type_id) {
     $query .= " WHERE p.content_type_id = $type_id";
 } // фильтрация по типу
 
-if ($sort_by_likes) {
-    $query .= ' GROUP BY fl.post_id';
-} // сортировка по лайкам
-
 // добавление префикса таблицы
-if ($sort_by === 'like_count') {
-    $query .= " ORDER BY $sort_by DESC";
-} else {
-    $query .= " ORDER BY p.$sort_by DESC";
-}
+$query .= ' ORDER BY ' . ($sort_by_likes ? '' : 'p.') . $sort_by . ' DESC';
 // запрос сформирован
 
 // список всех постов
@@ -106,7 +96,7 @@ $posts = array_slice($all_posts, (($current_page - 1) * $show_limit), $show_limi
 // параметры текущего адреса
 $url_param = array(
     'type_id' => $type_id,
-    'sort_by' => $sort_by
+    'sort_by' => $sort_by,
 );
 
 // формирование адреса для предыдущей страницы
@@ -145,11 +135,4 @@ $main_content = include_template('main.php', [
     'show_pagination' => $show_pagination,
 ]);
 
-$layout_template = include_template('layout.php', [
-    'page_title' => $page_title,
-    'is_auth' => $is_auth,
-    'user_name' => $user_name,
-    'main_content' => $main_content,
-]);
-
-print($layout_template);
+print build_page('layout.php', $params, $main_content);

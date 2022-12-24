@@ -8,7 +8,7 @@
                 <b class="popular__sorting-caption sorting__caption">Сортировка:</b>
                 <ul class="popular__sorting-list sorting__list">
                     <li class="sorting__item sorting__item--popular">
-                        <a class="sorting__link<?= $sort_by === 'view_count' ? ' sorting__link--active' : ''; ?>" href="?sort_by=view_count<?= "$type_filter_url"; ?>">
+                        <a class="sorting__link<?= $sort_by === 'view_count' ? ' sorting__link--active' : ''; ?>" href="?sort_by=view_count<?= $type_filter_url; ?>">
                             <span>Популярность</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -16,7 +16,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link <?= $sort_by === 'like_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=like_count<?= "$type_filter_url"; ?>">
+                        <a class="sorting__link <?= $sort_by === 'like_count' ? 'sorting__link--active' : ''; ?>" href="?sort_by=like_count<?= $type_filter_url; ?>">
                             <span>Лайки</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>
@@ -24,7 +24,7 @@
                         </a>
                     </li>
                     <li class="sorting__item">
-                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= "$type_filter_url"; ?>">
+                        <a class="sorting__link <?= $sort_by === 'create_dt' ? 'sorting__link--active' : ''; ?>" href="?sort_by=create_dt<?= $type_filter_url; ?>">
                             <span>Дата</span>
                             <svg class="sorting__icon" width="10" height="12">
                                 <use xlink:href="#icon-sort"></use>

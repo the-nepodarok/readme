@@ -171,8 +171,6 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
         exit();
     }
 
-    $data = [];
-
     switch ($mode) {
         case 'all':
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -186,6 +184,9 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
             break;
         case 'one':
             $data = mysqli_fetch_row($result)[0];
+            break;
+        default:
+            $data = [];
             break;
     }
 
@@ -208,4 +209,15 @@ function trim_link(string $link_text): string
     }
 
     return $link_text;
+}
+
+/**
+ * Подгатавливает шаблон страницы
+ *
+ * @param string $page Название файла шаблона
+ * @param array $params Массив с данными для передачи из сценария в шаблон
+ * @param string $main_content Основное содержимое страницы, передаваемое в шаблон
+ */
+function build_page($page, $params, $main_content): string {
+    return include_template($page, $params + ['main_content' => $main_content]);
 }

@@ -3,22 +3,23 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db.php';
 
-$is_auth = rand(0, 1);
-$page_title = 'публикация';
-$user_name = 'the-nepodarok'; // укажите здесь ваше имя
+// массив с данными страницы и пользователя
+$params = array(
+    'is_auth' => $is_auth = rand(0, 1),
+    'page_title' => $page_title = 'публикация',
+    'user_name' => $user_name = 'the-nepodarok', // укажите здесь ваше имя
+);
+
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
-$post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT); // параметр запроса id поста
+// параметр запроса id поста
+$post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 $post_id = intval($post_id); // приведение к целочисленному типу
 
-// обработка ошибки существовании публикации
+// обработка ошибки запроса
 if (!isset($post_id) || $post_id === 0) {
-    die(include_template('layout.php', [
-        'is_auth' => $is_auth,
-        'user_name' => $user_name,
-        'page_title' => 'Ошибка идентификатора',
-        'main_content' => include_template('page-404.php', ['text_content' => 'Запрос сформирован неверно!']),
-    ]));
+    $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
+    die(build_page('layout.php', $params, $error_page));
 }
 
 // получаем данные поста
@@ -38,13 +39,10 @@ $query = "
 
 $post = get_data_from_db($db_connection, $query, 'row');
 
+// обработка ошибки несуществующей публикации
 if (!$post) {
-    die(include_template('layout.php', [
-        'is_auth' => $is_auth,
-        'user_name' => $user_name,
-        'page_title' => 'Ошибка 404',
-        'main_content' => include_template('page-404.php', ['text_content' => 'Публикация не найдена']),
-    ]));
+    $error_page = include_template('page-404.php', ['main_content' => 'Публикация не найдена']);
+    die(build_page('layout.php', $params, $error_page));
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
@@ -131,11 +129,5 @@ $main_content = include_template('post_template.php', [
     'hide_comments' => $hide_comments,
 ]);
 
-$layout_template = include_template('layout.php', [
-    'page_title' => $page_title,
-    'is_auth' => $is_auth,
-    'user_name' => $user_name,
-    'main_content' => $main_content,
-]);
-
-print $layout_template;
+// подключение layout
+print build_page('layout.php', $params, $main_content);
