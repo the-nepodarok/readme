@@ -187,7 +187,6 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
             break;
         default:
             $data = [];
-            break;
     }
 
     return $data;

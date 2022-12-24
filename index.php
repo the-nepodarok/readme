@@ -36,14 +36,13 @@ $query = 'SELECT p.*,
              u.user_name,
              ct.type_val,
              ct.type_name,
-             (SELECT COUNT(id) FROM fav_list AS fl WHERE post_id = p.id) AS like_count,
-             (SELECT COUNT(id) FROM comment AS c WHERE c.post_id = p.id) AS comment_count';
-
-$query .= " FROM post AS p
-               JOIN user AS u
-                   ON p.user_id = u.id
-               JOIN content_type AS ct
-                   ON p.content_type_id = ct.id";
+             (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
+             (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
+          FROM post AS p
+             JOIN user AS u
+                ON p.user_id = u.id
+             JOIN content_type AS ct
+                ON p.content_type_id = ct.id';
 
 if ($sort_by_likes) {
     $query .= " JOIN fav_list AS fl
