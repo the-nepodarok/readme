@@ -6,12 +6,13 @@ date_default_timezone_set('Europe/Moscow');
  * Обрезает текст до заданного предела
  *
  * @param string $string Исходный текст в виде строки
+ * @param string $link Текст ссылки для перехода к полному тексту
  * @param number $max_post_length Максимальное количество символов
  * @return string Возвращает строку, обрезанную до $max_post_length, либо исходную строку без изменений,
  * если лимит символов не превышен
  */
 
-function slice_string($string, $max_post_length = 300)
+function slice_string($string, $link = '', $max_post_length = 300)
 {
     $result_string = trim($string);
 
@@ -25,10 +26,10 @@ function slice_string($string, $max_post_length = 300)
             $i++;
         }
 
-        $result_string = '<p>' . trim(
+        $result_string = trim(
                 $result_string,
                 '/ :–-,;'
-            ) . '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
+            ) . '...' . '<a class="post-text__more-link" href="' . $link . '">Читать далее</a>';
         // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
@@ -64,7 +65,6 @@ function secure(&$value)
     if (is_string($value)) {
         $value = htmlspecialchars($value);
     }
-        return $value;
 }
 
 /**
@@ -105,7 +105,6 @@ function format_date($date)
     if ($diff->invert === 0) {
         $result = 'Дата ещё не наступила!';
     } else {
-
         $minutes_in_hour = 60; // Кол-во минут в 1 часе
         $hours_in_day = 24; // Кол-во часов в 1 сутках;
 
@@ -123,7 +122,6 @@ function format_date($date)
                 :
                 $minutes . ' минут' . get_noun_plural_form($minutes, 'у', 'ы', '');
         } else {
-
             $days_in_week = 7; // Кол-во дней в 1 неделе;
             $days_in_month = 30; // Кол-во дней в 1 месяце;
             $days_in_year = 365; // Кол-во дней в 1 году;
@@ -147,21 +145,25 @@ function format_date($date)
                 $years = ($days >= $days_in_year / 2) ? $years++ : $years;
                 $result = $years . ' ' . get_noun_plural_form($years, 'год', 'года', 'лет');
             }
-
-            $result .= ' назад';
         }
     }
     return $result;
 }
 
 /**
- * Выполняет запрос типа SELECT в базу данных
+ * Выполняет запрос в базу данных
  *
- * @param mysqli $src_db Переменная подключения к БД
- * @param string $query Переменная запроса
- * @return array Полученные данные из базы данных в виде массива
+ * @param mysqli $src_db Подключение к БД
+ * @param string $query Текст запроса
+ * @param string $mode Режим выполнения функции:
+ *        'all' - для вывода всех данных в виде двумерного массива,
+ *        'row' - для вывода одной строки данных в виде одномерного ассоц. массива,
+ *        'col' - для вывода всех значений искомого поля в виде нумерованного массива,
+ *        'one' - для вывода одного значения поля в виде строки
+ * @return mixed Полученные данные в виде, заданном режимом $mode
  */
-function get_data_from_db(mysqli $src_db, string $query) {
+function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
+{
     $result = mysqli_query($src_db, $query);
 
     if (!$result) {
@@ -169,7 +171,52 @@ function get_data_from_db(mysqli $src_db, string $query) {
         exit();
     }
 
-    $arr = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    switch ($mode) {
+        case 'all':
+            $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            break;
+        case 'row':
+            $data = mysqli_fetch_assoc($result);
+            break;
+        case 'col':
+            $data = mysqli_fetch_all($result);
+            $data = array_column($data, 0);
+            break;
+        case 'one':
+            $data = mysqli_fetch_row($result)[0];
+            break;
+        default:
+            $data = [];
+    }
 
-    return $arr;
+    return $data;
+}
+
+/**
+ * Приводит ссылки к единому виду, обрезая протокол
+ *
+ * @param string $link_text Текст ссылки
+ */
+function trim_link(string $link_text): string
+{
+    $scheme = parse_url($link_text, PHP_URL_SCHEME);
+
+    if ($scheme) {
+        $link_text = 'https' . str_replace($scheme, '', $link_text);
+    } else {
+        $link_text = 'https://' . $link_text;
+    }
+
+    return $link_text;
+}
+
+/**
+ * Подгатавливает шаблон страницы
+ *
+ * @param string $page Название файла шаблона
+ * @param array $params Массив с данными для передачи из сценария в шаблон
+ * @param string $main_content Основное содержимое страницы, передаваемое в шаблон
+ */
+function build_page($page, $params, $main_content): string {
+    return include_template($page, $params + ['main_content' => $main_content]);
 }
