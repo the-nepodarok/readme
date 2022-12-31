@@ -217,6 +217,190 @@ function trim_link(string $link_text): string
  * @param array $params Массив с данными для передачи из сценария в шаблон
  * @param string $main_content Основное содержимое страницы, передаваемое в шаблон
  */
-function build_page($page, $params, $main_content): string {
+function build_page($page, $params, $main_content): string
+{
     return include_template($page, $params + ['main_content' => $main_content]);
+}
+
+/**
+ * Возвращает значение поля input из данных формы
+ *
+ * @param string $name Атрибут name поля input
+ */
+function getPostVal($name)
+{
+    return $_POST[$name] ?? '';
+}
+
+/**
+ * Валидирует загруженный файл
+ *
+ * @param string $page Название поля input, из которого загружается файл
+ * @param array $allowed_types Массив с разрешёнными MIME-типами файлов
+ * @return boolean Булево значение проверки
+ */
+function validateFile($resource, $allowed_types)
+{
+    $validity = false;
+    if (isset($_FILES[$resource]) && !empty($_FILES[$resource]['name'])) {
+        $file_info = finfo_open(FILEINFO_MIME_TYPE);
+        $file_name = $_FILES[$resource]['tmp_name'];
+        $file_size = $_FILES[$resource]['size'];
+        $file_type = finfo_file($file_info, $file_name);
+
+        if (in_array($file_type, $allowed_types) && $file_size < 200000) {
+            $validity = true;
+        }
+    }
+    return $validity;
+}
+
+/**
+ * Производит валидацию полей формы
+ *
+ * @param string $type Модификатор запроса типа
+ * @return array Массив с ошибками валидации
+ */
+function validateField($type)
+{
+    $errors = [];
+    $required_fields = [];
+
+    // типы файлов, допустимых для загрузки в форме
+    $allowed_file_types = array(
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+    );
+
+    // список обязательных полей варьируется в зависимости от типа поста
+    switch ($type) {
+        case 'photo':
+            $required_fields = [
+                'photo-heading' => 'Заголовок',
+                'userpic_file_photo' => 'Выбрать фото',
+            ];
+            break;
+        case 'text':
+            $required_fields = [
+                'text-heading' => 'Заголовок',
+                'post-text' => 'Текст поста',
+            ];
+            break;
+        case 'quote':
+            $required_fields = [
+                'quote-heading' => 'Заголовок',
+                'cite-text' => 'Текст цитаты',
+                'quote-author' => 'Автор',
+            ];
+            break;
+        case 'video':
+            $required_fields = [
+                'video-heading' => 'Заголовок',
+                'video-url' => 'Ссылка YouTube',
+            ];
+            break;
+        case 'link':
+            $required_fields = [
+                'link-heading' => 'Заголовок',
+                'post-link' => 'Ссылка',
+            ];
+    }
+
+    // проверка обязательных к заполнению полей
+    foreach ($required_fields as $key => $value) {
+        if (empty($_POST[$key])) {
+
+            // Обработка обязательного поля загрузки изображения
+            if ($key === 'userpic_file_photo') {
+
+                // валидация загруженного файла
+                if (!validateFile($key, $allowed_file_types)) {
+
+                    // поле со ссылкой обрабатывается, если файл не был приложен или не прошёл валидацию
+                    if ($_POST['photo-url']) {
+                        $photo_url = $_POST['photo-url'];
+                        $err_msg = 'Ссылка из интернета. Введите действующую ссылку на изображение в формате jpg, png или gif.';
+
+                        // проверка валидности ссылки
+                        if (parse_url($photo_url, PHP_URL_PATH) && filter_var($photo_url, FILTER_VALIDATE_URL)) {
+
+                            // проверка доступности и работоспособности ссылки
+                            $response = get_headers($photo_url);
+                            if (stripos($response[0], "200 OK")) {
+                                $file = uploadFileFromURL('photo-url');
+                                $file_type = finfo_open(FILEINFO_MIME_TYPE);
+                                $file_type = finfo_file($file_type, $file);
+
+                                // проверка типа загружаемого файла
+                                if (!in_array($file_type, $allowed_file_types)) {
+                                    $errors['photo-url'] = $err_msg;
+                                }
+                            } else {
+                                $errors['photo-url'] = $err_msg;
+                            }
+                        } else {
+                            $errors['photo-url'] = $err_msg;
+                        }
+                    } else {
+                        $errors[$key] = $value . '. Загрузите картинку в формате jpg, png или gif. Максимальный размер файла: 200Кб.';
+                    }
+                }
+            } else {
+                $errors[$key] = $value . '. Это поле должно быть заполнено.';
+            }
+        } elseif ($key === 'video-url') { // проверка валидности ссылки на youtube
+            if (filter_var($_POST[$key], FILTER_VALIDATE_URL)) {
+                if (!check_youtube_url($_POST[$key])) {
+                    $errors[$key] = $value . '. ' . check_youtube_url($_POST[$key]);
+                }
+            } else {
+                $errors[$key] = $value . '. URL должен быть корректным';
+            }
+        } elseif ($key === 'post-link') { // проверка ссылки на валидность
+            if (!filter_var($_POST[$key], FILTER_VALIDATE_URL)) {
+                $errors[$key] = $value . '. URL должен быть корректным';
+            }
+        }
+    }
+    return $errors;
+}
+
+/**
+ * Загружает файл из input с типом file и перемещает полученный файл в папку uploads в корне проекта
+ *
+ * @param string $resource Ключ массива $_FILES
+ * @return string Путь к загруженному и перемещённому файлу
+ */
+function uploadFile($resource)
+{
+    $file_name = $_FILES[$resource]['name'];
+    $file_path = 'uploads/' . $file_name;
+    move_uploaded_file($_FILES[$resource]['tmp_name'], $file_path);
+    copy($file_path, '../img/');
+
+    return $file_path;
+}
+
+/**
+ * Загружает файл по ссылке из текстового поля формы и перемещает полученный файл в папку uploads в корне проекта
+ *
+ * @param string $field Название (name) поля формы
+ * @return string Путь к загруженному файлу
+ */
+function uploadFileFromURL($field)
+{
+    $file = file_get_contents($_POST[$field]);
+    $file_name = $field;
+    $file_path = 'uploads/' . $file_name;
+
+    // добавление расширения файла
+    $file_info = finfo_open(FILEINFO_MIME_TYPE);
+    $file_info = finfo_file($file_info, $file_path);
+    $ext = substr($file_info, '6');
+    $file_url = "uploads/$file_name.$ext";
+
+    file_put_contents($file_url, $file);
+
+    return $file_url;
 }
