@@ -1,5 +1,9 @@
 <?php
 
+// константа для пути сохранения файлов, загружаемых из формы
+define('UPLOAD_PATH', 'uploads/');
+
+// часовой пояс по умолчанию
 date_default_timezone_set('Europe/Moscow');
 
 /**
@@ -11,7 +15,6 @@ date_default_timezone_set('Europe/Moscow');
  * @return string Возвращает строку, обрезанную до $max_post_length, либо исходную строку без изменений,
  * если лимит символов не превышен
  */
-
 function slice_string($string, $link = '', $max_post_length = 300)
 {
     $result_string = trim($string);
@@ -38,7 +41,6 @@ function slice_string($string, $link = '', $max_post_length = 300)
 }
 
 //  Второй вариант функции
-
 function slice_string_2($string, $max_post_length = 300)
 {
     $result_string = trim($string);
@@ -59,7 +61,6 @@ function slice_string_2($string, $max_post_length = 300)
  * Заменяет потенциально опасные символы в являющемся строкой элементе на HTML-мнемоники, делая текст безопасным для вывода на страницу
  * @param mixed $value Входящий элемент любого типа
  */
-
 function secure(&$value)
 {
     if (is_string($value)) {
@@ -73,7 +74,6 @@ function secure(&$value)
  * @param string $date Дата в виде строки
  * @return string Строка с датой в формате «дд.мм.гггг чч:мм»
  */
-
 function get_title_date($date)
 {
     $date = strtotime($date);
@@ -93,7 +93,6 @@ function get_title_date($date)
  * @param string $date Дата, с которой начинается отсчёт
  * @return string Строка, отражающая количество времени, прошедшего с $date
  */
-
 function format_date($date)
 {
     $post_date = date_create($date);
@@ -256,117 +255,6 @@ function validateFile($resource, $allowed_types)
 }
 
 /**
- * Производит валидацию полей формы
- *
- * @param string $type Модификатор запроса типа
- * @return array Массив с ошибками валидации
- */
-function validateField($type)
-{
-    $errors = [];
-    $required_fields = [];
-
-    // типы файлов, допустимых для загрузки в форме
-    $allowed_file_types = array(
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-    );
-
-    // список обязательных полей варьируется в зависимости от типа поста
-    switch ($type) {
-        case 'photo':
-            $required_fields = [
-                'photo-heading' => 'Заголовок',
-                'userpic_file_photo' => 'Выбрать фото',
-            ];
-            break;
-        case 'text':
-            $required_fields = [
-                'text-heading' => 'Заголовок',
-                'post-text' => 'Текст поста',
-            ];
-            break;
-        case 'quote':
-            $required_fields = [
-                'quote-heading' => 'Заголовок',
-                'cite-text' => 'Текст цитаты',
-                'quote-author' => 'Автор',
-            ];
-            break;
-        case 'video':
-            $required_fields = [
-                'video-heading' => 'Заголовок',
-                'video-url' => 'Ссылка YouTube',
-            ];
-            break;
-        case 'link':
-            $required_fields = [
-                'link-heading' => 'Заголовок',
-                'post-link' => 'Ссылка',
-            ];
-    }
-
-    // проверка обязательных к заполнению полей
-    foreach ($required_fields as $key => $value) {
-        if (empty($_POST[$key])) {
-
-            // Обработка обязательного поля загрузки изображения
-            if ($key === 'userpic_file_photo') {
-
-                // валидация загруженного файла
-                if (!validateFile($key, $allowed_file_types)) {
-
-                    // поле со ссылкой обрабатывается, если файл не был приложен или не прошёл валидацию
-                    if ($_POST['photo-url']) {
-                        $photo_url = $_POST['photo-url'];
-                        $err_msg = 'Ссылка из интернета. Введите действующую ссылку на изображение в формате jpg, png или gif.';
-
-                        // проверка валидности ссылки
-                        if (parse_url($photo_url, PHP_URL_PATH) && filter_var($photo_url, FILTER_VALIDATE_URL)) {
-
-                            // проверка доступности и работоспособности ссылки
-                            $response = get_headers($photo_url);
-                            if (stripos($response[0], "200 OK")) {
-                                $file = uploadFileFromURL('photo-url');
-                                $file_type = finfo_open(FILEINFO_MIME_TYPE);
-                                $file_type = finfo_file($file_type, $file);
-
-                                // проверка типа загружаемого файла
-                                if (!in_array($file_type, $allowed_file_types)) {
-                                    $errors['photo-url'] = $err_msg;
-                                }
-                            } else {
-                                $errors['photo-url'] = $err_msg;
-                            }
-                        } else {
-                            $errors['photo-url'] = $err_msg;
-                        }
-                    } else {
-                        $errors[$key] = $value . '. Загрузите картинку в формате jpg, png или gif. Максимальный размер файла: 200Кб.';
-                    }
-                }
-            } else {
-                $errors[$key] = $value . '. Это поле должно быть заполнено.';
-            }
-        } elseif ($key === 'video-url') { // проверка валидности ссылки на youtube
-            if (filter_var($_POST[$key], FILTER_VALIDATE_URL)) {
-                if (!check_youtube_url($_POST[$key])) {
-                    $errors[$key] = $value . '. ' . check_youtube_url($_POST[$key]);
-                }
-            } else {
-                $errors[$key] = $value . '. URL должен быть корректным';
-            }
-        } elseif ($key === 'post-link') { // проверка ссылки на валидность
-            if (!filter_var($_POST[$key], FILTER_VALIDATE_URL)) {
-                $errors[$key] = $value . '. URL должен быть корректным';
-            }
-        }
-    }
-    return $errors;
-}
-
-/**
  * Загружает файл из input с типом file и перемещает полученный файл в папку uploads в корне проекта
  *
  * @param string $resource Ключ массива $_FILES
@@ -375,9 +263,8 @@ function validateField($type)
 function uploadFile($resource)
 {
     $file_name = $_FILES[$resource]['name'];
-    $file_path = 'uploads/' . $file_name;
+    $file_path = UPLOAD_PATH . $file_name;
     move_uploaded_file($_FILES[$resource]['tmp_name'], $file_path);
-    copy($file_path, '../img/');
 
     return $file_path;
 }
@@ -391,8 +278,10 @@ function uploadFile($resource)
 function uploadFileFromURL($field)
 {
     $file = file_get_contents($_POST[$field]);
-    $file_name = $field;
-    $file_path = 'uploads/' . $file_name;
+    $file_name = uniqid($field . '_');
+    $file_path = UPLOAD_PATH . $file_name;
+
+    file_put_contents($file_path, $file);
 
     // добавление расширения файла
     $file_info = finfo_open(FILEINFO_MIME_TYPE);
@@ -400,7 +289,46 @@ function uploadFileFromURL($field)
     $ext = substr($file_info, '6');
     $file_url = "uploads/$file_name.$ext";
 
-    file_put_contents($file_url, $file);
+    rename($file_path, $file_url);
 
     return $file_url;
+}
+
+/**
+ * Проверят валидность ссылки с обязательной частью path после адреса хоста
+ *
+ * @param string $url Ссылка
+ * @return boolean Валидность ссылки
+ */
+function checkURL($url)
+{
+    $url_validity = false;
+
+    if (parse_url($url, PHP_URL_PATH) && filter_var($url, FILTER_VALIDATE_URL)) {
+
+        // проверка доступности и работоспособности ссылки
+        $response = get_headers($url);
+        if (stripos($response[0], "200 OK")) {
+            $url_validity = true;
+        }
+    }
+
+    return $url_validity;
+}
+
+/**
+ * Формирует и выводит шаблон блока с текстом ошибки заполнения поля на основе массива ошибок
+ *
+ * @param array $err Массив с ошибками
+ * @param string $field_name Название поля
+ * @return string Итоговый HTML-шаблон
+ */
+function show_error_msg($err, $field_name) {
+
+    $err_msg = isset($err[$field_name]) ? '<b>' . explode('.', $err[$field_name])[0] . '</b>.' . explode('.', $err[$field_name])[1] : '';
+
+    return include_template('add-post_error_template.php', [
+        'errors' => $err,
+        'err_msg' => $err_msg,
+    ]);
 }
