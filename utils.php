@@ -1,5 +1,14 @@
 <?php
 
+define('HASHTAG', '/^(\d|[a-zA-Zа-яА-Я]|_)+$/');
+
+// массив с допустимыми для загрузки в форме типами файлов
+define('ALLOWED_IMG_TYPES', array(
+    'jpg' => 'image/jpeg',
+    'png' => 'image/png',
+    'gif' => 'image/gif',
+));
+
 // константа для пути сохранения файлов, загружаемых из формы
 define('UPLOAD_PATH', 'uploads/');
 
@@ -222,76 +231,79 @@ function build_page($page, $params, $main_content): string
 }
 
 /**
- * Возвращает значение поля input из данных формы
- *
- * @param string $name Атрибут name поля input
- */
-function getPostVal($name)
-{
-    return $_POST[$name] ?? '';
-}
-
-/**
  * Валидирует загруженный файл
  *
  * @param string $page Название поля input, из которого загружается файл
  * @param array $allowed_types Массив с разрешёнными MIME-типами файлов
  * @return boolean Булево значение проверки
  */
-function validateFile($resource, $allowed_types)
+function validate_file($field_name)
 {
     $validity = false;
-    if (isset($_FILES[$resource]) && !empty($_FILES[$resource]['name'])) {
-        $file_info = finfo_open(FILEINFO_MIME_TYPE);
-        $file_name = $_FILES[$resource]['tmp_name'];
-        $file_size = $_FILES[$resource]['size'];
-        $file_type = finfo_file($file_info, $file_name);
 
-        if (in_array($file_type, $allowed_types) && $file_size < 200000) {
-            $validity = true;
-        }
+    $file_name = $_FILES[$field_name]['tmp_name'];
+    $file_type = mime_content_type($file_name);
+
+    if (in_array($file_type, ALLOWED_IMG_TYPES)) {
+        $validity = true;
     }
+
     return $validity;
 }
 
 /**
- * Загружает файл из input с типом file и перемещает полученный файл в папку uploads в корне проекта
+ * Загружает файл из input с типом file и перемещает полученный файл в установленную папку
  *
- * @param string $resource Ключ массива $_FILES
- * @return string Путь к загруженному и перемещённому файлу
+ * @param string $field_name Ключ массива $_FILES
+ * @return string Конечное имя файла; выводит сообщение об ошибке при неудачной попытке записать файл
  */
-function uploadFile($resource)
+function upload_file($field_name)
 {
-    $file_name = $_FILES[$resource]['name'];
+    $file_name = $_FILES[$field_name]['name'];
     $file_path = UPLOAD_PATH . $file_name;
-    move_uploaded_file($_FILES[$resource]['tmp_name'], $file_path);
 
-    return $file_path;
+    try {
+        move_uploaded_file($_FILES[$field_name]['tmp_name'], $file_path);
+    } catch (Exception $exc) {
+        echo('Не удалось загрузить файл! Попробуйте снова.');
+    } finally {
+        return $file_name;
+    }
 }
 
 /**
- * Загружает файл по ссылке из текстового поля формы и перемещает полученный файл в папку uploads в корне проекта
+ * Загружает файл по ссылке из текстового поля формы и перемещает полученный файл в установленную папку
  *
  * @param string $field Название (name) поля формы
- * @return string Путь к загруженному файлу
+ * @return mixed Конечное имя загруженного файла или false, если файл не прошёл одну из проверок
  */
-function uploadFileFromURL($field)
+function download_file_from_url($field)
 {
-    $file = file_get_contents($_POST[$field]);
-    $file_name = uniqid($field . '_');
-    $file_path = UPLOAD_PATH . $file_name;
+    $file_src = filter_input(INPUT_POST, $field, FILTER_VALIDATE_URL);
+    $file_extension = pathinfo($file_src)['extension'];
 
-    file_put_contents($file_path, $file);
+    // проверка на текстовое расширение в ссылке
+    if (array_key_exists($file_extension, ALLOWED_IMG_TYPES)) {
+        if ($file_extension === 'jpeg') {
+                $file_extension = 'jpg';
+            }
 
-    // добавление расширения файла
-    $file_info = finfo_open(FILEINFO_MIME_TYPE);
-    $file_info = finfo_file($file_info, $file_path);
-    $ext = substr($file_info, '6');
-    $file_url = "uploads/$file_name.$ext";
+        $file_name = uniqid($field . '_') . ".$file_extension";
+        $file_path = UPLOAD_PATH . $file_name;
 
-    rename($file_path, $file_url);
+        file_put_contents($file_path, fopen($file_src, 'r'));
 
-    return $file_url;
+        $file_type = mime_content_type($file_path);
+
+        // проверка настоящего типа файла
+        if (in_array($file_type, ALLOWED_IMG_TYPES)) {
+            return $file_name;
+        } else {
+            unlink($file_path);
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -300,7 +312,7 @@ function uploadFileFromURL($field)
  * @param string $url Ссылка
  * @return boolean Валидность ссылки
  */
-function checkURL($url)
+function check_url($url)
 {
     $url_validity = false;
 
@@ -324,11 +336,39 @@ function checkURL($url)
  * @return string Итоговый HTML-шаблон
  */
 function show_error_msg($err, $field_name) {
+    $params = [];
 
-    $err_msg = isset($err[$field_name]) ? '<b>' . explode('.', $err[$field_name])[0] . '</b>.' . explode('.', $err[$field_name])[1] : '';
+    if (array_key_exists($field_name, $err)) {
+        $err_msg = isset($err[$field_name]) ? '<b>' . $err[$field_name]['heading'] . '</b>. ' . $err[$field_name]['text'] : '';
+        $params = array(
+            'err_msg' => $err_msg,
+            'error_type' => $err[$field_name]['type'],
+        );
+    }
 
-    return include_template('add-post_error_template.php', [
-        'errors' => $err,
-        'err_msg' => $err_msg,
-    ]);
+    return include_template('add-post_error_template.php', $params);
+}
+
+/**
+ * Удаляет лишние (повторяющиеся) пробелы в строке
+ *
+ * @param string $str Строка
+ */
+function trim_extra_spaces($str) {
+    return trim(preg_replace('/\s+/',' ', $str));
+}
+
+/**
+ * Заполняет массив с ошибками
+ *
+ * @param array $err Массив для заполнения
+ * @param string $field Название поля
+ * @param string $type Тип ошибки
+ * @param string $heading Заголовок ошибки
+ * @param string $text Пояснительный текст ошибки
+ */
+function fill_errors(&$err, $field, $type, $heading, $text) {
+    $err[$field]['type'] = $type;
+    $err[$field]['heading'] = $heading;
+    $err[$field]['text'] = $text;
 }

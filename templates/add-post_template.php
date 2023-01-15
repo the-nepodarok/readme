@@ -9,7 +9,7 @@
                     <ul class="adding-post__tabs-list filters__list tabs__list">
                         <?php foreach ($content_types as $content_type): ?>
                         <li class="adding-post__tabs-item filters__item">
-                            <a class="adding-post__tabs-link filters__button filters__button--<?= $content_type['type_val']; ?> filters__button<?= $form_tab === $content_type['type_val'] ? '--active' : ''; ?> tabs__item tabs__item<?= $form_tab === $content_type['type_val'] ? '--active' : ''; ?> button" href="?post_type=<?= $content_type['type_val']; ?>">
+                            <a class="adding-post__tabs-link filters__button filters__button--<?= $content_type['type_val']; ?> filters__button<?= $post_type === $content_type['type_val'] ? '--active' : ''; ?> tabs__item tabs__item<?= $post_type === $content_type['type_val'] ? '--active' : ''; ?> button" href="?post_type=<?= $content_type['type_val']; ?>">
                                 <svg class="filters__icon" width="<?= $content_type['type_icon_width']; ?>" height="<?= $content_type['type_icon_height']; ?>">
                                     <use xlink:href="#icon-filter-<?= $content_type['type_val']; ?>"></use>
                                 </svg>
@@ -20,9 +20,10 @@
                     </ul>
                 </div>
                 <div class="adding-post__tab-content">
-                    <section class="adding-post__photo tabs__content tabs__content<?= $form_tab === 'photo' ? '--active' : ''; ?>">
+                    <section class="adding-post__photo tabs__content tabs__content<?= $post_type === 'photo' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления фото</h2>
-                        <form class="adding-post__form form" action="../add.php?post_type=<?= $form_tab; ?>" method="post" enctype="multipart/form-data">
+                        <form class="adding-post__form form" action="../add.php?post_type=<?= $post_type; ?>" method="post" enctype="multipart/form-data">
+                            <input class="visually-hidden" type="text" name="form_tab" value="photo">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -60,9 +61,10 @@
                         </form>
                     </section>
 
-                    <section class="adding-post__video tabs__content<?= $form_tab === 'video' ? '--active' : ''; ?>">
+                    <section class="adding-post__video tabs__content<?= $post_type === 'video' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления видео</h2>
-                        <form class="adding-post__form form" action="../add.php?post_type=<?= $form_tab; ?>" method="post" enctype="multipart/form-data">
+                        <form class="adding-post__form form" action="../add.php?post_type=<?= $post_type; ?>" method="post" enctype="multipart/form-data">
+                            <input class="visually-hidden" type="text" name="form_tab" value="video">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -85,9 +87,10 @@
                         </form>
                     </section>
 
-                    <section class="adding-post__text tabs__content<?= $form_tab === 'text' ? '--active' : ''; ?>">
+                    <section class="adding-post__text tabs__content<?= $post_type === 'text' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления текста</h2>
-                        <form class="adding-post__form form" action="../add.php?post_type=<?= $form_tab; ?>" method="post">
+                        <form class="adding-post__form form" action="../add.php?post_type=<?= $post_type; ?>" method="post">
+                            <input class="visually-hidden" type="text" name="form_tab" value="text">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -109,9 +112,10 @@
                         </form>
                     </section>
 
-                    <section class="adding-post__quote tabs__content<?= $form_tab === 'quote' ? '--active' : ''; ?>">
+                    <section class="adding-post__quote tabs__content<?= $post_type === 'quote' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления цитаты</h2>
-                        <form class="adding-post__form form" action="../add.php?post_type=<?= $form_tab; ?>" method="post">
+                        <form class="adding-post__form form" action="../add.php?post_type=<?= $post_type; ?>" method="post">
+                            <input class="visually-hidden" type="text" name="form_tab" value="quote">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -140,9 +144,10 @@
                         </form>
                     </section>
 
-                    <section class="adding-post__link tabs__content<?= $form_tab === 'link' ? '--active' : ''; ?>">
+                    <section class="adding-post__link tabs__content<?= $post_type === 'link' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления ссылки</h2>
-                        <form class="adding-post__form form" action="../add.php?post_type=<?= $form_tab; ?>" method="post">
+                        <form class="adding-post__form form" action="../add.php?post_type=<?= $post_type; ?>" method="post">
+                            <input class="visually-hidden" type="text" name="form_tab" value="link">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
