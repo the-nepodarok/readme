@@ -45,7 +45,7 @@
             <form class="comments__form form" action="#" method="post">
               <div class="comments__my-avatar">
                 <?php if ($post['user_avatar']): ?>
-                <img class="comments__picture" src="img/<?= $post['user_avatar']; ?>" alt="Аватар пользователя">
+                <img class="comments__picture" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </div>
               <div class="form__input-section _form__input-section--error"> <!-- не забыть вернуть -->
@@ -66,7 +66,7 @@
                   <div class="comments__avatar">
                     <a class="user__avatar-link" href="#">
                       <?php if ($comment['user_avatar']): ?>
-                      <img class="comments__picture" src="img/<?= $comment['user_avatar']; ?>" alt="Аватар пользователя">
+                      <img class="comments__picture" src="<?= UPLOAD_PATH . $comment['user_avatar']; ?>" alt="Аватар пользователя">
                       <?php endif; ?>
                     </a>
                   </div>
@@ -101,7 +101,7 @@
             <div class="post-details__avatar user__avatar">
               <a class="post-details__avatar-link user__avatar-link" href="#">
                 <?php if ($post['user_avatar']): ?>
-                <img class="post-details__picture user__picture" src="img/<?= $post['user_avatar']; ?>" alt="Аватар пользователя">
+                <img class="post-details__picture user__picture" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </a>
             </div>
