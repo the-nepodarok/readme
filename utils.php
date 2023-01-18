@@ -1,13 +1,18 @@
 <?php
 
-define('HASHTAG', '/^(\d|[a-zA-Zа-яА-Я]|_)+$/');
+// название поля загрузки картинки
+define('FILE_PHOTO', 'userpic_file_photo');
 
 // массив с допустимыми для загрузки в форме типами файлов
 define('ALLOWED_IMG_TYPES', array(
     'jpg' => 'image/jpeg',
+    'jpeg' => 'image/jpeg',
     'png' => 'image/png',
     'gif' => 'image/gif',
 ));
+
+// максимальный размер файла: 10мб
+define('MAX_FILE_SIZE', 10 * 1048576);
 
 // константа для пути сохранения файлов, загружаемых из формы
 define('UPLOAD_PATH', 'uploads/');
@@ -44,23 +49,6 @@ function slice_string($string, $link = '', $max_post_length = 300)
             ) . '...' . '<a class="post-text__more-link" href="' . $link . '">Читать далее</a>';
         // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
-    }
-
-    return $result_string;
-}
-
-//  Второй вариант функции
-function slice_string_2($string, $max_post_length = 300)
-{
-    $result_string = trim($string);
-
-    if (mb_strlen($result_string) > $max_post_length) {
-        $temp_string = mb_substr($string, 0, $max_post_length);
-        $result_string = '<p>' . mb_substr(
-                $temp_string,
-                0,
-                mb_strripos($temp_string, ' ')
-            ) . '...</p><a class="post-text__more-link" href="#">Читать далее</a>';
     }
 
     return $result_string;
@@ -233,94 +221,79 @@ function build_page($page, $params, $main_content): string
 /**
  * Валидирует загруженный файл
  *
- * @param string $page Название поля input, из которого загружается файл
- * @param array $allowed_types Массив с разрешёнными MIME-типами файлов
- * @return boolean Булево значение проверки
+ * @param string $field_name Название поля input, из которого загружается файл
+ * @return boolean Пройдена ли проверка
  */
 function validate_file($field_name)
 {
     $validity = false;
 
-    $file_name = $_FILES[$field_name]['tmp_name'];
-    $file_type = mime_content_type($file_name);
-
-    if (in_array($file_type, ALLOWED_IMG_TYPES)) {
-        $validity = true;
+    if ($_FILES[$field_name]['error'] === 0) {
+        $file_name = $_FILES[$field_name]['tmp_name'];
+        $file_type = mime_content_type($file_name);
+        $validity = in_array($file_type, ALLOWED_IMG_TYPES);
     }
 
     return $validity;
 }
 
 /**
- * Загружает файл из input с типом file и перемещает полученный файл в установленную папку
- *
- * @param string $field_name Ключ массива $_FILES
- * @return string Конечное имя файла; выводит сообщение об ошибке при неудачной попытке записать файл
- */
-function upload_file($field_name)
-{
-    $file_name = $_FILES[$field_name]['name'];
-    $file_path = UPLOAD_PATH . $file_name;
-
-    try {
-        move_uploaded_file($_FILES[$field_name]['tmp_name'], $file_path);
-    } catch (Exception $exc) {
-        echo('Не удалось загрузить файл! Попробуйте снова.');
-    } finally {
-        return $file_name;
-    }
-}
-
-/**
  * Загружает файл по ссылке из текстового поля формы и перемещает полученный файл в установленную папку
  *
- * @param string $field Название (name) поля формы
- * @return mixed Конечное имя загруженного файла или false, если файл не прошёл одну из проверок
+ * @param string $url Ссылка на файл
+ * @return string Конечное имя загруженного файла или код ошибки, если файл не прошёл одну из проверок
  */
-function download_file_from_url($field)
+function download_file_from_url($url)
 {
-    $file_src = filter_input(INPUT_POST, $field, FILTER_VALIDATE_URL);
-    $file_extension = pathinfo($file_src)['extension'];
+    $file_extension = pathinfo($url, PATHINFO_EXTENSION) ?? '';
 
     // проверка на текстовое расширение в ссылке
     if (array_key_exists($file_extension, ALLOWED_IMG_TYPES)) {
         if ($file_extension === 'jpeg') {
-                $file_extension = 'jpg';
-            }
+            $file_extension = 'jpg';
+        }
 
-        $file_name = uniqid($field . '_') . ".$file_extension";
+        $file_content = file_get_contents($url);
+        $file_name = uniqid() . ".$file_extension";
         $file_path = UPLOAD_PATH . $file_name;
 
-        file_put_contents($file_path, fopen($file_src, 'r'));
-
+        file_put_contents($file_path, $file_content);
         $file_type = mime_content_type($file_path);
 
         // проверка настоящего типа файла
         if (in_array($file_type, ALLOWED_IMG_TYPES)) {
-            return $file_name;
+            // проверка размера файла
+            if (filesize($file_path) < MAX_FILE_SIZE) {
+                clearstatcache();
+                $result = $file_name;
+            } else {
+                $result = 'oversize';
+                unlink($file_path);
+            }
         } else {
             unlink($file_path);
         }
+    } else {
+        $result = 'bad_type';
     }
 
-    return false;
+    return $result;
 }
 
 /**
- * Проверят валидность ссылки с обязательной частью path после адреса хоста
+ * Проверяет валидность ссылки с обязательной частью component в теле ссылки
  *
- * @param string $url Ссылка
+ * @param string $url Текст ссылки
+ * @param int $component Код компонента (для parse_url)
  * @return boolean Валидность ссылки
  */
-function check_url($url)
+function check_url($url, $component = PHP_URL_HOST)
 {
     $url_validity = false;
 
-    if (parse_url($url, PHP_URL_PATH) && filter_var($url, FILTER_VALIDATE_URL)) {
-
+    if (filter_var($url, FILTER_VALIDATE_URL) and parse_url($url, $component)) {
         // проверка доступности и работоспособности ссылки
-        $response = get_headers($url);
-        if (stripos($response[0], "200 OK")) {
+        if (get_headers($url)) {
             $url_validity = true;
         }
     }
@@ -339,9 +312,12 @@ function show_error_msg($err, $field_name) {
     $params = [];
 
     if (array_key_exists($field_name, $err)) {
-        $err_msg = isset($err[$field_name]) ? '<b>' . $err[$field_name]['heading'] . '</b>. ' . $err[$field_name]['text'] : '';
+        if (isset($err[$field_name])) {
+            $err_msg = '<b>' . $err[$field_name]['heading'] . '</b>. ' . $err[$field_name]['text'];
+        }
+
         $params = array(
-            'err_msg' => $err_msg,
+            'err_msg' => $err_msg ?? '',
             'error_type' => $err[$field_name]['type'],
         );
     }
@@ -350,7 +326,7 @@ function show_error_msg($err, $field_name) {
 }
 
 /**
- * Удаляет лишние (повторяющиеся) пробелы в строке
+ * Удаляет повторяющиеся и концевые пробелы в строке
  *
  * @param string $str Строка
  */
@@ -359,7 +335,7 @@ function trim_extra_spaces($str) {
 }
 
 /**
- * Заполняет массив с ошибками
+ * Заполняет элемент массива ошибок
  *
  * @param array $err Массив для заполнения
  * @param string $field Название поля
@@ -368,7 +344,9 @@ function trim_extra_spaces($str) {
  * @param string $text Пояснительный текст ошибки
  */
 function fill_errors(&$err, $field, $type, $heading, $text) {
-    $err[$field]['type'] = $type;
-    $err[$field]['heading'] = $heading;
-    $err[$field]['text'] = $text;
+    $err[$field] = array(
+      'type' => $type,
+      'heading' => $heading,
+      'text' => $text,
+    );
 }
