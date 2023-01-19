@@ -1,7 +1,7 @@
 <?php
 
 // название поля загрузки картинки
-define('FILE_PHOTO', 'userpic_file_photo');
+define('UPLOAD_IMG_NAME', 'userpic_file_photo');
 
 // массив с допустимыми для загрузки в форме типами файлов
 define('ALLOWED_IMG_TYPES', array(
@@ -11,8 +11,9 @@ define('ALLOWED_IMG_TYPES', array(
     'gif' => 'image/gif',
 ));
 
-// максимальный размер файла: 10мб
-define('MAX_FILE_SIZE', 10 * 1048576);
+define('MAX_FILE_SIZE', 10485760); // максимальный размер файла: 10мб
+
+define('MAX_FILE_SIZE_USER', 10); // Мб, вывод ограничения на размер файла для пользователя
 
 // константа для пути сохранения файлов, загружаемых из формы
 define('UPLOAD_PATH', 'uploads/');
@@ -191,19 +192,38 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
 /**
  * Приводит ссылки к единому виду, обрезая протокол
  *
- * @param string $link_text Текст ссылки
+ * @param string $url Текст ссылки
  */
-function trim_link(string $link_text): string
+function trim_link(string $url): string
 {
-    $scheme = parse_url($link_text, PHP_URL_SCHEME);
+    if (filter_var($url, FILTER_VALIDATE_URL)) {
+        $scheme = parse_url($url, PHP_URL_SCHEME);
 
-    if ($scheme) {
-        $link_text = 'https' . str_replace($scheme, '', $link_text);
-    } else {
-        $link_text = 'https://' . $link_text;
+        if ($scheme) {
+            $url = 'https' . str_replace($scheme, '', $url);
+        } else {
+            $url = 'https://' . $url;
+        }
     }
 
-    return $link_text;
+    return $url;
+}
+
+/**
+ * Заполняет элемент массива ошибок
+ *
+ * @param array $err Массив для заполнения
+ * @param string $field Название поля
+ * @param string $type Тип ошибки
+ * @param string $heading Заголовок ошибки
+ * @param string $text Пояснительный текст ошибки
+ */
+function fill_errors(&$err, $field, $type, $heading, $text) {
+    $err[$field] = array(
+        'type' => $type,
+        'heading' => $heading,
+        'text' => $text,
+    );
 }
 
 /**
@@ -228,7 +248,7 @@ function validate_file($field_name)
 {
     $validity = false;
 
-    if ($_FILES[$field_name]['error'] === 0) {
+    if ($_FILES[$field_name]['error'] === UPLOAD_ERR_OK) {
         $file_name = $_FILES[$field_name]['tmp_name'];
         $file_type = mime_content_type($file_name);
         $validity = in_array($file_type, ALLOWED_IMG_TYPES);
@@ -238,13 +258,16 @@ function validate_file($field_name)
 }
 
 /**
- * Загружает файл по ссылке из текстового поля формы и перемещает полученный файл в установленную папку
+ * Загружает файл по URL и сохраняет его
  *
  * @param string $url Ссылка на файл
+ * @param array $err Массив к заполнению ошибками валидации файла
  * @return string Конечное имя загруженного файла или код ошибки, если файл не прошёл одну из проверок
  */
-function download_file_from_url($url)
+function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
 {
+    $result = false;
+    $err_heading = 'Ссылка из интернета';
     $file_extension = pathinfo($url, PATHINFO_EXTENSION) ?? '';
 
     // проверка на текстовое расширение в ссылке
@@ -253,28 +276,46 @@ function download_file_from_url($url)
             $file_extension = 'jpg';
         }
 
-        $file_content = file_get_contents($url);
-        $file_name = uniqid() . ".$file_extension";
-        $file_path = UPLOAD_PATH . $file_name;
+        if (file_get_contents($url)) {
+            $file_content = file_get_contents($url);
+            $file_name = uniqid() . ".$file_extension";
+            $file_path = UPLOAD_PATH . $file_name;
 
-        file_put_contents($file_path, $file_content);
-        $file_type = mime_content_type($file_path);
+            if (file_put_contents($file_path, $file_content)) {
+                $file_type = mime_content_type($file_path);
 
-        // проверка настоящего типа файла
-        if (in_array($file_type, ALLOWED_IMG_TYPES)) {
-            // проверка размера файла
-            if (filesize($file_path) < MAX_FILE_SIZE) {
-                clearstatcache();
-                $result = $file_name;
+                // проверка настоящего типа файла
+                if (in_array($file_type, ALLOWED_IMG_TYPES)) {
+                    // проверка размера файла
+                    if (filesize($file_path) < MAX_FILE_SIZE) {
+                        clearstatcache();
+                        $result = $file_name;
+                    } else {
+                        unlink($file_path);
+                        $err_type = 'Размер файла';
+                        $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
+                    }
+                } else {
+                    unlink($file_path);
+                    $err_type = 'Неверный тип файла';
+                    $err_text = 'Файл по ссылке не является изображением в формате jpg, png или gif';
+                }
             } else {
-                $result = 'oversize';
                 unlink($file_path);
+                $err_type = 'Ошибка копирования файла';
+                $err_heading = 'Не удалось загрузить файл на сервер. Попробуйте снова позднее';
             }
         } else {
-            unlink($file_path);
+            $err_type = 'Не удалось загрузить файл';
+            $err_text = 'Не удалось получить файл, убедитесь в правильности ссылки';
         }
     } else {
-        $result = 'bad_type';
+        $err_type = 'Неверный тип файла';
+        $err_text = 'Файл по ссылке не является изображением в формате jpg, png или gif';
+    }
+
+    if (!$result) {
+        fill_errors($err, 'photo-url', $err_type, $err_heading, $err_text);
     }
 
     return $result;
@@ -291,11 +332,9 @@ function check_url($url, $component = PHP_URL_HOST)
 {
     $url_validity = false;
 
-    if (filter_var($url, FILTER_VALIDATE_URL) and parse_url($url, $component)) {
-        // проверка доступности и работоспособности ссылки
-        if (get_headers($url)) {
-            $url_validity = true;
-        }
+    // проверка доступности и работоспособности ссылки
+    if (get_headers($url)) {
+        $url_validity = true;
     }
 
     return $url_validity;
@@ -334,19 +373,3 @@ function trim_extra_spaces($str) {
     return trim(preg_replace('/\s+/',' ', $str));
 }
 
-/**
- * Заполняет элемент массива ошибок
- *
- * @param array $err Массив для заполнения
- * @param string $field Название поля
- * @param string $type Тип ошибки
- * @param string $heading Заголовок ошибки
- * @param string $text Пояснительный текст ошибки
- */
-function fill_errors(&$err, $field, $type, $heading, $text) {
-    $err[$field] = array(
-      'type' => $type,
-      'heading' => $heading,
-      'text' => $text,
-    );
-}

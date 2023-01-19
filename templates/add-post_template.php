@@ -23,8 +23,8 @@
                 <div class="adding-post__tab-content">
                     <section class="adding-post__photo tabs__content tabs__content<?= $post_type === 'photo' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления фото</h2>
-                        <form class="adding-post__form form" action="add.php?post_type=<?= $post_type; ?>" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="form_tab" value="photo">
+                        <form class="adding-post__form form" action="add.php" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="post_type" value="photo">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -42,7 +42,7 @@
                             <div class="adding-post__input-file-container form__input-container form__input-container--file">
                                 <div class="adding-post__input-file-wrapper form__input-file-wrapper">
                                     <div class="adding-post__file-zone adding-post__file-zone--photo form__file-zone dropzone">
-                                        <input class="adding-post__input-file form__input-file dropzone" id="<?= FILE_PHOTO; ?>" type="file" name="<?= FILE_PHOTO; ?>">
+                                        <input class="adding-post__input-file form__input-file dropzone" id="<?= UPLOAD_IMG_NAME; ?>" type="file" name="<?= UPLOAD_IMG_NAME; ?>">
                                     </div>
                                     <button class="adding-post__input-file-button form__input-file-button form__input-file-button--photo button" type="button">
                                         <span>Выбрать фото</span>
@@ -64,8 +64,8 @@
 
                     <section class="adding-post__video tabs__content<?= $post_type === 'video' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления видео</h2>
-                        <form class="adding-post__form form" action="add.php?post_type=<?= $post_type; ?>" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="form_tab" value="video">
+                        <form class="adding-post__form form" action="add.php" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="post_type" value="video">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -90,8 +90,8 @@
 
                     <section class="adding-post__text tabs__content<?= $post_type === 'text' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления текста</h2>
-                        <form class="adding-post__form form" action="add.php?post_type=<?= $post_type; ?>" method="post">
-                            <input type="hidden" name="form_tab" value="text">
+                        <form class="adding-post__form form" action="add.php" method="post">
+                            <input type="hidden" name="post_type" value="text">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -115,8 +115,8 @@
 
                     <section class="adding-post__quote tabs__content<?= $post_type === 'quote' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления цитаты</h2>
-                        <form class="adding-post__form form" action="add.php?post_type=<?= $post_type; ?>" method="post">
-                            <input type="hidden" name="form_tab" value="quote">
+                        <form class="adding-post__form form" action="add.php" method="post">
+                            <input type="hidden" name="post_type" value="quote">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
@@ -130,7 +130,7 @@
                                     <div class="adding-post__textarea-wrapper form__input-wrapper">
                                         <label class="adding-post__label form__label" for="quote-author">Автор <span class="form__input-required">*</span></label>
                                         <div class="form__input-section <?= $errors['quote-author'] ? $alert_class : ''; ?>">
-                                            <input class="adding-post__input form__input" id="quote-author" type="text" name="quote-author" value="<?= $post_data['quote-author'] ?? ''; ?>">
+                                            <input class="adding-post__input form__input" id="quote-author" type="text" name="quote-author" value="<?= $post_data['quote-author'] ?? ''; ?>" placeholder="Автор цитаты">
                                             <?= show_error_msg($errors, 'quote-author'); ?>
                                         </div>
                                     </div>
@@ -147,15 +147,15 @@
 
                     <section class="adding-post__link tabs__content<?= $post_type === 'link' ? '--active' : ''; ?>">
                         <h2 class="visually-hidden">Форма добавления ссылки</h2>
-                        <form class="adding-post__form form" action="add.php?post_type=<?= $post_type; ?>" method="post">
-                            <input type="hidden" name="form_tab" value="link">
+                        <form class="adding-post__form form" action="add.php" method="post">
+                            <input type="hidden" name="post_type" value="link">
                             <div class="form__text-inputs-wrapper">
                                 <div class="form__text-inputs">
                                     <?= $header_field; ?>
                                     <div class="adding-post__textarea-wrapper form__input-wrapper">
                                         <label class="adding-post__label form__label" for="post-link">Ссылка <span class="form__input-required">*</span></label>
                                         <div class="form__input-section <?= $errors['post-link'] ? $alert_class : ''; ?>">
-                                            <input class="adding-post__input form__input" id="post-link" type="text" name="post-link" value="<?= $post_data['post-link'] ?? ''; ?>">
+                                            <input class="adding-post__input form__input" id="post-link" type="text" name="post-link" value="<?= $post_data['post-link'] ?? ''; ?>" placeholder="Введите ссылку">
                                             <?= show_error_msg($errors, 'post-link'); ?>
                                         </div>
                                     </div>

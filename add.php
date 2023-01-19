@@ -16,12 +16,7 @@ $params = array(
 // получение типов контента
 $query = 'SELECT * FROM content_type';
 $content_types = get_data_from_db($db_connection, $query);
-
-// параметр типа добавляемой публикации
-$post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
-
-// перечень допустимых параметров
-$post_type_options = array_column($content_types, 'type_val');
+$post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
 
 // функция для проверки на допустимое значение параметра post_type
 $filter_post_type = function ($type, $options) {
@@ -31,26 +26,16 @@ $filter_post_type = function ($type, $options) {
     return $type;
 };
 
-// открытие формы с созданием текстовой публикации по умолчанию
-$post_type = $filter_post_type($post_type, $post_type_options);
-
-// массив для заполнения данными из формы
-$post_data = [];
-
-// массив для заполнения ошибками полей формы
-$errors = [];
+$post_data = []; // массив для заполнения данными из формы
+$errors = []; // массив для заполнения ошибками полей формы
 
 // обработка данных формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // удаление XSS
+    // фильтрация данных формы
     $post_data = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-
-    // возврат на форму, с которой возникли ошибки
-    $post_type = $post_data['form_tab'];
-
-    // повторная проверка параметра
-    $post_type = $filter_post_type($post_type, $post_type_options);
+    $post_type = $post_data['post_type']; // тип поста
+    $post_type = $filter_post_type($post_type, $post_type_options); // проверка параметра
 
     // выборка обязательных для заполнения полей
     switch ($post_type) {
@@ -92,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // валидация ссылок и загрузка файлов
     switch ($post_type) {
         case 'video':
+            // прервать дальнейшую проверку, если поле со ссылкой на видео пустое
+            if (!$post_data['video-url']) {
+                break;
+            }
             // приведение ссылки к общему протоколу https
             $video_url = trim_link($post_data['video-url']);
             if ($video_url) {
@@ -101,99 +90,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $err_type = 'Не найдено видео по ссылке';
                         $err_heading = 'Ссылка YouTube';
                         $err_text = $yt_check;
-                        fill_errors($errors, 'video-url', $err_type, $err_heading, $err_text);
                     }
                 } else {
                     $err_type = 'Недействительная ссылка';
                     $err_heading = 'Ссылка YouTube';
                     $err_text = 'Введите корректную ссылку на видео с YouTube';
-                    fill_errors($errors, 'video-url', $err_type, $err_heading, $err_text);
                 }
             }
             break;
 
         case 'photo':
-            // если файл загружен, запускается его проверка на тип файла
-            if (validate_file(FILE_PHOTO)) {
-                $tmp_file = $_FILES[FILE_PHOTO];
-                // проверка размера файла
-                if ($tmp_file['size'] > MAX_FILE_SIZE) {
-                    $err_type = 'Размер файла';
-                    $err_heading = 'Картинка';
-                    $err_text = 'Превышен максимальный размер файла';
-                    fill_errors($errors, 'file-error', $err_type, $err_heading, $err_text);
-                }
-                // происходит загрузка файла
-                $file_name = $tmp_file['name'];
-                $file_path = UPLOAD_PATH . $file_name;
-                // перемещение файла в папку и обработка ошибки перемещения
-                if (move_uploaded_file($tmp_file['tmp_name'], $file_path)) {
-                    $file = $file_name;
-                } else {
-                    $err_type = 'Ошибка при копировании файла';
-                    $err_heading = 'Картинка';
-                    $err_text = 'Не удалось загрузить файл, попробуйте снова позднее';
-                    fill_errors($errors, 'file-error', $err_type, $err_heading, $err_text);
+            $file_photo = $_FILES[UPLOAD_IMG_NAME];
+            $file_attached = !empty($file_photo['name']); // был ли приложен файл
+            if ($file_attached) {
+                $file_error = $file_photo['error'];
+                $err_heading = 'Изображение';
+                switch ($file_error) {
+                    case UPLOAD_ERR_OK:
+                        if (validate_file(UPLOAD_IMG_NAME)) {
+                            // проверка размера файла
+                            if ($file_photo['size'] > MAX_FILE_SIZE) {
+                                $err_type = 'Размер файла';
+                                $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
+                            } else {
+                                // происходит загрузка файла
+                                $file_name = $file_photo['name'];
+                                $file_path = UPLOAD_PATH . $file_name;
+                                // перемещение файла в папку и обработка ошибки перемещения
+                                if (move_uploaded_file($file_photo['tmp_name'], $file_path)) {
+                                    $file = $file_name;
+                                } else {
+                                    $err_type = 'Ошибка при копировании файла';
+                                    $err_text = 'Не удалось загрузить файл, попробуйте снова позднее';
+                                }
+                            }
+                        } else {
+                            $err_type = 'Неверный тип файла';
+                            $err_text = 'Неверный тип файла. Загрузите изображение в формате jpg, png или gif';
+                        }
+                        break;
+                    case UPLOAD_ERR_INI_SIZE:
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $err_type = 'Размер файла';
+                        $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                    case UPLOAD_ERR_NO_FILE:
+                        $err_type = 'Файл отсутствует';
+                        $err_text = 'Файл не был загружен или загрузился с ошибками. Попробуйте ещё раз';
+                        break;
+                    case UPLOAD_ERR_NO_TMP_DIR:
+                    case UPLOAD_ERR_CANT_WRITE:
+                    case UPLOAD_ERR_EXTENSION:
+                        $err_type = 'Не удалось записать файл';
+                        $err_text = 'Ошибка сервера или PHP-модуля. Пожалуйста, попробуйте ещё раз позднее';
+                        break;
                 }
             } elseif ($post_data['photo-url']) { // если файл не загружен и заполнено поле со ссылкой
                 // приведение ссылки к общему протоколу https
                 $file_url = trim_link($post_data['photo-url']);
                 // проверка ссылки на path
                 if (check_url($file_url, PHP_URL_PATH)) {
-                    $file_from_url = download_file_from_url($file_url);
-                    // обработка ошибок валидации по типу и размеру файла по ссылке
-                    switch ($file_from_url) {
-                        case ('bad_type'):
-                            $err_type = 'Неверный тип файла';
-                            $err_heading = 'Ссылка из интернета';
-                            $err_text = 'Файл по ссылке не является изображением в формате jpg, png или gif';
-                            fill_errors($errors, 'photo-url', $err_type, $err_heading, $err_text);
-                            break;
-                        case ('oversize'):
-                            $err_type = 'Размер файла';
-                            $err_heading = 'Ссылка из интернета';
-                            $err_text = 'Превышен максимальный размер файла';
-                            fill_errors($errors, 'photo-url', $err_type, $err_heading, $err_text);
-                            break;
-                        default:
-                            $file = $file_from_url;
+                    // валидация по типу и размеру файла по ссылке
+                    $file_from_url = download_file_from_url($file_url, $errors);
+                    if ($file_from_url) {
+                        $file = $file_from_url;
                     }
                 } else { // если ссылка неверная или нерабочая
                     $err_type = 'Файл отсутствует';
                     $err_heading = 'Ссылка из интернета';
                     $err_text = 'Не удалось получить файл, убедитесь в правильности ссылки';
-                    fill_errors($errors, 'photo-url', $err_type, $err_heading, $err_text);
                 }
-            } else { // если пользователь приложил файл, но тот не прошёл первую проверку
-                $err_type = 'Неверный тип файла';
-                $err_heading = 'Картинка';
-                $err_text = 'Загрузите картинку в формате jpg, png или gif';
-                fill_errors($errors, 'file-error', $err_type, $err_heading, $err_text);
+            } else { // если файл не был загружен ни из файловой системы, ни по ссылке
+                $err_type = 'Файл не был загружен';
+                $err_heading = 'Нет файла';
+                $err_text = 'Воспользуйтесь полем для загрузки файла или вставьте ссылку на изображение';
             }
             break;
 
         case 'link':
+            // прервать дальнейшую проверку, если поле для ссылки пустое
+            if (!$post_data['post-link']) {
+                break;
+            }
             // приведение к общему протоколу https:
             $post_link = trim_link($post_data['post-link']);
             // проверка валидности и доступности ссылки
-            if (!empty($post_link) and !check_url($post_link)) {
+            if ($post_link and !check_url($post_link)) {
                 $err_type = 'Некорректная ссылка';
                 $err_heading = 'Ссылка';
                 $err_text = 'Введите корректный URL';
-                fill_errors($errors, 'post-link', $err_type, $err_heading, $err_text);
             }
             break;
+    }
+
+    // заполнить массив с ошибками, если такие возникли
+    if (isset($err_text)) {
+        fill_errors($errors, 'file-error', $err_type, $err_heading, $err_text);
     }
 
     // валидация хэштегов
     $tags_field = $post_data['tags'];
 
     if (!empty($tags_field)) {
-        // убираются лишние пробелы
-        $tags_field = trim_extra_spaces($tags_field);
-
-        // разбивка на отдельные теги по пробелу
-        $tags = explode(' ', $tags_field);
+        $tags_field = trim_extra_spaces($tags_field); // убираются лишние пробелы
+        $tags = explode(' ', $tags_field); // разбивка на отдельные теги по пробелу
 
         foreach ($tags as $tag) {
             // проверка на соответствие формату
@@ -225,18 +226,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $content_type_id = get_data_from_db($db_connection, $query, 'one');
 
         // подготовка выражения
-        $sql = "INSERT INTO post
-                         (post_header,
-                          text_content,
-                          quote_origin,
-                          photo_content,
-                          video_content,
-                          link_text_content,
-                          user_id,
-                          content_type_id)
-                       VALUES
-                         (?, ?, ?, ?, ?, ?, ?, ?)"; // 8
-        $stmt = mysqli_prepare($db_connection, $sql);
+        $query = "INSERT INTO post (
+                            post_header,
+                            text_content,
+                            quote_origin,
+                            photo_content,
+                            video_content,
+                            link_text_content,
+                            user_id,
+                            content_type_id
+                         )
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"; // 8 полей
+        $stmt = mysqli_prepare($db_connection, $query);
 
         // данные для подстановки
         $query_vars = array(
@@ -258,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_post_id = mysqli_insert_id($db_connection);
 
         // добавление тегов
-        if (!empty($tags_field)) {
+        if ($tags) {
             foreach ($tags as $tag) {
                 $tag = trim($tag, '#');
 
@@ -292,8 +293,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // переадресация на страницу с созданным постом
         header('Location: post.php?post_id=' . $new_post_id);
-        exit();
+        exit;
     }
+} else {
+    // параметр типа добавляемой публикации
+    $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
+
+    // проверка параметра или задание значения по умолчанию
+    $post_type = $filter_post_type($post_type, $post_type_options);
 }
 
 // класс для отображения ошибки рядом с полем
