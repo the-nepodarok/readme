@@ -58,7 +58,7 @@ $all_posts = get_data_from_db($db_connection, $query);
 // приведение ссылок к формату
 foreach ($all_posts as &$post) {
     if ($post['link_text_content']) {
-        $post['link_text_content'] = trim_link($post['link_text_content']);
+        $post['link_text_content'] = prepend_url_scheme($post['link_text_content']);
     }
 }
 

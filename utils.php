@@ -11,12 +11,11 @@ define('ALLOWED_IMG_TYPES', array(
     'gif' => 'image/gif',
 ));
 
-define('MAX_FILE_SIZE', 10485760); // максимальный размер файла: 10мб
+define('MAX_FILE_SIZE', 10485760); // максимальный размер файла: 10 * 1024 * 1024 (10 Мб)
 
 define('MAX_FILE_SIZE_USER', 10); // Мб, вывод ограничения на размер файла для пользователя
 
-// константа для пути сохранения файлов, загружаемых из формы
-define('UPLOAD_PATH', 'uploads/');
+define('UPLOAD_PATH', 'uploads/'); // папка сохранения файлов, загружаемых из формы
 
 // часовой пояс по умолчанию
 date_default_timezone_set('Europe/Moscow');
@@ -190,22 +189,21 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
 }
 
 /**
- * Приводит ссылки к единому виду, обрезая протокол
+ * Приводит ссылки к единому виду, добавляя протокол https
  *
  * @param string $url Текст ссылки
  */
-function trim_link(string $url): string
+function prepend_url_scheme(string $url): string
 {
     if (filter_var($url, FILTER_VALIDATE_URL)) {
         $scheme = parse_url($url, PHP_URL_SCHEME);
-
+        $pre = 'https';
         if ($scheme) {
-            $url = 'https' . str_replace($scheme, '', $url);
+            $url = $pre . str_replace($scheme, '', $url);
         } else {
-            $url = 'https://' . $url;
+            $url = $pre . '://' . $url;
         }
     }
-
     return $url;
 }
 
@@ -239,21 +237,20 @@ function build_page($page, $params, $main_content): string
 }
 
 /**
- * Валидирует загруженный файл
+ * Валидирует загруженную картинку
  *
  * @param string $field_name Название поля input, из которого загружается файл
  * @return boolean Пройдена ли проверка
  */
-function validate_file($field_name)
+function validate_image($field_name)
 {
     $validity = false;
+    $file_name = $_FILES[$field_name]['tmp_name'];
+    $file_type = mime_content_type($file_name);
 
-    if ($_FILES[$field_name]['error'] === UPLOAD_ERR_OK) {
-        $file_name = $_FILES[$field_name]['tmp_name'];
-        $file_type = mime_content_type($file_name);
-        $validity = in_array($file_type, ALLOWED_IMG_TYPES);
+    if (in_array($file_type, ALLOWED_IMG_TYPES)) {
+        $validity = true;
     }
-
     return $validity;
 }
 
@@ -323,18 +320,60 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
 
 /**
  * Проверяет валидность ссылки с обязательной частью component в теле ссылки
+ * и заполняет массив с ошибками (если передан)
  *
  * @param string $url Текст ссылки
+ * @param array $err Массив к заполнению ошибками валидации ссылки
+ * @param string $field_name Название валидируемого поля
  * @param int $component Код компонента (для parse_url)
  * @return boolean Валидность ссылки
  */
-function check_url($url, $component = PHP_URL_HOST)
+function validate_url($url, &$err = [], $field_name = '', $component = PHP_URL_HOST)
 {
     $url_validity = false;
+    if (filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, $component)) {
+        if ($headers = get_headers($url)) {
+            foreach ($headers as $header) {
+                if (strpos($header, '200 OK') !== 0) {
+                    $url_validity = true;
+                    break;
+                }
+            }
+        }
+    }
 
-    // проверка доступности и работоспособности ссылки
-    if (get_headers($url)) {
-        $url_validity = true;
+    if (!$url_validity) {
+        switch ($field_name) {
+            case 'video-url':
+                $args = array(
+                    'Недействительная ссылка',
+                    'Ссылка YouTube',
+                    'Введите корректную ссылку на видео с YouTube',
+                );
+                break;
+            case 'photo-url':
+                $args = array(
+                    'Файл отсутствует',
+                    'Ссылка из интернета',
+                    'Не удалось получить файл, убедитесь в правильности ссылки',
+                );
+                break;
+            case 'post-link':
+                $args = array(
+                    'Некорректная ссылка',
+                    'Ссылка',
+                    'Введите корректный URL',
+                );
+                break;
+            default:
+                $args = array(
+                    'Некорректная ссылка',
+                    'Ссылка',
+                    'Введите корректный URL',
+                );
+        }
+        array_unshift($args, $field_name);
+        fill_errors($err, ...$args);
     }
 
     return $url_validity;
@@ -370,6 +409,6 @@ function show_error_msg($err, $field_name) {
  * @param string $str Строка
  */
 function trim_extra_spaces($str) {
-    return trim(preg_replace('/\s+/',' ', $str));
+    return trim(preg_replace('/\s{2,}/',' ', $str));
 }
 

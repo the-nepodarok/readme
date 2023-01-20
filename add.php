@@ -77,29 +77,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // валидация ссылок и загрузка файлов
     switch ($post_type) {
         case 'video':
+            $field_name = 'video-url';
             // прервать дальнейшую проверку, если поле со ссылкой на видео пустое
-            if (!$post_data['video-url']) {
+            if (isset($errors[$field_name])) {
                 break;
             }
-            // приведение ссылки к общему протоколу https
-            $video_url = trim_link($post_data['video-url']);
-            if ($video_url) {
-                if (check_url($video_url, PHP_URL_PATH)) {
-                    $yt_check = check_youtube_url($video_url);
-                    if ($yt_check !== true) {
-                        $err_type = 'Не найдено видео по ссылке';
-                        $err_heading = 'Ссылка YouTube';
-                        $err_text = $yt_check;
-                    }
-                } else {
-                    $err_type = 'Недействительная ссылка';
+            $video_url = $post_data[$field_name];
+            if (validate_url($video_url, $errors, $field_name, PHP_URL_PATH)) {
+                $yt_check = check_youtube_url($video_url);
+                if ($yt_check !== true) {
+                    $err_type = 'Не найдено видео по ссылке';
                     $err_heading = 'Ссылка YouTube';
-                    $err_text = 'Введите корректную ссылку на видео с YouTube';
+                    $err_text = $yt_check;
                 }
             }
             break;
 
         case 'photo':
+            $field_name = 'file-photo';
             $file_photo = $_FILES[UPLOAD_IMG_NAME];
             $file_attached = !empty($file_photo['name']); // был ли приложен файл
             if ($file_attached) {
@@ -107,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $err_heading = 'Изображение';
                 switch ($file_error) {
                     case UPLOAD_ERR_OK:
-                        if (validate_file(UPLOAD_IMG_NAME)) {
+                        if (validate_image(UPLOAD_IMG_NAME)) {
                             // проверка размера файла
                             if ($file_photo['size'] > MAX_FILE_SIZE) {
                                 $err_type = 'Размер файла';
@@ -147,19 +142,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                 }
             } elseif ($post_data['photo-url']) { // если файл не загружен и заполнено поле со ссылкой
-                // приведение ссылки к общему протоколу https
-                $file_url = trim_link($post_data['photo-url']);
+                $field_name = 'photo-url';
+                // приведение ссылки к протоколу https
+                $file_url = prepend_url_scheme($post_data[$field_name]);
                 // проверка ссылки на path
-                if (check_url($file_url, PHP_URL_PATH)) {
+                if (validate_url($file_url, $errors, $field_name, PHP_URL_PATH)) {
                     // валидация по типу и размеру файла по ссылке
                     $file_from_url = download_file_from_url($file_url, $errors);
                     if ($file_from_url) {
                         $file = $file_from_url;
                     }
-                } else { // если ссылка неверная или нерабочая
-                    $err_type = 'Файл отсутствует';
-                    $err_heading = 'Ссылка из интернета';
-                    $err_text = 'Не удалось получить файл, убедитесь в правильности ссылки';
                 }
             } else { // если файл не был загружен ни из файловой системы, ни по ссылке
                 $err_type = 'Файл не был загружен';
@@ -169,24 +161,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'link':
+            $field_name = 'post-link';
             // прервать дальнейшую проверку, если поле для ссылки пустое
-            if (!$post_data['post-link']) {
+            if (isset($errors[$field_name])) {
                 break;
             }
-            // приведение к общему протоколу https:
-            $post_link = trim_link($post_data['post-link']);
+            // приведение к протоколу https:
+            $post_link = prepend_url_scheme($post_data[$field_name]);
+
             // проверка валидности и доступности ссылки
-            if ($post_link and !check_url($post_link)) {
-                $err_type = 'Некорректная ссылка';
-                $err_heading = 'Ссылка';
-                $err_text = 'Введите корректный URL';
-            }
+            validate_url($post_link, $errors, $field_name);
             break;
     }
 
     // заполнить массив с ошибками, если такие возникли
     if (isset($err_text)) {
-        fill_errors($errors, 'file-error', $err_type, $err_heading, $err_text);
+        fill_errors($errors, $field_name, $err_type, $err_heading, $err_text);
     }
 
     // валидация хэштегов
@@ -198,17 +188,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         foreach ($tags as $tag) {
             // проверка на соответствие формату
-            $match = preg_match('/^#(\d|[A-zА-я]|_)+$/', $tag);
+            $match = preg_match('/^#(\d|[A-zА-я]|_)+$/ui', $tag);
 
+            $err_heading = 'Теги';
             if ($match === 0) {
                 $err_type = 'Недопустимые символы';
-                $err_heading = 'Теги';
                 $err_text = 'Теги должны начинаться с #, могут состоять из букв, цифр и символа подчёркивания и разделены пробелами';
                 fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
                 break;
             } elseif (!$match) { // если по какой-то причине preg_match вернул false
                 $err_type = 'Ошибка алгоритма';
-                $err_heading = 'Теги';
                 $err_text = 'Что-то пошло не так, попробуйте ещё раз';
                 fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
                 break;
