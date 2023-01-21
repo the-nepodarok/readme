@@ -94,7 +94,7 @@
                         <?php case 'photo': ?>
                 <!--содержимое для поста-фото-->
                 <div class="post-photo__image-wrapper">
-                    <img src="img/<?= $post['photo_content']; ?>" alt="Фото от пользователя" width="360" height="240">
+                    <img src="<?= UPLOAD_PATH . $post['photo_content']; ?>" alt="Фото от пользователя" width="360" height="240">
                 </div>
                         <?php break; ?>
 
@@ -149,7 +149,7 @@
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
                                 <?php if ($post['user_avatar']): ?>
-                                <img class="post__author-avatar" src="img/<?= $post['user_avatar']; ?>" alt="Аватар пользователя">
+                                <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
                                 <?php endif; ?>
                             </div>
                             <div class="post__info">

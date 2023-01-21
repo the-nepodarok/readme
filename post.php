@@ -50,7 +50,7 @@ $page_title = 'публикация. ' . $post['post_header']; // сформир
 
 // приведение ссылок к формату
 if ($post['link_text_content']) {
-    $post['link_text_content'] = trim_link($post['link_text_content']);
+    $post['link_text_content'] = prepend_url_scheme($post['link_text_content']);
 }
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
