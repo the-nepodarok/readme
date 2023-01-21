@@ -98,49 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file_photo = $_FILES[UPLOAD_IMG_NAME];
             $file_attached = !empty($file_photo['name']); // был ли приложен файл
             if ($file_attached) {
-                $file_error = $file_photo['error'];
-                $err_heading = 'Изображение';
-                switch ($file_error) {
-                    case UPLOAD_ERR_OK:
-                        if (validate_image(UPLOAD_IMG_NAME)) {
-                            // проверка размера файла
-                            if ($file_photo['size'] > MAX_FILE_SIZE) {
-                                $err_type = 'Размер файла';
-                                $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
-                            } else {
-                                // происходит загрузка файла
-                                $file_name = $file_photo['name'];
-                                $file_path = UPLOAD_PATH . $file_name;
-                                // перемещение файла в папку и обработка ошибки перемещения
-                                if (move_uploaded_file($file_photo['tmp_name'], $file_path)) {
-                                    $file = $file_name;
-                                } else {
-                                    $err_type = 'Ошибка при копировании файла';
-                                    $err_text = 'Не удалось загрузить файл, попробуйте снова позднее';
-                                }
-                            }
-                        } else {
-                            $err_type = 'Неверный тип файла';
-                            $err_text = 'Неверный тип файла. Загрузите изображение в формате jpg, png или gif';
-                        }
-                        break;
-                    case UPLOAD_ERR_INI_SIZE:
-                    case UPLOAD_ERR_FORM_SIZE:
-                        $err_type = 'Размер файла';
-                        $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
-                        break;
-                    case UPLOAD_ERR_PARTIAL:
-                    case UPLOAD_ERR_NO_FILE:
-                        $err_type = 'Файл отсутствует';
-                        $err_text = 'Файл не был загружен или загрузился с ошибками. Попробуйте ещё раз';
-                        break;
-                    case UPLOAD_ERR_NO_TMP_DIR:
-                    case UPLOAD_ERR_CANT_WRITE:
-                    case UPLOAD_ERR_EXTENSION:
-                        $err_type = 'Не удалось записать файл';
-                        $err_text = 'Ошибка сервера или PHP-модуля. Пожалуйста, попробуйте ещё раз позднее';
-                        break;
-                }
+                $file = upload_image(UPLOAD_IMG_NAME, $errors);
             } elseif ($post_data['photo-url']) { // если файл не загружен и заполнено поле со ссылкой
                 $field_name = 'photo-url';
                 // приведение ссылки к протоколу https
@@ -180,28 +138,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // валидация хэштегов
-    $tags_field = $post_data['tags'];
+    $tags = $post_data['tags'];
 
-    if (!empty($tags_field)) {
-        $tags_field = trim_extra_spaces($tags_field); // убираются лишние пробелы
-        $tags = explode(' ', $tags_field); // разбивка на отдельные теги по пробелу
+    if (!empty($tags)) {
+        $tags = trim_extra_spaces($tags) . ' '; // убираются лишние пробелы, добавляется пробел в конце для проверки
 
-        foreach ($tags as $tag) {
-            // проверка на соответствие формату
-            $match = preg_match('/^#(\d|[A-zА-я]|_)+$/ui', $tag);
+        // проверка на соответствие формату
+        $match = preg_match('/^(#[A-z_А-я\d]+\h)+$/ui', $tags);
 
-            $err_heading = 'Теги';
-            if ($match === 0) {
-                $err_type = 'Недопустимые символы';
-                $err_text = 'Теги должны начинаться с #, могут состоять из букв, цифр и символа подчёркивания и разделены пробелами';
-                fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
-                break;
-            } elseif (!$match) { // если по какой-то причине preg_match вернул false
-                $err_type = 'Ошибка алгоритма';
-                $err_text = 'Что-то пошло не так, попробуйте ещё раз';
-                fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
-                break;
-            }
+        $err_heading = 'Теги';
+        if ($match === 0) {
+            $err_type = 'Недопустимые символы';
+            $err_text = 'Теги должны начинаться с #, могут состоять из букв, цифр и символа подчёркивания и разделены пробелами';
+            fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
+        } elseif (!$match) { // если по какой-то причине preg_match вернул false
+            $err_type = 'Ошибка алгоритма';
+            $err_text = 'Что-то пошло не так, попробуйте ещё раз';
+            fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
         }
     }
 
@@ -249,6 +202,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // добавление тегов
         if ($tags) {
+            $tags = trim($tags); // удаляет пробел, который требовался для проверки
+            $tags = explode(' ', $tags); // разбивка на отдельные теги по пробелу
+
             foreach ($tags as $tag) {
                 $tag = trim($tag, '#');
 
@@ -297,7 +253,7 @@ $alert_class = 'form__input-section--error';
 
 // подключение шаблона для отображения блоков с ошибками заполнения справа от формы
 if ($errors) {
-    $error_list = include_template('add-post_error-list.php', [
+    $error_list = include_template('form_error-list.php', [
         'errors' => $errors,
     ]);
 }

@@ -320,7 +320,7 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
 
 /**
  * Проверяет валидность ссылки с обязательной частью component в теле ссылки
- * и заполняет массив с ошибками (если передан)
+ * и заполняет массив с ошибками
  *
  * @param string $url Текст ссылки
  * @param array $err Массив к заполнению ошибками валидации ссылки
@@ -328,7 +328,7 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
  * @param int $component Код компонента (для parse_url)
  * @return boolean Валидность ссылки
  */
-function validate_url($url, &$err = [], $field_name = '', $component = PHP_URL_HOST)
+function validate_url($url, &$err, $field_name, $component = PHP_URL_HOST)
 {
     $url_validity = false;
     if (filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, $component)) {
@@ -400,7 +400,7 @@ function show_error_msg($err, $field_name) {
         );
     }
 
-    return include_template('add-post_error_template.php', $params);
+    return include_template('form_error_template.php', $params);
 }
 
 /**
@@ -412,3 +412,61 @@ function trim_extra_spaces($str) {
     return trim(preg_replace('/\s{2,}/',' ', $str));
 }
 
+/**
+ * Выполняет процедуру валидации и загрузки изображения из формы
+ *
+ * @param string $files_name Название поля для загрузки файла
+ * @param array $err Массив для заполнения ошибками
+ * @return mixed Имя загруженного файла, либо false, если файл не прошёл валидацию
+ */
+function upload_image($files_name, &$err) {
+    $image = $_FILES[$files_name];
+    $file = false;
+    $file_error = $image['error'];
+    $err_heading = 'Изображение';
+    switch ($file_error) {
+        case UPLOAD_ERR_OK:
+            if (validate_image($files_name)) {
+                // проверка размера файла
+                if ($image['size'] > MAX_FILE_SIZE) {
+                    $err_type = 'Размер файла';
+                    $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
+                } else {
+                    // происходит загрузка файла
+                    $file_name = $image['name'];
+                    $file_path = UPLOAD_PATH . $file_name;
+                    // перемещение файла в папку и обработка ошибки перемещения
+                    if (move_uploaded_file($image['tmp_name'], $file_path)) {
+                        $file = $file_name;
+                    } else {
+                        $err_type = 'Ошибка при копировании файла';
+                        $err_text = 'Не удалось загрузить файл, попробуйте снова позднее';
+                    }
+                }
+            } else {
+                $err_type = 'Неверный тип файла';
+                $err_text = 'Неверный тип файла. Загрузите изображение в формате jpg, png или gif';
+            }
+            break;
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            $err_type = 'Размер файла';
+            $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
+            break;
+        case UPLOAD_ERR_PARTIAL:
+        case UPLOAD_ERR_NO_FILE:
+            $err_type = 'Файл отсутствует';
+            $err_text = 'Файл не был загружен или загрузился с ошибками. Попробуйте ещё раз';
+            break;
+        case UPLOAD_ERR_NO_TMP_DIR:
+        case UPLOAD_ERR_CANT_WRITE:
+        case UPLOAD_ERR_EXTENSION:
+            $err_type = 'Не удалось записать файл';
+            $err_text = 'Ошибка сервера или PHP-модуля. Пожалуйста, попробуйте ещё раз позднее';
+            break;
+    }
+    if (isset($err_text)) {
+        fill_errors($err, $files_name, $err_type, $err_heading, $err_text);
+    }
+    return $file;
+}
