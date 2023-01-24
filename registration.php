@@ -34,26 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // валидация e-mail
     if ($post_data['email']) {
-        $err_heading = 'Электронная почта';
-
-        if (filter_var($post_data['email'], FILTER_VALIDATE_EMAIL)) {
-            $email = mysqli_real_escape_string($db_connection, $post_data['email']);
-            $query = "SELECT id FROM user WHERE user_email = '$email'";
-            $result = get_data_from_db($db_connection, $query, 'one');
-
-            if ($result > 0) {
-                $err_type = 'Пользователь уже существует';
-                $err_text = 'Пользователь с такой электронной почтой уже существует';
-            }
-        } else {
-            $err_type = 'Некорректный email-адрес';
-            $err_text = 'Введите корректный адрес электронной почты';
-        }
-
-        // заполнить массив с ошибками, если таковые возникли
-        if (isset($err_text)) {
-            fill_errors($errors, 'email', $err_type, $err_heading, $err_text);
-        }
+        $email = validate_email($post_data['email'], $db_connection, $errors);
     }
 
     // проверка повторного ввода пароля
@@ -64,13 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fill_errors($errors, 'password-repeat', $err_type, $err_heading, $err_text);
     }
 
-    if (!empty($_FILES['userpic-file']['name'])) {
-        $file = upload_image('userpic-file', $errors);
+    // валидация и загрузка изображения
+    if ($_FILES[NEW_USER_IMG_NAME]['name']) {
+        $file = upload_image($errors, NEW_USER_IMG_NAME);
     }
 
+    // добавление нового пользователя
     if (empty($errors)) {
 
-        // подготовка запроса для добавления нового пользователя
+        // подготовка запроса
         $sql = 'INSERT INTO user (
                           user_reg_dt,
                           user_email,
@@ -86,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // данные для подстановки
         $query_vars = array(
-            $post_data['email'],
+            $email,
             $post_data['login'],
             $password,
             $file ?? NULL,
@@ -97,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_execute($stmt);
 
         // переадресация на главную страницу
-        header('Location: index.php');
+        header('Location: /');
         exit;
     }
 }

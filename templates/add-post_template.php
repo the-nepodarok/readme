@@ -41,18 +41,13 @@
                             </div>
                             <div class="adding-post__input-file-container form__input-container form__input-container--file">
                                 <div class="adding-post__input-file-wrapper form__input-file-wrapper">
-                                    <div class="adding-post__file-zone adding-post__file-zone--photo form__file-zone dropzone">
-                                        <input class="adding-post__input-file form__input-file dropzone" id="<?= UPLOAD_IMG_NAME; ?>" type="file" name="<?= UPLOAD_IMG_NAME; ?>">
-                                    </div>
-                                    <button class="adding-post__input-file-button form__input-file-button form__input-file-button--photo button" type="button">
+                                    <label class="adding-post__input-file-button form__input-file-button form__input-file-button--photo button" for="<?= UPLOAD_IMG_NAME; ?>" title="Выберите фото в формате jpg, png или gif">
                                         <span>Выбрать фото</span>
                                         <svg class="adding-post__attach-icon form__attach-icon" width="10" height="20">
                                             <use xlink:href="#icon-attach"></use>
                                         </svg>
-                                    </button>
-                                </div>
-                                <div class="adding-post__file adding-post__file--photo form__file dropzone-previews">
-
+                                    </label>
+                                    <input class="visually-hidden" id="<?= UPLOAD_IMG_NAME; ?>" type="file" name="<?= UPLOAD_IMG_NAME; ?>">
                                 </div>
                             </div>
                             <div class="adding-post__buttons">

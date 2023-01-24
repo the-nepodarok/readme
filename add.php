@@ -95,21 +95,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'photo':
             $field_name = 'file-photo';
-            $file_photo = $_FILES[UPLOAD_IMG_NAME];
-            $file_attached = !empty($file_photo['name']); // был ли приложен файл
+            $file_attached = (bool)$_FILES[UPLOAD_IMG_NAME]['name']; // был ли приложен файл
             if ($file_attached) {
-                $file = upload_image(UPLOAD_IMG_NAME, $errors);
-            } elseif ($post_data['photo-url']) { // если файл не загружен и заполнено поле со ссылкой
+                $file = upload_image($errors, UPLOAD_IMG_NAME);
+            } elseif ($post_data['photo-url']) { // если не было загрузки файла и заполнено поле со ссылкой
                 $field_name = 'photo-url';
                 // приведение ссылки к протоколу https
-                $file_url = prepend_url_scheme($post_data[$field_name]);
+                $file_url = $post_data[$field_name];
                 // проверка ссылки на path
                 if (validate_url($file_url, $errors, $field_name, PHP_URL_PATH)) {
                     // валидация по типу и размеру файла по ссылке
-                    $file_from_url = download_file_from_url($file_url, $errors);
-                    if ($file_from_url) {
-                        $file = $file_from_url;
-                    }
+                    $file = download_file_from_url($file_url, $errors);
                 }
             } else { // если файл не был загружен ни из файловой системы, ни по ссылке
                 $err_type = 'Файл не был загружен';
@@ -138,13 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // валидация хэштегов
-    $tags = $post_data['tags'];
+    $tags_field = $post_data['tags'];
 
-    if (!empty($tags)) {
-        $tags = trim_extra_spaces($tags) . ' '; // убираются лишние пробелы, добавляется пробел в конце для проверки
+    if ($tags_field) {
+        $tags_field = trim_extra_spaces($tags_field); // убираются лишние пробелы
 
         // проверка на соответствие формату
-        $match = preg_match('/^(#[A-z_А-я\d]+\h)+$/ui', $tags);
+        $match = preg_match('/^(#[A-z_А-я\d]+\h)+$/ui', $tags_field . ' '); // пробел в конце для учёта особенности паттерна
 
         $err_heading = 'Теги';
         if ($match === 0) {
@@ -162,10 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
 
         // получение типа контента в зав-ти от формы
-        $query = "SELECT id
-                  FROM content_type
-                  WHERE type_val = '$post_type'";
-        $content_type_id = get_data_from_db($db_connection, $query, 'one');
+        $content_type_values = array_column($content_types, 'type_val', 'id');
+        $content_type_id = array_search($post_type, $content_type_values);
 
         // подготовка выражения
         $query = "INSERT INTO post (
@@ -201,9 +195,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_post_id = mysqli_insert_id($db_connection);
 
         // добавление тегов
-        if ($tags) {
-            $tags = trim($tags); // удаляет пробел, который требовался для проверки
-            $tags = explode(' ', $tags); // разбивка на отдельные теги по пробелу
+        if ($tags_field) {
+            $tags = explode(' ', $tags_field); // разбивка на отдельные теги по пробелу
 
             foreach ($tags as $tag) {
                 $tag = trim($tag, '#');

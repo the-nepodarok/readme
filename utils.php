@@ -1,7 +1,10 @@
 <?php
 
-// название поля загрузки картинки
+// название поля загрузки картинки в форме добавления поста
 define('UPLOAD_IMG_NAME', 'userpic_file_photo');
+
+// название поля загрузки картинки в форме регистрации нового пользователя
+define('NEW_USER_IMG_NAME', 'userpic_file');
 
 // массив с допустимыми для загрузки в форме типами файлов
 define('ALLOWED_IMG_TYPES', array(
@@ -242,7 +245,7 @@ function build_page($page, $params, $main_content): string
  * @param string $field_name Название поля input, из которого загружается файл
  * @return boolean Пройдена ли проверка
  */
-function validate_image($field_name)
+function validate_image_type($field_name)
 {
     $validity = false;
     $file_name = $_FILES[$field_name]['tmp_name'];
@@ -259,7 +262,8 @@ function validate_image($field_name)
  *
  * @param string $url Ссылка на файл
  * @param array $err Массив к заполнению ошибками валидации файла
- * @return string Конечное имя загруженного файла или код ошибки, если файл не прошёл одну из проверок
+ * @param string $destination Путь для перемещения загруженного файла
+ * @return false|string Конечное имя загруженного файла или false, если файл не прошёл одну из проверок
  */
 function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
 {
@@ -276,7 +280,7 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
         if (file_get_contents($url)) {
             $file_content = file_get_contents($url);
             $file_name = uniqid() . ".$file_extension";
-            $file_path = UPLOAD_PATH . $file_name;
+            $file_path = $destination . $file_name;
 
             if (file_put_contents($file_path, $file_content)) {
                 $file_type = mime_content_type($file_path);
@@ -288,19 +292,20 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
                         clearstatcache();
                         $result = $file_name;
                     } else {
-                        unlink($file_path);
                         $err_type = 'Размер файла';
                         $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
                     }
                 } else {
-                    unlink($file_path);
                     $err_type = 'Неверный тип файла';
                     $err_text = 'Файл по ссылке не является изображением в формате jpg, png или gif';
                 }
             } else {
-                unlink($file_path);
                 $err_type = 'Ошибка копирования файла';
                 $err_heading = 'Не удалось загрузить файл на сервер. Попробуйте снова позднее';
+            }
+            // удаление невалидного файла
+            if (!$result) {
+                unlink($file_path);
             }
         } else {
             $err_type = 'Не удалось загрузить файл';
@@ -415,28 +420,28 @@ function trim_extra_spaces($str) {
 /**
  * Выполняет процедуру валидации и загрузки изображения из формы
  *
- * @param string $files_name Название поля для загрузки файла
  * @param array $err Массив для заполнения ошибками
+ * @param string $files_name Название поля для загрузки файла
  * @return mixed Имя загруженного файла, либо false, если файл не прошёл валидацию
  */
-function upload_image($files_name, &$err) {
-    $image = $_FILES[$files_name];
+function upload_image(&$err, $files_name) {
+    $file_src = $_FILES[$files_name];
     $file = false;
-    $file_error = $image['error'];
+    $file_error = $file_src['error'];
     $err_heading = 'Изображение';
     switch ($file_error) {
         case UPLOAD_ERR_OK:
-            if (validate_image($files_name)) {
+            if (validate_image_type($files_name)) {
                 // проверка размера файла
-                if ($image['size'] > MAX_FILE_SIZE) {
+                if ($file_src['size'] > MAX_FILE_SIZE) {
                     $err_type = 'Размер файла';
                     $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
                 } else {
                     // происходит загрузка файла
-                    $file_name = $image['name'];
+                    $file_name = $file_src['name'];
                     $file_path = UPLOAD_PATH . $file_name;
-                    // перемещение файла в папку и обработка ошибки перемещения
-                    if (move_uploaded_file($image['tmp_name'], $file_path)) {
+                    // перемещение файла в папку uploads и обработка ошибки перемещения
+                    if (move_uploaded_file($file_src['tmp_name'], $file_path)) {
                         $file = $file_name;
                     } else {
                         $err_type = 'Ошибка при копировании файла';
@@ -469,4 +474,37 @@ function upload_image($files_name, &$err) {
         fill_errors($err, $files_name, $err_type, $err_heading, $err_text);
     }
     return $file;
+}
+
+/**
+ * Выполняет проверку e-mail адреса на валидность и на существование в БД
+ *
+ * @param string $email Адрес эл. почты
+ * @param array $err Массив для заполнения ошибками
+ * @return false|string Исходный e-mail, либо false, если адрес не прошёл проверку
+ */
+function validate_email($email, $db, &$err) {
+    $err_heading = 'Электронная почта';
+
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+        $query = "SELECT id FROM user WHERE user_email = '$email'";
+        $result = get_data_from_db($db, $query, 'one');
+
+        if ($result > 0) {
+            $err_type = 'Пользователь уже существует';
+            $err_text = 'Пользователь с такой электронной почтой уже существует';
+        }
+    } else {
+        $err_type = 'Некорректный email-адрес';
+        $err_text = 'Введите корректный адрес электронной почты';
+    }
+
+    // заполнить массив с ошибками, если таковые возникли
+    if (isset($err_text)) {
+        $email = false;
+        fill_errors($err, 'email', $err_type, $err_heading, $err_text);
+    }
+
+    return $email;
 }
