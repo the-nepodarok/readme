@@ -234,7 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 } else { 
-
     // параметр типа добавляемой публикации
     $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
 
