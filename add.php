@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: post.php?post_id=' . $new_post_id);
         exit;
     }
-} else {
+} else { 
     // параметр типа добавляемой публикации
     $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
 
