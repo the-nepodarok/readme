@@ -95,63 +95,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'photo':
             $field_name = 'file-photo';
-            $file_photo = $_FILES[UPLOAD_IMG_NAME];
-            $file_attached = !empty($file_photo['name']); // был ли приложен файл
+            $file_attached = (bool)$_FILES[UPLOAD_IMG_NAME]['name']; // был ли приложен файл
             if ($file_attached) {
-                $file_error = $file_photo['error'];
-                $err_heading = 'Изображение';
-                switch ($file_error) {
-                    case UPLOAD_ERR_OK:
-                        if (validate_image(UPLOAD_IMG_NAME)) {
-                            // проверка размера файла
-                            if ($file_photo['size'] > MAX_FILE_SIZE) {
-                                $err_type = 'Размер файла';
-                                $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
-                            } else {
-                                // происходит загрузка файла
-                                $file_name = $file_photo['name'];
-                                $file_path = UPLOAD_PATH . $file_name;
-                                // перемещение файла в папку и обработка ошибки перемещения
-                                if (move_uploaded_file($file_photo['tmp_name'], $file_path)) {
-                                    $file = $file_name;
-                                } else {
-                                    $err_type = 'Ошибка при копировании файла';
-                                    $err_text = 'Не удалось загрузить файл, попробуйте снова позднее';
-                                }
-                            }
-                        } else {
-                            $err_type = 'Неверный тип файла';
-                            $err_text = 'Неверный тип файла. Загрузите изображение в формате jpg, png или gif';
-                        }
-                        break;
-                    case UPLOAD_ERR_INI_SIZE:
-                    case UPLOAD_ERR_FORM_SIZE:
-                        $err_type = 'Размер файла';
-                        $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
-                        break;
-                    case UPLOAD_ERR_PARTIAL:
-                    case UPLOAD_ERR_NO_FILE:
-                        $err_type = 'Файл отсутствует';
-                        $err_text = 'Файл не был загружен или загрузился с ошибками. Попробуйте ещё раз';
-                        break;
-                    case UPLOAD_ERR_NO_TMP_DIR:
-                    case UPLOAD_ERR_CANT_WRITE:
-                    case UPLOAD_ERR_EXTENSION:
-                        $err_type = 'Не удалось записать файл';
-                        $err_text = 'Ошибка сервера или PHP-модуля. Пожалуйста, попробуйте ещё раз позднее';
-                        break;
-                }
-            } elseif ($post_data['photo-url']) { // если файл не загружен и заполнено поле со ссылкой
+                $file = upload_image($errors, UPLOAD_IMG_NAME);
+            } elseif ($post_data['photo-url']) { // если не было загрузки файла и заполнено поле со ссылкой
                 $field_name = 'photo-url';
                 // приведение ссылки к протоколу https
-                $file_url = prepend_url_scheme($post_data[$field_name]);
+                $file_url = $post_data[$field_name];
                 // проверка ссылки на path
                 if (validate_url($file_url, $errors, $field_name, PHP_URL_PATH)) {
                     // валидация по типу и размеру файла по ссылке
-                    $file_from_url = download_file_from_url($file_url, $errors);
-                    if ($file_from_url) {
-                        $file = $file_from_url;
-                    }
+                    $file = download_file_from_url($file_url, $errors);
                 }
             } else { // если файл не был загружен ни из файловой системы, ни по ссылке
                 $err_type = 'Файл не был загружен';
@@ -182,26 +136,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // валидация хэштегов
     $tags_field = $post_data['tags'];
 
-    if (!empty($tags_field)) {
+    if ($tags_field) {
         $tags_field = trim_extra_spaces($tags_field); // убираются лишние пробелы
-        $tags = explode(' ', $tags_field); // разбивка на отдельные теги по пробелу
 
-        foreach ($tags as $tag) {
-            // проверка на соответствие формату
-            $match = preg_match('/^#(\d|[A-zА-я]|_)+$/ui', $tag);
+        // проверка на соответствие формату
+        $match = preg_match('/^(#[A-z_А-я\d]+\h)+$/ui', $tags_field . ' '); // пробел в конце для учёта особенности паттерна
 
-            $err_heading = 'Теги';
-            if ($match === 0) {
-                $err_type = 'Недопустимые символы';
-                $err_text = 'Теги должны начинаться с #, могут состоять из букв, цифр и символа подчёркивания и разделены пробелами';
-                fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
-                break;
-            } elseif (!$match) { // если по какой-то причине preg_match вернул false
-                $err_type = 'Ошибка алгоритма';
-                $err_text = 'Что-то пошло не так, попробуйте ещё раз';
-                fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
-                break;
-            }
+        $err_heading = 'Теги';
+        if ($match === 0) {
+            $err_type = 'Недопустимые символы';
+            $err_text = 'Теги должны начинаться с #, могут состоять из букв, цифр и символа подчёркивания и разделены пробелами';
+            fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
+        } elseif (!$match) { // если по какой-то причине preg_match вернул false
+            $err_type = 'Ошибка алгоритма';
+            $err_text = 'Что-то пошло не так, попробуйте ещё раз';
+            fill_errors($errors, 'tags', $err_type, $err_heading, $err_text);
         }
     }
 
@@ -209,10 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
 
         // получение типа контента в зав-ти от формы
-        $query = "SELECT id
-                  FROM content_type
-                  WHERE type_val = '$post_type'";
-        $content_type_id = get_data_from_db($db_connection, $query, 'one');
+        $content_type_values = array_column($content_types, 'type_val', 'id');
+        $content_type_id = array_search($post_type, $content_type_values);
 
         // подготовка выражения
         $query = "INSERT INTO post (
@@ -248,7 +195,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_post_id = mysqli_insert_id($db_connection);
 
         // добавление тегов
-        if ($tags) {
+        if ($tags_field) {
+            $tags = explode(' ', $tags_field); // разбивка на отдельные теги по пробелу
+
             foreach ($tags as $tag) {
                 $tag = trim($tag, '#');
 
@@ -284,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: post.php?post_id=' . $new_post_id);
         exit;
     }
-} else {
+} else { 
     // параметр типа добавляемой публикации
     $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
 
@@ -297,7 +246,7 @@ $alert_class = 'form__input-section--error';
 
 // подключение шаблона для отображения блоков с ошибками заполнения справа от формы
 if ($errors) {
-    $error_list = include_template('add-post_error-list.php', [
+    $error_list = include_template('form_error-list.php', [
         'errors' => $errors,
     ]);
 }
