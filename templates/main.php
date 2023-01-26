@@ -129,7 +129,6 @@
                             /* вставьте ссылку на видео */
                              $post['video_content']
                         ); ?>
-                        <img src="img/coast-medium.jpg" alt="Превью к видео" width="360" height="188">
                     </div>
                     <a href="post-details.html" class="post-video__play-big button">
                         <svg class="post-video__play-big-icon" width="14" height="14">
@@ -157,7 +156,7 @@
                                     <!--здесь имя пользоателя-->
                                     <?= $post['user_name']; ?>
                                 </b>
-                                <?php $pd = $post['create_dt']; // alias для $post['date'] ?>
+                                <?php $pd = $post['create_dt']; // alias для post date ?>
                                 <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?> назад</time>
                             </div>
                         </a>

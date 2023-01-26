@@ -192,7 +192,7 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
 }
 
 /**
- * Приводит ссылки к единому виду, добавляя протокол https
+ * Приводит ссылки к единому виду, добавляя протокол https (если работает) или http
  *
  * @param string $url Текст ссылки
  */
@@ -200,11 +200,18 @@ function prepend_url_scheme(string $url): string
 {
     if (filter_var($url, FILTER_VALIDATE_URL)) {
         $scheme = parse_url($url, PHP_URL_SCHEME);
-        $pre = 'https';
+
         if ($scheme) {
-            $url = $pre . str_replace($scheme, '', $url);
+            $url = str_replace($scheme, '', $url);
+        }
+
+        $http = 'http' . $url;
+        $https = 'https' . $url;
+
+        if (get_headers($http) && get_headers($https)) {
+            $url = $https;
         } else {
-            $url = $pre . '://' . $url;
+            $url = $http;
         }
     }
     return $url;
@@ -265,7 +272,7 @@ function validate_image_type($field_name)
  * @param string $destination Путь для перемещения загруженного файла
  * @return false|string Конечное имя загруженного файла или false, если файл не прошёл одну из проверок
  */
-function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
+function download_file_from_url(&$err, $url, $destination = UPLOAD_PATH)
 {
     $result = false;
     $err_heading = 'Ссылка из интернета';
@@ -333,7 +340,7 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
  * @param int $component Код компонента (для parse_url)
  * @return boolean Валидность ссылки
  */
-function validate_url($url, &$err, $field_name, $component = PHP_URL_HOST)
+function validate_url(&$err, $url, $field_name, $component = PHP_URL_HOST)
 {
     $url_validity = false;
     if (filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, $component)) {
@@ -479,11 +486,13 @@ function upload_image(&$err, $files_name) {
 /**
  * Выполняет проверку e-mail адреса на валидность и на существование в БД
  *
- * @param string $email Адрес эл. почты
+ * @param mysqli $db Подключение к базе данных
  * @param array $err Массив для заполнения ошибками
+ * @param string $email Адрес эл. почты
+ * @param boolean $new Проверяется ли e-mail для регистрации нового пользователя
  * @return false|string Исходный e-mail, либо false, если адрес не прошёл проверку
  */
-function validate_email($email, $db, &$err) {
+function validate_email($db, &$err, $email, $new = false) {
     $err_heading = 'Электронная почта';
 
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -491,10 +500,14 @@ function validate_email($email, $db, &$err) {
         $query = "SELECT id FROM user WHERE user_email = '$email'";
         $result = get_data_from_db($db, $query, 'one');
 
-        if ($result > 0) {
+        if ($new && $result > 0) {
             $err_type = 'Пользователь уже существует';
             $err_text = 'Пользователь с такой электронной почтой уже существует';
+        } elseif (!$new && !$result) {
+            $err_type = 'Пользователя не существует';
+            $err_text = 'Пользователь с таким E-mail не найден';
         }
+
     } else {
         $err_type = 'Некорректный email-адрес';
         $err_text = 'Введите корректный адрес электронной почты';
@@ -507,4 +520,109 @@ function validate_email($email, $db, &$err) {
     }
 
     return $email;
+}
+
+/**
+ * Выполняет проверку аутентификации пользователя
+ *
+ * @param mysqli $db Подключение к базе данных
+ * @return array|false Массив с данными пользователя, либо false при отсутствии аутентификации
+ */
+function check_session($db) {
+    $user = false;
+    if (isset($_SESSION['user'])) {
+        $user_id = $_SESSION['user'];
+
+        $query = "SELECT * FROM user WHERE id = '$user_id'";
+        $user = get_data_from_db($db, $query, 'row');
+    }
+    return $user;
+}
+
+/**
+ * Сохраняет в cookies адрес текущей страницы
+ */
+function set_reference_page_cookies() {
+    $name = 'prev_page';
+    $value = $_SERVER['REQUEST_URI'];
+    $expire = time() + 3000;
+    $path = "/";
+
+    setcookie($name, $value, $expire, $path);
+}
+
+/**
+ * Производит репост публикации
+ *
+ * @param mysqli $db Подключение к базе данных
+ * @param int $post_id Параметр запроса, соответствующий id публикации
+ * @param int $user_id Идентификатор аутентифицированного пользователя
+ */
+function repost($db, $post_id, $user_id) {
+    $query = "SELECT p.* FROM post AS p WHERE id = $post_id";
+    $original_post = get_data_from_db($db, $query, 'row');
+
+    if ($original_post) {
+        // подготовка выражения
+        $query = "INSERT INTO post (
+                        post_header,
+                        text_content,
+                        quote_origin,
+                        photo_content,
+                        video_content,
+                        link_text_content,
+                        user_id,
+                        is_repost,
+                        origin_post_id,
+                        content_type_id
+                     )
+                     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"; // 10 полей
+        $stmt = mysqli_prepare($db, $query);
+
+        // данные для подстановки
+        $query_vars = array(
+            $original_post['post_header'],
+            $original_post['text_content'] ?? NULL,
+            $original_post['quote_origin'] ?? NULL,
+            $original_post['photo_content'] ?? NULL,
+            $original_post['video_content'] ?? NULL,
+            $original_post['link_text_content'] ?? NULL,
+            $user_id,
+            $original_post['id'],
+            $original_post['content_type_id'],
+        );
+
+        // выполнение подготовленного выражения
+        mysqli_stmt_bind_param($stmt, 'ssssssiii', ...$query_vars);
+        mysqli_stmt_execute($stmt);
+
+        // сохранение id нового поста
+        $new_post_id = mysqli_insert_id($db);
+
+        // получение хэштегов записи
+        $query = "SELECT hashtag_name,
+                     ht.id
+              FROM post AS p
+                    JOIN post_hashtag_link AS phl
+                        ON phl.post_id = p.id
+                    JOIN hashtag AS ht
+                        ON ht.id = phl.hashtag_id
+              WHERE phl.post_id = '$post_id'";
+        $post_hashtag_list = get_data_from_db($db, $query, 'all');
+
+        if ($post_hashtag_list) {
+            foreach ($post_hashtag_list as $tag) {
+                // подготовка запроса для связки поста с тегами
+                $query = "INSERT INTO post_hashtag_link
+                             (post_id, hashtag_id)
+                           VALUES
+                             ($new_post_id, {$tag['id']})";
+                mysqli_query($db, $query);
+            }
+        }
+
+        // переадресация на страницу с репостом
+        header('Location: post.php?post_id=' . $new_post_id);
+        exit;
+    }
 }

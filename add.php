@@ -1,16 +1,25 @@
 <?php
 require_once 'helpers.php';
 require_once 'utils.php';
-require_once 'db.php';
+require_once 'config.php';
+
+// Получение данных пользователя
+$user = check_session($db_connection);
+
+// Перенаправление анонимного пользователя
+if (!$user) {
+
+    // текущий адрес записывается в cookies для последующей переадресации обратно на страницу
+    set_reference_page_cookies();
+    header('Location: /');
+    exit;
+}
 
 // массив с данными страницы и пользователя
 $params = array(
-    'is_auth' => rand(0, 1),
     'page_title' => 'публикация',
-    'user_name' => 'the-nepodarok', // укажите здесь ваше имя
-    'user' => array(
-        'id' => 1,
-    ),
+    'user_name' => $user['user_name'],
+    'user_avatar' => $user['user_avatar'],
 );
 
 // получение типов контента
@@ -83,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             }
             $video_url = $post_data[$field_name];
-            if (validate_url($video_url, $errors, $field_name, PHP_URL_PATH)) {
+            if (validate_url($errors, $video_url, $field_name, PHP_URL_PATH)) {
                 $yt_check = check_youtube_url($video_url);
                 if ($yt_check !== true) {
                     $err_type = 'Не найдено видео по ссылке';
@@ -103,9 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // приведение ссылки к протоколу https
                 $file_url = $post_data[$field_name];
                 // проверка ссылки на path
-                if (validate_url($file_url, $errors, $field_name, PHP_URL_PATH)) {
+                if (validate_url($errors, $file_url, $field_name, PHP_URL_PATH)) {
                     // валидация по типу и размеру файла по ссылке
-                    $file = download_file_from_url($file_url, $errors);
+                    $file = download_file_from_url($errors, $file_url);
                 }
             } else { // если файл не был загружен ни из файловой системы, ни по ссылке
                 $err_type = 'Файл не был загружен';
@@ -120,11 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($errors[$field_name])) {
                 break;
             }
-            // приведение к протоколу https:
-            $post_link = prepend_url_scheme($post_data[$field_name]);
 
             // проверка валидности и доступности ссылки
-            validate_url($post_link, $errors, $field_name);
+            validate_url($errors, $post_data[$field_name], $field_name);
             break;
     }
 
@@ -157,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Обработка полученных данных в случае правильного заполнения всех полей и добавление новой публикации в БД
     if (empty($errors)) {
 
-        // получение типа контента в зав-ти от формы
+        // получение id типа контента в зав-ти от формы
         $content_type_values = array_column($content_types, 'type_val', 'id');
         $content_type_id = array_search($post_type, $content_type_values);
 
@@ -183,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file ?? NULL,
             $post_data['video-url'] ?? NULL,
             $post_data['post-link'] ?? NULL,
-            $params['user']['id'],
+            $user['id'],
             $content_type_id
         );
 
@@ -233,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: post.php?post_id=' . $new_post_id);
         exit;
     }
-} else { 
+} else { // обработка данных GET
     // параметр типа добавляемой публикации
     $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
 

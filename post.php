@@ -1,13 +1,25 @@
 <?php
 require_once 'helpers.php';
 require_once 'utils.php';
-require_once 'db.php';
+require_once 'config.php';
+
+// Получение данных пользователя
+$user = check_session($db_connection);
+
+// Перенаправление анонимного пользователя
+if (!$user) {
+
+    // текущий адрес записывается в cookies для последующей переадресации обратно
+    set_reference_page_cookies();
+    header('Location: /');
+    exit;
+}
 
 // массив с данными страницы и пользователя
 $params = array(
-    'is_auth' => $is_auth = rand(0, 1),
     'page_title' => $page_title = 'публикация',
-    'user_name' => $user_name = 'the-nepodarok', // укажите здесь ваше имя
+    'user_name' => $user['user_name'],
+    'user_avatar' => $user['user_avatar'],
 );
 
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
@@ -21,6 +33,9 @@ if (!isset($post_id) || $post_id === 0) {
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
     die(build_page('layout.php', $params, $error_page));
 }
+
+// параметр запроса репоста
+$repost_id = filter_input(INPUT_GET, 'repost', FILTER_SANITIZE_NUMBER_INT);
 
 // получаем данные поста
 $query = "
@@ -47,11 +62,6 @@ if (!$post) {
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
 $page_title = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
-
-// приведение ссылок к формату
-if ($post['link_text_content']) {
-    $post['link_text_content'] = prepend_url_scheme($post['link_text_content']);
-}
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
 $count_arr = [];
@@ -119,6 +129,11 @@ $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comm
 // отображение поста
 $post_type_template = include_template('post-' . $post['type_val'] . '_template.php', ['post' => $post]);
 
+// подключение функционала репоста (если пользователь не пытается репостить сам себя)
+if ($repost_id and $user['id'] !== $user_id) {
+    repost($db_connection, $post_id, $user['id']);
+}
+
 // подключение шаблонов
 $main_content = include_template('post_template.php', [
     'post' => $post,
@@ -126,6 +141,7 @@ $main_content = include_template('post_template.php', [
     'count_arr' => $count_arr,
     'post_hashtag_list' => $post_hashtag_list,
     'comment_list' => $comment_list,
+    'user_avatar' => $user['user_avatar'],
     'hide_comments' => $hide_comments,
 ]);
 

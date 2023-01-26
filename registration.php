@@ -1,11 +1,16 @@
 <?php
 require_once 'helpers.php';
 require_once 'utils.php';
-require_once 'db.php';
+require_once 'config.php';
 
-// массив с данными страницы и пользователя
+// Перенаправление аутентифицированного пользователя
+if (isset($_SESSION['user'])) {
+    header('Location: /');
+    exit;
+}
+
+// массив с данными страницы
 $params = array(
-    'is_auth' => 0,
     'page_title' => 'регистрация',
 );
 
@@ -34,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // валидация e-mail
     if ($post_data['email']) {
-        $email = validate_email($post_data['email'], $db_connection, $errors);
+        $email = validate_email($db_connection, $errors, $post_data['email'], true);
     }
 
     // проверка повторного ввода пароля

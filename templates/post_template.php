@@ -25,7 +25,7 @@
                 <span><?= $count_arr['comment_count']; ?></span>
                 <span class="visually-hidden">количество комментариев</span>
               </a>
-              <a class="post__indicator post__indicator--repost button" href="#" title="Репост">
+              <a class="post__indicator post__indicator--repost button" href="?post_id=<?= $post['id']; ?>&repost=1" title="Репост">
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-repost"></use>
                 </svg>
@@ -44,8 +44,8 @@
           <div class="comments">
             <form class="comments__form form" action="#" method="post">
               <div class="comments__my-avatar">
-                <?php if ($post['user_avatar']): ?>
-                <img class="comments__picture" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
+                <?php if ($user_avatar): ?>
+                <img class="comments__picture" src="<?= UPLOAD_PATH . $user_avatar; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </div>
               <div class="form__input-section _form__input-section--error"> <!-- не забыть вернуть -->
