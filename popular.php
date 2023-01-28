@@ -1,31 +1,31 @@
 <?php
-require_once 'helpers.php';
-require_once 'utils.php';
-require_once 'config.php';
-
-// Получение данных пользователя
-$user = check_session($db_connection);
+session_start();
 
 // Перенаправление анонимного пользователя
-if (!$user) {
-
-    // текущий адрес записывается в cookies для последующей переадресации обратно
-    set_reference_page_cookies();
+if (!isset($_SESSION['user'])) {
+    // адрес сохраняется в cookies для возврата на страницу после входа
+    $prev_page_cookies = array(
+        'prev_page',
+        $_SERVER['REQUEST_URI'],
+        time() + 3000,
+        '/',
+    );
+    setcookie(...$prev_page_cookies);
     header('Location: /');
     exit;
 }
 
-// массив с данными страницы и пользователя
+require_once 'helpers.php';
+require_once 'utils.php';
+require_once 'db_config.php';
+
+// массив с данными страницы
 $params = array(
     'page_title' => 'популярное',
-    'user_name' => $user['user_name'],
-    'user_avatar' => $user['user_avatar'],
     'active_class' => 'popular',
 );
 
-// получение типов контента
-$query = 'SELECT * FROM content_type';
-$content_types = get_data_from_db($db_connection, $query);
+$content_types = $_SESSION['ct_types']; // типы контента
 
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
@@ -52,9 +52,9 @@ $query = 'SELECT p.*,
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
           FROM post AS p
-             JOIN user AS u
+             INNER JOIN user AS u
                 ON p.user_id = u.id
-             JOIN content_type AS ct
+             INNER JOIN content_type AS ct
                 ON p.content_type_id = ct.id';
 
 if ($type_id) {

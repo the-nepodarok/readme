@@ -28,11 +28,12 @@ date_default_timezone_set('Europe/Moscow');
  *
  * @param string $string Исходный текст в виде строки
  * @param string $link Текст ссылки для перехода к полному тексту
+ * @param boolean $use_target_blank Должна ли ссылка открываться в новой вкладке
  * @param number $max_post_length Максимальное количество символов
  * @return string Возвращает строку, обрезанную до $max_post_length, либо исходную строку без изменений,
  * если лимит символов не превышен
  */
-function slice_string($string, $link = '', $max_post_length = 300)
+function slice_string($string, $link = '', $use_target_blank = false, $max_post_length = 300)
 {
     $result_string = trim($string);
 
@@ -49,7 +50,9 @@ function slice_string($string, $link = '', $max_post_length = 300)
         $result_string = trim(
                 $result_string,
                 '/ :–-,;'
-            ) . '...' . '<a class="post-text__more-link" href="' . $link . '">Читать далее</a>';
+            ) . '...' . '<a class="post-text__more-link" href="' .
+                $link . '"' .
+                ($use_target_blank ? ' target="_blank"' : '') . '>Читать далее</a>';
         // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
@@ -484,30 +487,17 @@ function upload_image(&$err, $files_name) {
 }
 
 /**
- * Выполняет проверку e-mail адреса на валидность и на существование в БД
+ * Валидирует e-mail адрес и заполняет массив с ошибками
  *
- * @param mysqli $db Подключение к базе данных
  * @param array $err Массив для заполнения ошибками
  * @param string $email Адрес эл. почты
- * @param boolean $new Проверяется ли e-mail для регистрации нового пользователя
  * @return false|string Исходный e-mail, либо false, если адрес не прошёл проверку
  */
-function validate_email($db, &$err, $email, $new = false) {
+function validate_email(&$err, $email) {
     $err_heading = 'Электронная почта';
 
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-        $query = "SELECT id FROM user WHERE user_email = '$email'";
-        $result = get_data_from_db($db, $query, 'one');
-
-        if ($new && $result > 0) {
-            $err_type = 'Пользователь уже существует';
-            $err_text = 'Пользователь с такой электронной почтой уже существует';
-        } elseif (!$new && !$result) {
-            $err_type = 'Пользователя не существует';
-            $err_text = 'Пользователь с таким E-mail не найден';
-        }
-
     } else {
         $err_type = 'Некорректный email-адрес';
         $err_text = 'Введите корректный адрес электронной почты';
@@ -523,106 +513,32 @@ function validate_email($db, &$err, $email, $new = false) {
 }
 
 /**
- * Выполняет проверку аутентификации пользователя
+ * Выполняет проверку e-mail адреса на существование в БД
  *
  * @param mysqli $db Подключение к базе данных
- * @return array|false Массив с данными пользователя, либо false при отсутствии аутентификации
+ * @param array $err Массив для заполнения ошибками
+ * @param string $email Адрес эл. почты
+ * @param boolean $new Проверяется ли e-mail для регистрации нового пользователя
+ * @return boolean Значение проверки
  */
-function check_session($db) {
-    $user = false;
-    if (isset($_SESSION['user'])) {
-        $user_id = $_SESSION['user'];
+function check_email($db, &$err, $email, $new = false) {
+    $query = "SELECT id FROM user WHERE user_email = '$email'";
+    $result = get_data_from_db($db, $query, 'one');
+    $err_heading = 'Электронная почта';
 
-        $query = "SELECT * FROM user WHERE id = '$user_id'";
-        $user = get_data_from_db($db, $query, 'row');
+    if ($new && $result > 0) {
+        $err_type = 'Пользователь уже существует';
+        $err_text = 'Пользователь с такой электронной почтой уже существует';
+    } elseif (!$new && !$result) {
+        $err_type = 'Пользователя не существует';
+        $err_text = 'Пользователь с таким E-mail не найден';
     }
-    return $user;
-}
 
-/**
- * Сохраняет в cookies адрес текущей страницы
- */
-function set_reference_page_cookies() {
-    $name = 'prev_page';
-    $value = $_SERVER['REQUEST_URI'];
-    $expire = time() + 3000;
-    $path = "/";
-
-    setcookie($name, $value, $expire, $path);
-}
-
-/**
- * Производит репост публикации
- *
- * @param mysqli $db Подключение к базе данных
- * @param int $post_id Параметр запроса, соответствующий id публикации
- * @param int $user_id Идентификатор аутентифицированного пользователя
- */
-function repost($db, $post_id, $user_id) {
-    $query = "SELECT p.* FROM post AS p WHERE id = $post_id";
-    $original_post = get_data_from_db($db, $query, 'row');
-
-    if ($original_post) {
-        // подготовка выражения
-        $query = "INSERT INTO post (
-                        post_header,
-                        text_content,
-                        quote_origin,
-                        photo_content,
-                        video_content,
-                        link_text_content,
-                        user_id,
-                        is_repost,
-                        origin_post_id,
-                        content_type_id
-                     )
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"; // 10 полей
-        $stmt = mysqli_prepare($db, $query);
-
-        // данные для подстановки
-        $query_vars = array(
-            $original_post['post_header'],
-            $original_post['text_content'] ?? NULL,
-            $original_post['quote_origin'] ?? NULL,
-            $original_post['photo_content'] ?? NULL,
-            $original_post['video_content'] ?? NULL,
-            $original_post['link_text_content'] ?? NULL,
-            $user_id,
-            $original_post['id'],
-            $original_post['content_type_id'],
-        );
-
-        // выполнение подготовленного выражения
-        mysqli_stmt_bind_param($stmt, 'ssssssiii', ...$query_vars);
-        mysqli_stmt_execute($stmt);
-
-        // сохранение id нового поста
-        $new_post_id = mysqli_insert_id($db);
-
-        // получение хэштегов записи
-        $query = "SELECT hashtag_name,
-                     ht.id
-              FROM post AS p
-                    JOIN post_hashtag_link AS phl
-                        ON phl.post_id = p.id
-                    JOIN hashtag AS ht
-                        ON ht.id = phl.hashtag_id
-              WHERE phl.post_id = '$post_id'";
-        $post_hashtag_list = get_data_from_db($db, $query, 'all');
-
-        if ($post_hashtag_list) {
-            foreach ($post_hashtag_list as $tag) {
-                // подготовка запроса для связки поста с тегами
-                $query = "INSERT INTO post_hashtag_link
-                             (post_id, hashtag_id)
-                           VALUES
-                             ($new_post_id, {$tag['id']})";
-                mysqli_query($db, $query);
-            }
-        }
-
-        // переадресация на страницу с репостом
-        header('Location: post.php?post_id=' . $new_post_id);
-        exit;
+    // заполнить массив с ошибками, если таковые возникли
+    if (isset($err_text)) {
+        $email = false;
+        fill_errors($err, 'email', $err_type, $err_heading, $err_text);
     }
+
+    return boolval($email);
 }

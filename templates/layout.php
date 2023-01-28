@@ -15,14 +15,14 @@
 <header class="header">
     <div class="header__wrapper container">
         <div class="header__logo-wrapper">
-            <a class="header__logo-link" href="main.html">
+            <a class="header__logo-link" href="/">
                 <img class="header__logo" src="img/logo.svg" alt="Логотип readme" width="128" height="24">
             </a>
             <p class="header__topic">
                 micro blogging
             </p>
         </div>
-        <?php if (isset($_SESSION['user'])): ?>
+    <?php if (isset($_SESSION['user'])): ?>
         <form class="header__search-form form" action="#" method="get">
             <div class="header__search">
                 <label class="visually-hidden">Поиск</label>
@@ -60,15 +60,15 @@
                     <li class="header__profile">
                         <a class="header__profile-link" href="#">
                             <div class="header__avatar-wrapper">
-                            <?php if ($user_avatar) : ?>
-                                <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $user_avatar; ?>" alt="Аватар профиля">
+                            <?php if ($_SESSION['user']['user_avatar']) : ?>
+                                <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $_SESSION['user']['user_avatar']; ?>" alt="Аватар профиля">
                             <?php endif; ?>
                             </div>
                             <div class="header__profile-name">
-                            <span>
-                                <!--здесь должно быть имя пользователя-->
-                                <?= $user_name; ?>
-                            </span>
+                                <span>
+                                    <!--здесь должно быть имя пользователя-->
+                                    <?= $_SESSION['user']['user_name']; ?>
+                                </span>
                                 <svg class="header__link-arrow" width="10" height="6">
                                     <use xlink:href="#icon-arrow-right-ad"></use>
                                 </svg>
@@ -79,25 +79,22 @@
                                 <ul class="header__profile-nav">
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="#">
-                      <span class="header__profile-nav-text">
-                        Мой профиль
-                      </span>
+                                            <span class="header__profile-nav-text">Мой профиль</span>
                                         </a>
                                     </li>
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="#">
-                      <span class="header__profile-nav-text">
-                        Сообщения
-                        <i class="header__profile-indicator">2</i>
-                      </span>
+                                            <span class="header__profile-nav-text">
+                                                  Сообщения
+                                                  <i class="header__profile-indicator">2</i>
+                                            </span>
                                         </a>
                                     </li>
-
                                     <li class="header__profile-nav-item">
                                         <a class="header__profile-nav-link" href="logout.php">
-                      <span class="header__profile-nav-text">
-                        Выход
-                      </span>
+                                            <span class="header__profile-nav-text">
+                                                  Выход
+                                            </span>
                                         </a>
                                     </li>
                                 </ul>
@@ -109,7 +106,7 @@
                     </li>
                 </ul>
             </nav>
-            <?php else: ?>
+    <?php else: ?>
             <nav class="header__nav">
                 <ul class="header__user-nav">
                     <li class="header__authorization">
@@ -120,7 +117,7 @@
                     </li>
                 </ul>
             </nav>
-            <?php endif; ?>
+    <?php endif; ?>
         </div>
     </div>
 </header>

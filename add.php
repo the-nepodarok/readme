@@ -1,30 +1,22 @@
 <?php
-require_once 'helpers.php';
-require_once 'utils.php';
-require_once 'config.php';
-
-// Получение данных пользователя
-$user = check_session($db_connection);
+session_start();
 
 // Перенаправление анонимного пользователя
-if (!$user) {
-
-    // текущий адрес записывается в cookies для последующей переадресации обратно на страницу
-    set_reference_page_cookies();
-    header('Location: /');
+if (!isset($_SESSION['user'])) {
+    header('Location: /feed.php');
     exit;
 }
 
-// массив с данными страницы и пользователя
+require_once 'helpers.php';
+require_once 'utils.php';
+require_once 'db_config.php';
+
+// массив с данными страницы
 $params = array(
     'page_title' => 'публикация',
-    'user_name' => $user['user_name'],
-    'user_avatar' => $user['user_avatar'],
 );
 
-// получение типов контента
-$query = 'SELECT * FROM content_type';
-$content_types = get_data_from_db($db_connection, $query);
+$content_types = $_SESSION['ct_types']; // типы контента
 $post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
 
 // функция для проверки на допустимое значение параметра post_type
@@ -190,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file ?? NULL,
             $post_data['video-url'] ?? NULL,
             $post_data['post-link'] ?? NULL,
-            $user['id'],
+            $_SESSION['user']['id'],
             $content_type_id
         );
 

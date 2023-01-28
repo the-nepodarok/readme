@@ -1,13 +1,15 @@
 <?php
-require_once 'helpers.php';
-require_once 'utils.php';
-require_once 'config.php';
+session_start();
 
 // Перенаправление аутентифицированного пользователя
 if (isset($_SESSION['user'])) {
-    header('Location: /');
+    header('Location: /feed.php');
     exit;
 }
+
+require_once 'helpers.php';
+require_once 'utils.php';
+require_once 'db_config.php';
 
 // массив с данными страницы
 $params = array(
@@ -39,7 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // валидация e-mail
     if ($post_data['email']) {
-        $email = validate_email($db_connection, $errors, $post_data['email'], true);
+        $email_input = validate_email($errors, $post_data['email']);
+        if ($email_input and check_email($db_connection, $errors, $email_input, true)) {
+            $email = $email_input;
+        }
     }
 
     // проверка повторного ввода пароля
@@ -60,13 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // подготовка запроса
         $sql = 'INSERT INTO user (
-                          user_reg_dt,
-                          user_email,
-                          user_name,
-                          user_password,
-                          user_avatar
-                       )
-                       VALUES (NOW(), ?, ?, ?, ?)'; // 4 поля
+                      user_reg_dt,
+                      user_email,
+                      user_name,
+                      user_password,
+                      user_avatar
+                   )
+                VALUES (NOW(), ?, ?, ?, ?)'; // 4 поля
         $stmt = mysqli_prepare($db_connection, $sql);
 
         // хэширование пароля

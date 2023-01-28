@@ -77,7 +77,7 @@
                 <blockquote>
                     <p>
                         <!--здесь текст-->
-                        <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
+                        <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
                     </p>
                     <cite><?= $post['quote_origin'] ?></cite>
                 </blockquote>
@@ -87,7 +87,7 @@
                 <!--содержимое для поста-текста-->
                 <p>
                     <!--здесь текст-->
-                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
+                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
                 </p>
                         <?php break; ?>
 

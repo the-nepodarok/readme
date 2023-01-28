@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>readme: блог, каким он должен быть</title>
-    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 
 <body class="page page--main">
@@ -62,7 +62,7 @@
             <form class="authorization__form form" action="#" method="post">
                 <div class="authorization__input-wrapper form__input-wrapper">
                     <div class="form__input-section <?= $errors['email'] ? $alert_class : ''; ?>">
-                        <input class="authorization__input authorization__input--login form__input" type="email" name="email" placeholder="Логин" value="<?= $post_data['email'] ?? ''; ?>">
+                        <input class="authorization__input authorization__input--login form__input" type="email" name="email" placeholder="Логин" value="<?= $auth_data['email'] ?? ''; ?>">
                         <svg class="form__input-icon" width="19" height="18">
                             <use xlink:href="#icon-input-user"></use>
                         </svg>
@@ -72,7 +72,7 @@
                 </div>
                 <div class="authorization__input-wrapper form__input-wrapper <?= $errors['password'] ? $alert_class : ''; ?>">
                     <div class="form__input-section <?= $errors['password'] ? $alert_class : ''; ?>">
-                        <input class="authorization__input authorization__input--password form__input" type="password" name="password" placeholder="Пароль" value="<?= $post_data['password'] ?? ''; ?>">
+                        <input class="authorization__input authorization__input--password form__input" type="password" name="password" placeholder="Пароль" value="<?= $auth_data['password'] ?? ''; ?>">
                         <svg class="form__input-icon" width="16" height="20">
                             <use xlink:href="#icon-input-password"></use>
                         </svg>
