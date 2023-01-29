@@ -54,7 +54,7 @@ $query = "
             ON ct.id = p.content_type_id
     WHERE p.id = $post_id
 ";
-
+ 
 $post = get_data_from_db($db_connection, $query, 'row');
 
 // обработка ошибки несуществующей публикации
