@@ -41,6 +41,7 @@
                             <span>Все</span>
                         </a>
                     </li>
+                    
                     <?php if ($content_types ?? false):
                               foreach ($content_types as $type): ?>
                     <li class="popular__filters-item filters__item">
