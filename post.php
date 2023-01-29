@@ -30,7 +30,7 @@ $comment_limit = 2; // ограничение на кол-во показыва�
 // параметр запроса id поста
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 $post_id = intval($post_id); // приведение к целочисленному типу
-
+ 
 // обработка ошибки запроса
 if (!isset($post_id) || $post_id === 0) {
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
