@@ -501,10 +501,6 @@ function validate_email(&$err, $email) {
     } else {
         $err_type = 'Некорректный email-адрес';
         $err_text = 'Введите корректный адрес электронной почты';
-    }
-
-    // заполнить массив с ошибками, если таковые возникли
-    if (isset($err_text)) {
         $email = false;
         fill_errors($err, 'email', $err_type, $err_heading, $err_text);
     }
@@ -522,23 +518,65 @@ function validate_email(&$err, $email) {
  * @return boolean Значение проверки
  */
 function check_email($db, &$err, $email, $new = false) {
+    $email_check = false;
     $query = "SELECT id FROM user WHERE user_email = '$email'";
     $result = get_data_from_db($db, $query, 'one');
     $err_heading = 'Электронная почта';
 
-    if ($new && $result > 0) {
-        $err_type = 'Пользователь уже существует';
-        $err_text = 'Пользователь с такой электронной почтой уже существует';
-    } elseif (!$new && !$result) {
-        $err_type = 'Пользователя не существует';
-        $err_text = 'Пользователь с таким E-mail не найден';
+    if ($new) {
+        if ($result > 0) {
+            $err_type = 'Пользователь уже существует';
+            $err_text = 'Пользователь с такой электронной почтой уже существует';
+        } else {
+            $email_check = true;
+        }
+    } else {
+        if (!$result) {
+            $err_type = 'Пользователя не существует';
+            $err_text = 'Пользователь с таким E-mail не найден';
+        } else {
+            $email_check = true;
+        }
     }
 
     // заполнить массив с ошибками, если таковые возникли
     if (isset($err_text)) {
-        $email = false;
         fill_errors($err, 'email', $err_type, $err_heading, $err_text);
     }
 
-    return boolval($email);
+    return $email_check;
+}
+
+/**
+ * Получает хэштеги публикации
+ *
+ * @param mysqli $db Подключение к БД
+ * @param int $post_id Идентификатор поста
+ * @return array|mixed Список хэштегов в виде массива
+ */
+function get_hashtags($db, $post_id) {
+    $query = "SELECT hashtag_name,
+                     ht.id
+              FROM post AS p
+                  JOIN post_hashtag_link AS phl
+                      ON phl.post_id = p.id
+                  JOIN hashtag AS ht
+                      ON ht.id = phl.hashtag_id
+              WHERE phl.post_id = '$post_id'";
+    return get_data_from_db($db, $query, 'col');
+}
+
+/**
+ * Проверяет поля на заполненность
+ *
+ * @param array $err Массив для заполнения ошибками
+ * @param array $req Массив со списком обязательных полей формы
+ * @param array $post_data Массив с данными из формы
+ */
+function check_if_empty(&$err, $req, $post_data) {
+    foreach ($req as $key => $value) {
+        if (empty($post_data[$key])) {
+            fill_errors($err, $key, 'Пустое поле', $value, 'Это поле должно быть заполнено');
+        }
+    }
 }

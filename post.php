@@ -3,14 +3,6 @@ session_start();
 
 // Перенаправление анонимного пользователя
 if (!isset($_SESSION['user'])) {
-    // адрес сохраняется в cookies для возврата на страницу после входа
-    $prev_page_cookies = array(
-        'prev_page',
-        $_SERVER['REQUEST_URI'],
-        time() + 3000,
-        '/',
-    );
-    setcookie(...$prev_page_cookies);
     header('Location: /');
     exit;
 }
@@ -18,53 +10,50 @@ if (!isset($_SESSION['user'])) {
 require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
-require_once 'repost.php';
 
-// массив с данными страницы
-$params = array(
-    'page_title' => $page_title = 'публикация',
-);
-
+$params = []; // массив с данными страницы
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
+
+// параметр запроса репоста
+$repost_id = filter_input(INPUT_GET, 'repost_id', FILTER_SANITIZE_NUMBER_INT);
+
+// репост
+if ($repost_id) {
+    header( 'Location: /repost.php?repost_id=' . $repost_id);
+    exit;
+}
 
 // параметр запроса id поста
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 $post_id = intval($post_id); // приведение к целочисленному типу
 
 // обработка ошибки запроса
-if (!isset($post_id) || $post_id === 0) {
+if (!$post_id) {
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
-    die(build_page('layout.php', $params, $error_page));
+    die(build_page('layout.php', ['page_title' => 'Ошибка запроса'], $error_page));
 }
-
-// параметр запроса репоста
-$repost_id = filter_input(INPUT_GET, 'repost', FILTER_SANITIZE_NUMBER_INT);
 
 // получаем данные поста
 $query = "
     SELECT p.*,
            u.user_avatar,
            u.user_name,
-           u.user_reg_dt AS reg_date,
-           ct.type_val
+           u.user_reg_dt AS reg_date
     FROM post AS p
         JOIN user AS u
             ON u.id = p.user_id
-        JOIN content_type AS ct
-            ON ct.id = p.content_type_id
     WHERE p.id = $post_id
 ";
-
 $post = get_data_from_db($db_connection, $query, 'row');
 
 // обработка ошибки несуществующей публикации
 if (!$post) {
     $error_page = include_template('page-404.php', ['main_content' => 'Публикация не найдена']);
-    die(build_page('layout.php', $params, $error_page));
+    die(build_page('layout.php', ['page_title' => 'Ошибка 404'], $error_page));
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
-$page_title = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
+$params['page_title'] = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
 $count_arr = [];
@@ -91,17 +80,7 @@ $query = "SELECT COUNT(id) FROM comment AS c WHERE post_id = $post_id";
 $count_arr['comment_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем хэштеги записи
-$query = "
-    SELECT hashtag_name
-    FROM post AS p
-        JOIN post_hashtag_link AS phl
-            ON phl.post_id = p.id
-        JOIN hashtag AS ht
-            ON ht.id = phl.hashtag_id
-    WHERE phl.post_id = $post_id
-";
-
-$post_hashtag_list = get_data_from_db($db_connection, $query, 'col');
+$post_hashtag_list = get_hashtags($db_connection, $post_id);
 array_walk_recursive($post_hashtag_list, 'secure'); // очистка хэштегов от вредоносного кода
 
 // проверка отображения комментариев
@@ -129,8 +108,11 @@ array_walk_recursive($comment_list, 'secure'); // очистка коммент�
 // условие для скрытия комментариев при превышение лимита
 $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comments;
 
+// записываем тип публикации
+$post_type = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
+
 // отображение поста
-$post_type_template = include_template('post-' . $post['type_val'] . '_template.php', ['post' => $post]);
+$post_type_template = include_template('post-' . $post_type . '_template.php', ['post' => $post]);
 
 // подключение шаблонов
 $main_content = include_template('post_template.php', [

@@ -1,15 +1,18 @@
-<?php
-//Производит репост публикации
+<?php // Производит репост публикации
+session_start();
+require_once 'utils.php';
+require_once 'db_config.php';
 
 // параметр запроса репоста
-$repost_id = filter_input(INPUT_GET, 'repost', FILTER_SANITIZE_NUMBER_INT);
+$repost_id = filter_input(INPUT_GET, 'repost_id', FILTER_SANITIZE_NUMBER_INT);
 
 if ($repost_id) {
     // получаем оригинальный пост
-    $query = "SELECT p.* FROM post AS p WHERE id = $repost_id";
-    $original_post = get_data_from_db($db_connection, $query, 'row');
+    $query = "SELECT * FROM post WHERE id = $repost_id";
+    $post_data = get_data_from_db($db_connection, $query, 'row');
 
-    if ($original_post and $original_post['user_id'] !== $_SESSION['user']['id']) {
+    if ($post_data and $post_data['user_id'] !== $_SESSION['user']['id']) {
+
         // подготовка выражения
         $query = "INSERT INTO post (
                       post_header,
@@ -28,15 +31,15 @@ if ($repost_id) {
 
         // данные для подстановки
         $query_vars = array(
-            $original_post['post_header'],
-            $original_post['text_content'] ?? null,
-            $original_post['quote_origin'] ?? null,
-            $original_post['photo_content'] ?? null,
-            $original_post['video_content'] ?? null,
-            $original_post['link_text_content'] ?? null,
+            $post_data['post_header'],
+            $post_data['text_content'] ?? null,
+            $post_data['quote_origin'] ?? null,
+            $post_data['photo_content'] ?? null,
+            $post_data['video_content'] ?? null,
+            $post_data['link_text_content'] ?? null,
             $_SESSION['user']['id'],
-            $original_post['id'],
-            $original_post['content_type_id'],
+            $post_data['id'],
+            $post_data['content_type_id'],
         );
 
         // выполнение подготовленного выражения
@@ -47,16 +50,9 @@ if ($repost_id) {
         $new_post_id = mysqli_insert_id($db_connection);
 
         // получение хэштегов записи
-        $query = "SELECT hashtag_name,
-                         ht.id
-                  FROM post AS p
-                      JOIN post_hashtag_link AS phl
-                          ON phl.post_id = p.id
-                      JOIN hashtag AS ht
-                          ON ht.id = phl.hashtag_id
-                  WHERE phl.post_id = '$repost_id'";
-        $post_hashtag_list = get_data_from_db($db_connection, $query, 'all');
+        $post_hashtag_list = get_hashtags($db_connection, $repost_id);
 
+        // добавление хэштегов репосту
         if ($post_hashtag_list) {
             foreach ($post_hashtag_list as $tag) {
                 // подготовка запроса для связки поста с тегами
@@ -70,6 +66,12 @@ if ($repost_id) {
 
         // переадресация на страницу с репостом
         header('Location: post.php?post_id=' . $new_post_id);
-        exit;
+    } else {
+        // переадресация на страницу с постом
+        header('Location: post.php?post_id=' . $repost_id);
     }
+} else {
+    // переадресация на главную
+    header('Location: /');
 }
+exit;

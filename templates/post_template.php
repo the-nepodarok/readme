@@ -25,7 +25,7 @@
                 <span><?= $count_arr['comment_count']; ?></span>
                 <span class="visually-hidden">количество комментариев</span>
               </a>
-              <a class="post__indicator post__indicator--repost button" href="?post_id=<?= $post['id'] . '&repost=' . $post['id']; ?>" title="Репост">
+              <a class="post__indicator post__indicator--repost button" href="?repost_id=<?= $post['id']; ?>" title="Репост">
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-repost"></use>
                 </svg>

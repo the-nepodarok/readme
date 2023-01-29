@@ -40,12 +40,12 @@
             <nav class="header__nav">
                 <ul class="header__my-nav">
                     <li class="header__my-page header__my-page--popular">
-                        <a class="header__page-link header__page-link<?= $active_class === 'popular' ? '--active' : '' ?>" title="Популярный контент" href="popular.php">
+                        <a class="header__page-link header__page-link<?= $active_page === 'popular' ? '--active' : '' ?>" title="Популярный контент" href="popular.php">
                             <span class="visually-hidden">Популярный контент</span>
                         </a>
                     </li>
                     <li class="header__my-page header__my-page--feed">
-                        <a class="header__page-link header__page-link<?= $active_class === 'feed' ? '--active' : '' ?>" href="feed.php" title="Моя лента">
+                        <a class="header__page-link header__page-link<?= $active_page === 'feed' ? '--active' : '' ?>" href="feed.php" title="Моя лента">
                             <span class="visually-hidden">Моя лента</span>
                         </a>
                     </li>

@@ -3,7 +3,7 @@ session_start();
 
 // Перенаправление анонимного пользователя
 if (!isset($_SESSION['user'])) {
-    header('Location: /feed.php');
+    header('Location: /');
     exit;
 }
 
@@ -69,11 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $required_fields = ['post-heading' => 'Заголовок'] + $required_fields;
 
     // обработка пустых обязательных полей
-    foreach ($required_fields as $key => $value) {
-        if (empty($post_data[$key])) {
-            fill_errors($errors, $key, 'Пустое поле', $value, 'Это поле должно быть заполнено');
-        }
-    }
+    check_if_empty($errors, $required_fields, $post_data);
 
     // валидация ссылок и загрузка файлов
     switch ($post_type) {
@@ -269,7 +265,6 @@ $tag_field = include_template('add-post_tags_template.php', [
 
 // отображение страницы
 $main_content = include_template('add-post_template.php', [
-    'content_types' => $content_types,
     'post_type' => $post_type,
     'header_field' => $header_field,
     'errors' => $errors,

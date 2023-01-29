@@ -13,7 +13,9 @@
                         <header class="post__header post__author">
                             <a class="post__author-link" href="#" title="Автор">
                                 <div class="post__avatar-wrapper">
+                    <?php if ($post['user_avatar']) : ?>
                                     <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя" width="60" height="60">
+                    <?php endif; ?>
                                 </div>
                                 <div class="post__info">
                                     <b class="post__author-name"><?= $post['user_name']; ?></b>
@@ -26,7 +28,7 @@
                   <?php switch ($post['type_val']):
                       case 'photo': ?>
                             <h2>
-                                <a href="/post.php?post_id=<?= $post['id']; ?>">
+                                <a href="<?= $post_link . $post['id']; ?>">
                                     <?= $post['post_header']; ?>
                                 </a>
                             </h2>
@@ -37,7 +39,7 @@
 
                       <?php case 'text': ?>
                             <h2>
-                                <a href="/post.php?post_id=<?= $post['id']; ?>">
+                                <a href="<?= $post_link . $post['id']; ?>">
                                     <?= $post['post_header']; ?>
                                 </a>
                             </h2>
@@ -105,14 +107,14 @@
                                     <span><?= $post['like_count']; ?></span>
                                     <span class="visually-hidden">количество лайков</span>
                                 </a>
-                                <a class="post__indicator post__indicator--comments button" href="post.php?post_id=<?= $post['id']; ?>" title="Комментарии">
+                                <a class="post__indicator post__indicator--comments button" href="<?= $post_link . $post['id']; ?>" title="Комментарии">
                                     <svg class="post__indicator-icon" width="19" height="17">
                                         <use xlink:href="#icon-comment"></use>
                                     </svg>
                                     <span><?= $post['comment_count']; ?></span>
                                     <span class="visually-hidden">количество комментариев</span>
                                 </a>
-                                <a class="post__indicator post__indicator--repost button" href="?repost=<?= $post['id']; ?>" title="Репост">
+                                <a class="post__indicator post__indicator--repost button" href="?repost_id=<?= $post['id']; ?>" title="Репост">
                                     <svg class="post__indicator-icon" width="19" height="17">
                                         <use xlink:href="#icon-repost"></use>
                                     </svg>
@@ -145,8 +147,7 @@
                         <span>Все</span>
                     </a>
                 </li>
-    <?php if ($content_types ?? false):
-              foreach ($content_types as $type): ?>
+    <?php foreach ($_SESSION['ct_types'] as $type): ?>
                 <li class="feed__filters-item filters__item">
                     <a class="filters__button filters__button--<?= $type['type_val']; ?> <?= $type_id === $type['id'] ? 'filters__button--active' : ''; ?> button" href="?type_id=<?= $type['id']; ?>">
                         <span class="visually-hidden"><?= $type['type_name']; ?></span>
@@ -155,10 +156,7 @@
                         </svg>
                     </a>
                 </li>
-    <?php
-              endforeach;
-          endif;
-    ?>
+    <?php endforeach; ?>
             </ul>
         </section>
         <aside class="promo">

@@ -41,8 +41,7 @@
                             <span>Все</span>
                         </a>
                     </li>
-                    <?php if ($content_types ?? false):
-                              foreach ($content_types as $type): ?>
+        <?php foreach ($_SESSION['ct_types'] as $type): ?>
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button<?= $type_id === $type['id'] ? ' filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button" href="?<?= 'sort_by=' . $sort_by . '&type_id=' . $type['id']; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
@@ -51,10 +50,7 @@
                             </svg>
                         </a>
                     </li>
-                    <?php
-                              endforeach;
-                          endif;
-                    ?>
+        <?php endforeach; ?>
                 </ul>
             </div>
         </div>
@@ -130,7 +126,7 @@
                              $post['video_content']
                         ); ?>
                     </div>
-                    <a href="post-details.html" class="post-video__play-big button">
+                    <a href="post.php?post_id=<?= $post['id']; ?>" class="post-video__play-big button">
                         <svg class="post-video__play-big-icon" width="14" height="14">
                             <use xlink:href="#icon-video-play-big"></use>
                         </svg>

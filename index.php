@@ -26,11 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 
     // обработка пустых обязательных полей
-    foreach ($required_fields as $key => $value) {
-        if (empty($auth_data[$key])) {
-            fill_errors($errors, $key, 'Пустое поле', $value, 'Это поле должно быть заполнено');
-        }
-    }
+    check_if_empty($errors, $required_fields, $auth_data);
 
     // валидация e-mail
     if ($auth_data['email']) {
@@ -41,25 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // проверка пароля
         if (isset($email) && $auth_data['password']) {
-            $query = "SELECT id, user_password FROM user WHERE user_email = '$email'";
-            $user = get_data_from_db($db_connection, $query, 'row');
+            $query = "SELECT * FROM user WHERE user_email = '$email'";
+            $user_data = get_data_from_db($db_connection, $query, 'row');
 
             // аутентификация пользователя при успешном вводе данных
-            if (password_verify($auth_data['password'], $user['user_password'])) {
-                $query = "SELECT id,
-                                 user_reg_dt,
-                                 user_email,
-                                 user_name,
-                                 user_avatar
-                          FROM user
-                          WHERE user_email = '$email'";
-
-                $user_data = get_data_from_db($db_connection, $query, 'row');
-                $_SESSION['user'] = $user_data;
+            if (password_verify($auth_data['password'], $user_data['user_password'])) {
+                unset($user_data['user_password']); // удаление кэша пароля из массива данных
+                $_SESSION['user'] = $user_data; // запись данных в сессию
 
                 // запись в сессию типов контента
                 $content_types_query = 'SELECT * FROM content_type';
                 $_SESSION['ct_types'] = get_data_from_db($db_connection, $content_types_query);
+                $_SESSION['ct_types'] = array_column($_SESSION['ct_types'], null, 'id'); // реиндексация по id
 
                 // перенаправление пользователя на страницу, к которой он пытался обратиться, или на ленту
                 header('Location:' . ($_COOKIE['prev_page'] ?? '/feed.php'));

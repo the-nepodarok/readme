@@ -3,14 +3,6 @@ session_start();
 
 // Перенаправление анонимного пользователя
 if (!isset($_SESSION['user'])) {
-    // адрес сохраняется в cookies для возврата на страницу после входа
-    $prev_page_cookies = array(
-        'prev_page',
-        $_SERVER['REQUEST_URI'],
-        time() + 3000,
-        '/',
-    );
-    setcookie(...$prev_page_cookies);
     header('Location: /');
     exit;
 }
@@ -22,15 +14,12 @@ require_once 'db_config.php';
 // массив с данными страницы
 $params = array(
     'page_title' => 'популярное',
-    'active_class' => 'popular',
+    'active_page' => 'popular',
 );
-
-$content_types = $_SESSION['ct_types']; // типы контента
 
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
-$type_options = array_column($content_types,'id');
-if (!in_array($type_id, $type_options)) {
+if (!key_exists($type_id, $_SESSION['ct_types'])) {
     $type_id = 0; // default value
 }
 
@@ -47,15 +36,11 @@ $sort_by_likes = $sort_by === 'like_count';
 $query = 'SELECT p.*,
              u.user_avatar,
              u.user_name,
-             ct.type_val,
-             ct.type_name,
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
           FROM post AS p
              INNER JOIN user AS u
-                ON p.user_id = u.id
-             INNER JOIN content_type AS ct
-                ON p.content_type_id = ct.id';
+                ON p.user_id = u.id';
 
 if ($type_id) {
     $query .= " WHERE p.content_type_id = $type_id";
@@ -93,6 +78,12 @@ if ($current_page < 1) {
 // список публикаций к отображению на странице
 $posts = array_slice($all_posts, (($current_page - 1) * $show_limit), $show_limit, true);
 
+// добавление данных о типе публикаций
+$posts = array_map(function ($post) {
+    $post['type_val'] = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
+    return $post;
+}, $posts);
+
 // параметры текущего адреса
 $url_param = array(
     'type_id' => $type_id,
@@ -103,7 +94,7 @@ $url_param = array(
 $url_less = $url_param + ['page' => ($current_page - (int)($current_page > 1))];
 $prev_page = http_build_query($url_less , '', '&');
 
-//// формирование адреса для следующей страницы
+// формирование адреса для следующей страницы
 $url_more = $url_param + ['page' => ($current_page + (int)($current_page < $page_count))];
 $next_page = http_build_query($url_more, '', '&');
 
@@ -129,7 +120,6 @@ $main_content = include_template('main.php', [
     'sort_by' => $sort_by,
     'type_id' => $type_id,
     'type_filter_url' => $type_filter_url,
-    'content_types' => $content_types,
     'posts' => $posts,
     'pagination' => $pagination,
     'show_pagination' => $show_pagination,
