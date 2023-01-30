@@ -249,7 +249,7 @@ if ($errors) {
 // подключение шаблона для отображения поля ввода заголовка
 $show_error_class = (array_key_exists('post-heading', $errors)) ? $alert_class : '';
 $header_field = include_template('add-post_header_template.php', [
-    'post_type' => $post_type,
+    'post_type' => $post_type, 
     'show_error_class' => $show_error_class,
     'post_heading' => $post_data['post-heading'] ?? '',
     'err_msg' => show_error_msg($errors, 'post-heading'),
