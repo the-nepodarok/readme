@@ -1,14 +1,15 @@
 <?php
+session_start();
+
+// Перенаправление анонимного пользователя
+if (!isset($_SESSION['user'])) {
+    header('Location: /');
+    exit;
+}
+
 require_once 'helpers.php';
 require_once 'utils.php';
-require_once 'db.php';
-
-// массив с данными страницы и пользователя
-$params = array(
-    'is_auth' => $is_auth = rand(0, 1),
-    'page_title' => $page_title = 'публикация',
-    'user_name' => $user_name = 'the-nepodarok', // укажите здесь ваше имя
-);
+require_once 'db_config.php';
 
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
@@ -16,53 +17,42 @@ $comment_limit = 2; // ограничение на кол-во показыва�
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 $post_id = intval($post_id); // приведение к целочисленному типу
 
-// обработка ошибки запроса
-if (!isset($post_id) || $post_id === 0) {
+if ($post_id > 0) {
+    // получаем данные поста
+    $query = "
+        SELECT p.*,
+               u.user_avatar,
+               u.user_name,
+               u.user_reg_dt AS reg_date
+        FROM post AS p
+            JOIN user AS u
+                ON u.id = p.user_id
+        WHERE p.id = $post_id
+    ";
+    $post = get_data_from_db($db_connection, $query, 'row');
+} else { // обработка ошибки запроса
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
-    die(build_page('layout.php', $params, $error_page));
+    die(build_page('layout.php', ['page_title' => 'Ошибка запроса'], $error_page));
 }
-
-// получаем данные поста
-$query = "
-    SELECT p.*,
-           u.user_avatar,
-           u.user_name,
-           u.user_reg_dt AS reg_date,
-           ct.type_val
-    FROM post AS p
-        JOIN user AS u
-            ON u.id = p.user_id
-        JOIN content_type AS ct
-            ON ct.id = p.content_type_id
-    WHERE p.id = $post_id
-";
-
-$post = get_data_from_db($db_connection, $query, 'row');
 
 // обработка ошибки несуществующей публикации
 if (!$post) {
     $error_page = include_template('page-404.php', ['main_content' => 'Публикация не найдена']);
-    die(build_page('layout.php', $params, $error_page));
+    die(build_page('layout.php', ['page_title' => 'Ошибка 404'], $error_page));
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
-$page_title = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
-
-// приведение ссылок к формату
-if ($post['link_text_content']) {
-    $post['link_text_content'] = prepend_url_scheme($post['link_text_content']);
-}
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
 $count_arr = [];
 
 // получаем кол-во публикаций от пользователя
-$user_id = $post['user_id'];
-$query = "SELECT COUNT(id) FROM post WHERE user_id = $user_id";
+$post_user_id = $post['user_id'];
+$query = "SELECT COUNT(id) FROM post WHERE user_id = $post_user_id";
 $count_arr['post_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во подписчиков у пользователя
-$query = "SELECT COUNT(id) FROM follower_list WHERE followed_user_id = $user_id";
+$query = "SELECT COUNT(id) FROM follower_list WHERE followed_user_id = $post_user_id";
 $count_arr['follower_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем кол-во лайков у записи
@@ -78,17 +68,7 @@ $query = "SELECT COUNT(id) FROM comment AS c WHERE post_id = $post_id";
 $count_arr['comment_count'] = get_data_from_db($db_connection, $query, 'one');
 
 // получаем хэштеги записи
-$query = "
-    SELECT hashtag_name
-    FROM post AS p
-        JOIN post_hashtag_link AS phl
-            ON phl.post_id = p.id
-        JOIN hashtag AS ht
-            ON ht.id = phl.hashtag_id
-    WHERE phl.post_id = $post_id
-";
-
-$post_hashtag_list = get_data_from_db($db_connection, $query, 'col');
+$post_hashtag_list = get_hashtags($db_connection, $post_id);
 array_walk_recursive($post_hashtag_list, 'secure'); // очистка хэштегов от вредоносного кода
 
 // проверка отображения комментариев
@@ -116,8 +96,16 @@ array_walk_recursive($comment_list, 'secure'); // очистка коммент�
 // условие для скрытия комментариев при превышение лимита
 $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comments;
 
+// записываем тип публикации
+$post_type = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
+
+// массив с данными страницы
+$params = array(
+    'page_title' => 'публикация. ' . $post['post_header']
+);
+
 // отображение поста
-$post_type_template = include_template('post-' . $post['type_val'] . '_template.php', ['post' => $post]);
+$post_type_template = include_template('post-' . $post_type . '_template.php', ['post' => $post]);
 
 // подключение шаблонов
 $main_content = include_template('post_template.php', [

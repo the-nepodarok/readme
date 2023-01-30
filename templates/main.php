@@ -41,8 +41,7 @@
                             <span>Все</span>
                         </a>
                     </li>
-                    <?php if ($content_types ?? false):
-                              foreach ($content_types as $type): ?>
+        <?php foreach ($_SESSION['ct_types'] as $type): ?>
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button<?= $type_id === $type['id'] ? ' filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button" href="?<?= 'sort_by=' . $sort_by . '&type_id=' . $type['id']; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
@@ -51,17 +50,16 @@
                             </svg>
                         </a>
                     </li>
-                    <?php
-                              endforeach;
-                          endif;
-                    ?>
+        <?php endforeach; ?>
                 </ul>
             </div>
         </div>
         <div class="popular__posts">
-        <?php if ($posts ?? false): ?>
-            <?php foreach ($posts as $post): ?>
-            <article class="popular__post post post-<?= $post['type_val']; ?>">
+        <?php if ($posts):
+                foreach ($posts as $post):
+                      // добавление данных о типе публикаций
+                      $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; ?>
+            <article class="popular__post post post-<?= $type_val; ?>">
                 <header class="post__header">
                     <h2>
                         <a href="post.php?post_id=<?= $post['id']; ?>">
@@ -71,13 +69,13 @@
                     </h2>
                 </header>
                 <div class="post__main">
-                <?php switch ($post['type_val']):
+                <?php switch ($type_val):
                         case 'quote': ?>
                 <!--содержимое для поста-цитаты-->
                 <blockquote>
                     <p>
                         <!--здесь текст-->
-                        <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
+                        <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
                     </p>
                     <cite><?= $post['quote_origin'] ?></cite>
                 </blockquote>
@@ -87,7 +85,7 @@
                 <!--содержимое для поста-текста-->
                 <p>
                     <!--здесь текст-->
-                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
+                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
                 </p>
                         <?php break; ?>
 
@@ -129,9 +127,8 @@
                             /* вставьте ссылку на видео */
                              $post['video_content']
                         ); ?>
-                        <img src="img/coast-medium.jpg" alt="Превью к видео" width="360" height="188">
                     </div>
-                    <a href="post-details.html" class="post-video__play-big button">
+                    <a href="post.php?post_id=<?= $post['id']; ?>" class="post-video__play-big button">
                         <svg class="post-video__play-big-icon" width="14" height="14">
                             <use xlink:href="#icon-video-play-big"></use>
                         </svg>
@@ -157,7 +154,7 @@
                                     <!--здесь имя пользоателя-->
                                     <?= $post['user_name']; ?>
                                 </b>
-                                <?php $pd = $post['create_dt']; // alias для $post['date'] ?>
+                                <?php $pd = $post['create_dt']; // alias для post date ?>
                                 <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?> назад</time>
                             </div>
                         </a>
@@ -185,8 +182,9 @@
                     </div>
                 </footer>
             </article>
-            <?php endforeach; ?>
-        <?php else: ?>
+            <?php
+                endforeach;
+        else: ?>
             <div>
                 <p>Записей нет!</p>
             </div>

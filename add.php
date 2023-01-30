@@ -1,21 +1,17 @@
 <?php
+session_start();
+
+// Перенаправление анонимного пользователя
+if (!isset($_SESSION['user'])) {
+    header('Location: /');
+    exit;
+}
+
 require_once 'helpers.php';
 require_once 'utils.php';
-require_once 'db.php';
+require_once 'db_config.php';
 
-// массив с данными страницы и пользователя
-$params = array(
-    'is_auth' => rand(0, 1),
-    'page_title' => 'публикация',
-    'user_name' => 'the-nepodarok', // укажите здесь ваше имя
-    'user' => array(
-        'id' => 1,
-    ),
-);
-
-// получение типов контента
-$query = 'SELECT * FROM content_type';
-$content_types = get_data_from_db($db_connection, $query);
+$content_types = $_SESSION['ct_types']; // типы контента
 $post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
 
 // функция для проверки на допустимое значение параметра post_type
@@ -68,11 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $required_fields = ['post-heading' => 'Заголовок'] + $required_fields;
 
     // обработка пустых обязательных полей
-    foreach ($required_fields as $key => $value) {
-        if (empty($post_data[$key])) {
-            fill_errors($errors, $key, 'Пустое поле', $value, 'Это поле должно быть заполнено');
-        }
-    }
+    check_if_empty($errors, $required_fields, $post_data);
 
     // валидация ссылок и загрузка файлов
     switch ($post_type) {
@@ -83,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             }
             $video_url = $post_data[$field_name];
-            if (validate_url($video_url, $errors, $field_name, PHP_URL_PATH)) {
+            if (validate_url($errors, $video_url, $field_name, PHP_URL_PATH)) {
                 $yt_check = check_youtube_url($video_url);
                 if ($yt_check !== true) {
                     $err_type = 'Не найдено видео по ссылке';
@@ -103,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // приведение ссылки к протоколу https
                 $file_url = $post_data[$field_name];
                 // проверка ссылки на path
-                if (validate_url($file_url, $errors, $field_name, PHP_URL_PATH)) {
+                if (validate_url($errors, $file_url, $field_name, PHP_URL_PATH)) {
                     // валидация по типу и размеру файла по ссылке
-                    $file = download_file_from_url($file_url, $errors);
+                    $file = download_file_from_url($errors, $file_url);
                 }
             } else { // если файл не был загружен ни из файловой системы, ни по ссылке
                 $err_type = 'Файл не был загружен';
@@ -120,11 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($errors[$field_name])) {
                 break;
             }
-            // приведение к протоколу https:
-            $post_link = prepend_url_scheme($post_data[$field_name]);
 
             // проверка валидности и доступности ссылки
-            validate_url($post_link, $errors, $field_name);
+            validate_url($errors, $post_data[$field_name], $field_name);
             break;
     }
 
@@ -157,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Обработка полученных данных в случае правильного заполнения всех полей и добавление новой публикации в БД
     if (empty($errors)) {
 
-        // получение типа контента в зав-ти от формы
+        // получение id типа контента в зав-ти от формы
         $content_type_values = array_column($content_types, 'type_val', 'id');
         $content_type_id = array_search($post_type, $content_type_values);
 
@@ -183,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file ?? NULL,
             $post_data['video-url'] ?? NULL,
             $post_data['post-link'] ?? NULL,
-            $params['user']['id'],
+            $_SESSION['user']['id'],
             $content_type_id
         );
 
@@ -233,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: post.php?post_id=' . $new_post_id);
         exit;
     }
-} else { 
+} else { // обработка данных GET
     // параметр типа добавляемой публикации
     $post_type = filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_STRING);
 
@@ -251,10 +241,14 @@ if ($errors) {
     ]);
 }
 
+// массив с данными страницы
+$params = array(
+    'page_title' => 'новая публикация',
+);
+
 // подключение шаблона для отображения поля ввода заголовка
 $show_error_class = (array_key_exists('post-heading', $errors)) ? $alert_class : '';
 $header_field = include_template('add-post_header_template.php', [
-    'post_type' => $post_type,
     'show_error_class' => $show_error_class,
     'post_heading' => $post_data['post-heading'] ?? '',
     'err_msg' => show_error_msg($errors, 'post-heading'),
@@ -270,7 +264,6 @@ $tag_field = include_template('add-post_tags_template.php', [
 
 // отображение страницы
 $main_content = include_template('add-post_template.php', [
-    'content_types' => $content_types,
     'post_type' => $post_type,
     'header_field' => $header_field,
     'errors' => $errors,

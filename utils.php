@@ -28,11 +28,12 @@ date_default_timezone_set('Europe/Moscow');
  *
  * @param string $string Исходный текст в виде строки
  * @param string $link Текст ссылки для перехода к полному тексту
+ * @param boolean $use_target_blank Должна ли ссылка открываться в новой вкладке
  * @param number $max_post_length Максимальное количество символов
  * @return string Возвращает строку, обрезанную до $max_post_length, либо исходную строку без изменений,
  * если лимит символов не превышен
  */
-function slice_string($string, $link = '', $max_post_length = 300)
+function slice_string($string, $link = '', $use_target_blank = false, $max_post_length = 300)
 {
     $result_string = trim($string);
 
@@ -49,7 +50,9 @@ function slice_string($string, $link = '', $max_post_length = 300)
         $result_string = trim(
                 $result_string,
                 '/ :–-,;'
-            ) . '...' . '<a class="post-text__more-link" href="' . $link . '">Читать далее</a>';
+            ) . '...' . '<a class="post-text__more-link" href="' .
+                $link . '"' .
+                ($use_target_blank ? ' target="_blank"' : '') . '>Читать далее</a>';
         // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
@@ -192,7 +195,7 @@ function get_data_from_db(mysqli $src_db, string $query, string $mode = 'all')
 }
 
 /**
- * Приводит ссылки к единому виду, добавляя протокол https
+ * Приводит ссылки к единому виду, добавляя протокол https (если работает) или http
  *
  * @param string $url Текст ссылки
  */
@@ -200,11 +203,18 @@ function prepend_url_scheme(string $url): string
 {
     if (filter_var($url, FILTER_VALIDATE_URL)) {
         $scheme = parse_url($url, PHP_URL_SCHEME);
-        $pre = 'https';
+
         if ($scheme) {
-            $url = $pre . str_replace($scheme, '', $url);
+            $url = str_replace($scheme, '', $url);
+        }
+
+        $http = 'http' . $url;
+        $https = 'https' . $url;
+
+        if (get_headers($http) && get_headers($https)) {
+            $url = $https;
         } else {
-            $url = $pre . '://' . $url;
+            $url = $http;
         }
     }
     return $url;
@@ -265,7 +275,7 @@ function validate_image_type($field_name)
  * @param string $destination Путь для перемещения загруженного файла
  * @return false|string Конечное имя загруженного файла или false, если файл не прошёл одну из проверок
  */
-function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
+function download_file_from_url(&$err, $url, $destination = UPLOAD_PATH)
 {
     $result = false;
     $err_heading = 'Ссылка из интернета';
@@ -333,7 +343,7 @@ function download_file_from_url($url, &$err, $destination = UPLOAD_PATH)
  * @param int $component Код компонента (для parse_url)
  * @return boolean Валидность ссылки
  */
-function validate_url($url, &$err, $field_name, $component = PHP_URL_HOST)
+function validate_url(&$err, $url, $field_name, $component = PHP_URL_HOST)
 {
     $url_validity = false;
     if (filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, $component)) {
@@ -477,34 +487,96 @@ function upload_image(&$err, $files_name) {
 }
 
 /**
- * Выполняет проверку e-mail адреса на валидность и на существование в БД
+ * Валидирует e-mail адрес и заполняет массив с ошибками
  *
- * @param string $email Адрес эл. почты
  * @param array $err Массив для заполнения ошибками
+ * @param string $email Адрес эл. почты
  * @return false|string Исходный e-mail, либо false, если адрес не прошёл проверку
  */
-function validate_email($email, $db, &$err) {
+function validate_email(&$err, $email) {
     $err_heading = 'Электронная почта';
 
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-        $query = "SELECT id FROM user WHERE user_email = '$email'";
-        $result = get_data_from_db($db, $query, 'one');
-
-        if ($result > 0) {
-            $err_type = 'Пользователь уже существует';
-            $err_text = 'Пользователь с такой электронной почтой уже существует';
-        }
     } else {
         $err_type = 'Некорректный email-адрес';
         $err_text = 'Введите корректный адрес электронной почты';
-    }
-
-    // заполнить массив с ошибками, если таковые возникли
-    if (isset($err_text)) {
         $email = false;
         fill_errors($err, 'email', $err_type, $err_heading, $err_text);
     }
 
     return $email;
+}
+
+/**
+ * Выполняет проверку e-mail адреса на существование в БД
+ *
+ * @param mysqli $db Подключение к базе данных
+ * @param array $err Массив для заполнения ошибками
+ * @param string $email Адрес эл. почты
+ * @param boolean $new Проверяется ли e-mail для регистрации нового пользователя
+ * @return boolean Значение проверки
+ */
+function check_email($db, &$err, $email, $new = false) {
+    $email_check = false;
+    $query = "SELECT id FROM user WHERE user_email = '$email'";
+    $result = get_data_from_db($db, $query, 'one');
+    $err_heading = 'Электронная почта';
+
+    if ($new) {
+        if ($result > 0) {
+            $err_type = 'Пользователь уже существует';
+            $err_text = 'Пользователь с такой электронной почтой уже существует';
+        } else {
+            $email_check = true;
+        }
+    } else {
+        if (!$result) {
+            $err_type = 'Пользователя не существует';
+            $err_text = 'Пользователь с таким E-mail не найден';
+        } else {
+            $email_check = true;
+        }
+    }
+
+    // заполнить массив с ошибками, если таковые возникли
+    if (isset($err_text)) {
+        fill_errors($err, 'email', $err_type, $err_heading, $err_text);
+    }
+
+    return $email_check;
+}
+
+/**
+ * Получает хэштеги публикации
+ *
+ * @param mysqli $db Подключение к БД
+ * @param int $post_id Идентификатор поста
+ * @return array|mixed Список хэштегов в виде массива
+ */
+function get_hashtags($db, $post_id) {
+    $query = "SELECT hashtag_name,
+                     ht.id
+              FROM post AS p
+                  JOIN post_hashtag_link AS phl
+                      ON phl.post_id = p.id
+                  JOIN hashtag AS ht
+                      ON ht.id = phl.hashtag_id
+              WHERE phl.post_id = '$post_id'";
+    return get_data_from_db($db, $query, 'col');
+}
+
+/**
+ * Проверяет поля на заполненность
+ *
+ * @param array $err Массив для заполнения ошибками
+ * @param array $req Массив со списком обязательных полей формы
+ * @param array $post_data Массив с данными из формы
+ */
+function check_if_empty(&$err, $req, $post_data) {
+    foreach ($req as $key => $value) {
+        if (empty($post_data[$key])) {
+            fill_errors($err, $key, 'Пустое поле', $value, 'Это поле должно быть заполнено');
+        }
+    }
 }
