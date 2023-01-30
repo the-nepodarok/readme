@@ -19,6 +19,7 @@
             <a class="header__logo-link header__logo-link--active">
                 <img class="header__logo" src="../img/logo.svg" alt="Логотип readme" width="172" height="32">
             </a>
+            
             <p class="header__topic page__header-topic">
                 micro blogging
             </p>
