@@ -11,12 +11,6 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// массив с данными страницы
-$params = array(
-    'page_title' => 'популярное',
-    'active_page' => 'popular',
-);
-
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
 if (!key_exists($type_id, $_SESSION['ct_types'])) {
@@ -68,7 +62,7 @@ $show_pagination = $all_posts_count > $show_limit;
 // текущая страница
 $current_page = filter_input(INPUT_GET, 'page', FILTER_SANITIZE_NUMBER_INT);
 
-// отсылаем к первой странице, если для page передано значение меньше допусутимого, и к последней, если задано значение больше
+// отсылаем к первой странице, если для page передано значение меньше допустимого, и к последней, если задано значение больше
 if ($current_page < 1) {
     $current_page = 1;
 } elseif ($current_page > $page_count) {
@@ -77,12 +71,6 @@ if ($current_page < 1) {
 
 // список публикаций к отображению на странице
 $posts = array_slice($all_posts, (($current_page - 1) * $show_limit), $show_limit, true);
-
-// добавление данных о типе публикаций
-$posts = array_map(function ($post) {
-    $post['type_val'] = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
-    return $post;
-}, $posts);
 
 // параметры текущего адреса
 $url_param = array(
@@ -115,6 +103,12 @@ $type_filter_url = $type_id ? "&type_id=$type_id" : '';
 //foreach ($posts as $key => $post) { // добавляем постам в массиве рандомные даты - the-nepodarok
 //    $posts[$key]['date'] = generate_random_date($key);
 //}
+
+// массив с данными страницы
+$params = array(
+    'page_title' => 'популярное',
+    'active_page' => 'popular',
+);
 
 $main_content = include_template('main.php', [
     'sort_by' => $sort_by,

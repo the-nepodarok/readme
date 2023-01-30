@@ -7,9 +7,10 @@
             <h2 class="visually-hidden">Лента</h2>
             <div class="feed__main-wrapper">
                 <div class="feed__wrapper">
-    <?php if ($posts):
-              foreach ($posts as $post): ?>
-                    <article class="feed__post post post-<?= $post['type_val']; ?>">
+    <?php foreach ($posts as $post):
+              $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; // добавление данных о типе публикаций
+              $post_link = 'post.php?post_id=' . $post['id']; // формирование ссылки на пост ?>
+                    <article class="feed__post post post-<?= $type_val; ?>">
                         <header class="post__header post__author">
                             <a class="post__author-link" href="#" title="Автор">
                                 <div class="post__avatar-wrapper">
@@ -25,10 +26,10 @@
                             </a>
                         </header>
                         <div class="post__main">
-                  <?php switch ($post['type_val']):
+                  <?php switch ($type_val):
                       case 'photo': ?>
                             <h2>
-                                <a href="<?= $post_link . $post['id']; ?>">
+                                <a href="<?= $post_link; ?>">
                                     <?= $post['post_header']; ?>
                                 </a>
                             </h2>
@@ -39,7 +40,7 @@
 
                       <?php case 'text': ?>
                             <h2>
-                                <a href="<?= $post_link . $post['id']; ?>">
+                                <a href="<?= $post_link; ?>">
                                     <?= $post['post_header']; ?>
                                 </a>
                             </h2>
@@ -107,14 +108,14 @@
                                     <span><?= $post['like_count']; ?></span>
                                     <span class="visually-hidden">количество лайков</span>
                                 </a>
-                                <a class="post__indicator post__indicator--comments button" href="<?= $post_link . $post['id']; ?>" title="Комментарии">
+                                <a class="post__indicator post__indicator--comments button" href="<?= $post_link; ?>" title="Комментарии">
                                     <svg class="post__indicator-icon" width="19" height="17">
                                         <use xlink:href="#icon-comment"></use>
                                     </svg>
                                     <span><?= $post['comment_count']; ?></span>
                                     <span class="visually-hidden">количество комментариев</span>
                                 </a>
-                                <a class="post__indicator post__indicator--repost button" href="?repost_id=<?= $post['id']; ?>" title="Репост">
+                                <a class="post__indicator post__indicator--repost button" href="repost.php?post_id=<?= $post['id']; ?>" title="Репост">
                                     <svg class="post__indicator-icon" width="19" height="17">
                                         <use xlink:href="#icon-repost"></use>
                                     </svg>
@@ -135,10 +136,7 @@
                   <?php endif; ?>
                         </footer>
                     </article>
-    <?php
-              endforeach;
-          endif;
-    ?>
+    <?php endforeach; ?>
                 </div>
             </div>
             <ul class="feed__filters filters">

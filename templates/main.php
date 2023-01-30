@@ -55,9 +55,11 @@
             </div>
         </div>
         <div class="popular__posts">
-        <?php if ($posts ?? false): ?>
-            <?php foreach ($posts as $post): ?>
-            <article class="popular__post post post-<?= $post['type_val']; ?>">
+        <?php if ($posts):
+                foreach ($posts as $post):
+                      // добавление данных о типе публикаций
+                      $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; ?>
+            <article class="popular__post post post-<?= $type_val; ?>">
                 <header class="post__header">
                     <h2>
                         <a href="post.php?post_id=<?= $post['id']; ?>">
@@ -67,7 +69,7 @@
                     </h2>
                 </header>
                 <div class="post__main">
-                <?php switch ($post['type_val']):
+                <?php switch ($type_val):
                         case 'quote': ?>
                 <!--содержимое для поста-цитаты-->
                 <blockquote>
@@ -180,8 +182,9 @@
                     </div>
                 </footer>
             </article>
-            <?php endforeach; ?>
-        <?php else: ?>
+            <?php
+                endforeach;
+        else: ?>
             <div>
                 <p>Записей нет!</p>
             </div>

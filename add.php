@@ -11,11 +11,6 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// массив с данными страницы
-$params = array(
-    'page_title' => 'публикация',
-);
-
 $content_types = $_SESSION['ct_types']; // типы контента
 $post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
 
@@ -246,10 +241,14 @@ if ($errors) {
     ]);
 }
 
+// массив с данными страницы
+$params = array(
+    'page_title' => 'новая публикация',
+);
+
 // подключение шаблона для отображения поля ввода заголовка
 $show_error_class = (array_key_exists('post-heading', $errors)) ? $alert_class : '';
 $header_field = include_template('add-post_header_template.php', [
-    'post_type' => $post_type,
     'show_error_class' => $show_error_class,
     'post_heading' => $post_data['post-heading'] ?? '',
     'err_msg' => show_error_msg($errors, 'post-heading'),

@@ -17,7 +17,7 @@
     <div class="header__wrapper page__header-wrapper container">
         <div class="header__logo-wrapper page__logo-wrapper">
             <a class="header__logo-link header__logo-link--active">
-                <img class="header__logo" src="../img/logo.svg" alt="Логотип readme" width="172" height="32">
+                <img class="header__logo" src="/img/logo.svg" alt="Логотип readme" width="172" height="32">
             </a>
             <p class="header__topic page__header-topic">
                 micro blogging
@@ -30,7 +30,7 @@
                 </p>
                 <ul class="header__user-nav">
                     <li>
-                        <a class="header__user-button header__register-button button button--transparent" href="../registration.php">Регистрация</a>
+                        <a class="header__user-button header__register-button button button--transparent" href="/registration.php">Регистрация</a>
                     </li>
                 </ul>
             </nav>

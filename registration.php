@@ -3,18 +3,13 @@ session_start();
 
 // Перенаправление аутентифицированного пользователя
 if (isset($_SESSION['user'])) {
-    header('Location: /');
+    header('Location: /feed.php');
     exit;
 }
 
 require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
-
-// массив с данными страницы
-$params = array(
-    'page_title' => 'регистрация',
-);
 
 $reg_data = []; // массив для заполнения данными из формы
 $errors = []; // массив для заполнения ошибками полей формы
@@ -99,6 +94,11 @@ if ($errors) {
         'errors' => $errors,
     ]);
 }
+
+// массив с данными страницы
+$params = array(
+    'page_title' => 'регистрация',
+);
 
 $main_content = include_template('registration_template.php', [
     'errors' => $errors,

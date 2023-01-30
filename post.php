@@ -11,40 +11,29 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-$params = []; // массив с данными страницы
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
-
-// параметр запроса репоста
-$repost_id = filter_input(INPUT_GET, 'repost_id', FILTER_SANITIZE_NUMBER_INT);
-
-// репост
-if ($repost_id) {
-    header( 'Location: /repost.php?repost_id=' . $repost_id);
-    exit;
-}
 
 // параметр запроса id поста
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 $post_id = intval($post_id); // приведение к целочисленному типу
 
-// обработка ошибки запроса
-if (!$post_id) {
+if ($post_id > 0) {
+    // получаем данные поста
+    $query = "
+        SELECT p.*,
+               u.user_avatar,
+               u.user_name,
+               u.user_reg_dt AS reg_date
+        FROM post AS p
+            JOIN user AS u
+                ON u.id = p.user_id
+        WHERE p.id = $post_id
+    ";
+    $post = get_data_from_db($db_connection, $query, 'row');
+} else { // обработка ошибки запроса
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
     die(build_page('layout.php', ['page_title' => 'Ошибка запроса'], $error_page));
 }
-
-// получаем данные поста
-$query = "
-    SELECT p.*,
-           u.user_avatar,
-           u.user_name,
-           u.user_reg_dt AS reg_date
-    FROM post AS p
-        JOIN user AS u
-            ON u.id = p.user_id
-    WHERE p.id = $post_id
-";
-$post = get_data_from_db($db_connection, $query, 'row');
 
 // обработка ошибки несуществующей публикации
 if (!$post) {
@@ -53,7 +42,6 @@ if (!$post) {
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
-$params['page_title'] = 'публикация. ' . $post['post_header']; // сформировать заголовок страницы
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
 $count_arr = [];
@@ -110,6 +98,11 @@ $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comm
 
 // записываем тип публикации
 $post_type = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
+
+// массив с данными страницы
+$params = array(
+    'page_title' => 'публикация. ' . $post['post_header']
+);
 
 // отображение поста
 $post_type_template = include_template('post-' . $post_type . '_template.php', ['post' => $post]);

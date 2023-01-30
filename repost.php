@@ -1,14 +1,22 @@
 <?php // Производит репост публикации
 session_start();
+
+// Перенаправление анонимного пользователя
+if (!isset($_SESSION['user'])) {
+    header('Location: /');
+    exit;
+}
+
 require_once 'utils.php';
 require_once 'db_config.php';
 
 // параметр запроса репоста
-$repost_id = filter_input(INPUT_GET, 'repost_id', FILTER_SANITIZE_NUMBER_INT);
+$post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
+$tmp_id = $post_id;
 
-if ($repost_id) {
+if ($post_id) {
     // получаем оригинальный пост
-    $query = "SELECT * FROM post WHERE id = $repost_id";
+    $query = "SELECT * FROM post WHERE id = $post_id";
     $post_data = get_data_from_db($db_connection, $query, 'row');
 
     if ($post_data and $post_data['user_id'] !== $_SESSION['user']['id']) {
@@ -26,7 +34,7 @@ if ($repost_id) {
                       origin_post_id,
                       content_type_id
                     )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"; // 10 полей
+                  VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"; // 9 полей
         $stmt = mysqli_prepare($db_connection, $query);
 
         // данные для подстановки
@@ -50,7 +58,7 @@ if ($repost_id) {
         $new_post_id = mysqli_insert_id($db_connection);
 
         // получение хэштегов записи
-        $post_hashtag_list = get_hashtags($db_connection, $repost_id);
+        $post_hashtag_list = get_hashtags($db_connection, $post_id);
 
         // добавление хэштегов репосту
         if ($post_hashtag_list) {
@@ -63,15 +71,9 @@ if ($repost_id) {
                 mysqli_query($db_connection, $query);
             }
         }
-
         // переадресация на страницу с репостом
-        header('Location: post.php?post_id=' . $new_post_id);
-    } else {
-        // переадресация на страницу с постом
-        header('Location: post.php?post_id=' . $repost_id);
+        $tmp_id = $new_post_id;
     }
-} else {
-    // переадресация на главную
-    header('Location: /');
 }
+header('Location: post.php?post_id=' . $tmp_id); // переадресация на страницу с постом
 exit;
