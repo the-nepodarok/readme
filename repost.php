@@ -12,9 +12,10 @@ require_once 'db_config.php';
 
 // параметр запроса репоста
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
-$tmp_id = $post_id;
 
 if ($post_id) {
+    $tmp_id = $post_id;
+
     // получаем оригинальный пост
     $query = "SELECT * FROM post WHERE id = $post_id";
     $post_data = get_data_from_db($db_connection, $query, 'row');
@@ -34,7 +35,7 @@ if ($post_id) {
                       origin_post_id,
                       content_type_id
                     )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"; // 9 полей
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; // 10 полей
         $stmt = mysqli_prepare($db_connection, $query);
 
         // данные для подстановки
@@ -46,19 +47,20 @@ if ($post_id) {
             $post_data['video_content'] ?? null,
             $post_data['link_text_content'] ?? null,
             $_SESSION['user']['id'],
+            1,
             $post_data['id'],
             $post_data['content_type_id'],
         );
 
         // выполнение подготовленного выражения
-        mysqli_stmt_bind_param($stmt, 'ssssssiii', ...$query_vars);
+        mysqli_stmt_bind_param($stmt, 'ssssssiiii', ...$query_vars);
         mysqli_stmt_execute($stmt);
 
         // сохранение id нового поста для переадресации
         $tmp_id = mysqli_insert_id($db_connection);
 
         // получение хэштегов записи
-        $post_hashtag_list = get_hashtags($db_connection, $post_id);
+        $post_hashtag_list = get_hashtags($db_connection, $post_id, 'all');
 
         // добавление хэштегов репосту
         if ($post_hashtag_list) {
@@ -71,9 +73,7 @@ if ($post_id) {
                 mysqli_query($db_connection, $query);
             }
         }
-        // переадресация на страницу с репостом
-        $tmp_id = $new_post_id;
     }
 }
-header('Location: post.php?post_id=' . $tmp_id); // переадресация на страницу с постом
-exit;
+// переадресация на страницу с постом или в ленту
+header('Location: ' . ($tmp_id ? 'post.php?post_id=' . $tmp_id : 'feed.php'));

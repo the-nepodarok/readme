@@ -557,7 +557,7 @@ function check_email($db, &$err, $email, $new = false) {
  * @param string $mode Режим извлечения данных (см. get_data_from_db)
  * @return array|mixed Список хэштегов в виде массива
  */
-function get_hashtags($db, $post_id) {
+function get_hashtags($db, $post_id, $mode = 'col') {
     $query = "SELECT hashtag_name,
                      ht.id
               FROM post AS p
@@ -566,7 +566,7 @@ function get_hashtags($db, $post_id) {
                   JOIN hashtag AS ht
                       ON ht.id = phl.hashtag_id
               WHERE phl.post_id = '$post_id'";
-    return get_data_from_db($db, $query, 'col');
+    return get_data_from_db($db, $query, $mode);
 }
 
 /**
