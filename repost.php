@@ -69,7 +69,7 @@ if ($post_id) {
                 $query = "INSERT INTO post_hashtag_link
                             (post_id, hashtag_id)
                           VALUES
-                            ($new_post_id, {$tag['id']})";
+                            ($tmp_id, {$tag['id']})";
                 mysqli_query($db_connection, $query);
             }
         }
