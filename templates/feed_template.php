@@ -20,7 +20,7 @@
                                 </div>
                                 <div class="post__info">
                                     <b class="post__author-name"><?= $post['user_name']; ?></b>
-                  <?php $dt = $post['create_dt']; // alias для post date ?>
+                    <?php $dt = $post['create_dt']; // alias для post date ?>
                                     <time class="post__time" title="<?= get_title_date($dt); ?>" datetime="<?= $dt; ?>"><?= format_date($dt); ?> назад</time>
                                 </div>
                             </a>
@@ -127,7 +127,7 @@
                             <ul class="post__tags">
                         <?php foreach ($post['hashtags'] as $hashtag): // отображение списка хэштегов ?>
                                 <li>
-                                    <a href="#">
+                                    <a href="search.php?<?= SEARCH . '=%23' . $hashtag; ?>">
                                         <?= '#' . $hashtag; ?>
                                     </a>
                                 </li>

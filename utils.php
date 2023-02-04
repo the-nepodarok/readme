@@ -20,6 +20,8 @@ define('MAX_FILE_SIZE_USER', 10); // Мб, вывод ограничения н�
 
 define('UPLOAD_PATH', 'uploads/'); // папка сохранения файлов, загружаемых из формы
 
+define('SEARCH', 'q'); // название поля формы поиска
+
 // часовой пояс по умолчанию
 date_default_timezone_set('Europe/Moscow');
 
@@ -57,7 +59,7 @@ function slice_string($string, $link = '', $use_target_blank = false, $max_post_
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
 
-    return $result_string;
+    return str_replace('&amp;#13;&amp;#10;', "<br>", $result_string);
 }
 
 /**
@@ -552,6 +554,7 @@ function check_email($db, &$err, $email, $new = false) {
  *
  * @param mysqli $db Подключение к БД
  * @param int $post_id Идентификатор поста
+ * @param string $mode Режим извлечения данных (см. get_data_from_db)
  * @return array|mixed Список хэштегов в виде массива
  */
 function get_hashtags($db, $post_id) {

@@ -54,8 +54,8 @@ if ($post_id) {
         mysqli_stmt_bind_param($stmt, 'ssssssiii', ...$query_vars);
         mysqli_stmt_execute($stmt);
 
-        // сохранение id нового поста
-        $new_post_id = mysqli_insert_id($db_connection);
+        // сохранение id нового поста для переадресации
+        $tmp_id = mysqli_insert_id($db_connection);
 
         // получение хэштегов записи
         $post_hashtag_list = get_hashtags($db_connection, $post_id);

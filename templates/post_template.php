@@ -38,7 +38,7 @@
           </div>
           <ul class="post__tags">
             <?php foreach ($post_hashtag_list as $hashtag): // отображение списка хэштегов ?>
-            <li><a href="#"><?= '#' . $hashtag; ?></a></li>
+            <li><a href="search.php?<?= SEARCH . '=%23' . $hashtag; ?>"><?= '#' . $hashtag; ?></a></li>
             <?php endforeach; ?>
           </ul>
           <div class="comments">

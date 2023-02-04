@@ -2,9 +2,9 @@
     <div class="post__main">
         <blockquote>
             <p>
-                <?=$post['text_content'];?>
+                <?= str_replace('&amp;#13;&amp;#10;', "<br>", $post['text_content']); ?>
             </p>
-            <cite><?=$post['quote_origin'];?></cite>
+            <cite><?= $post['quote_origin']; ?></cite>
         </blockquote>
     </div>
 </div>

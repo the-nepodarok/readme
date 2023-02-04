@@ -52,6 +52,9 @@ foreach ($posts as &$post) {
 // устранение вредоносного кода
 array_walk_recursive($posts, 'secure');
 
+// сохранение адреса страницы для перенаправления на странице поиска
+$_SESSION['prev_page'] = 'feed.php';
+
 // массив с данными страницы
 $params = array(
     'page_title' => 'моя лента',

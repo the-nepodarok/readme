@@ -26,8 +26,24 @@ if (!in_array($sort_by, $sort_options)) {
 
 $sort_by_likes = $sort_by === 'like_count';
 
+// текущая страница
+$current_page = filter_input(INPUT_GET, 'page', FILTER_SANITIZE_NUMBER_INT);
+
+// перенаправление к первой странице, если для page передано значение меньше допустимого
+if ($current_page < 1) {
+    $current_page = 1;
+}
+
+// лимит на кол-во постов на странице
+$show_limit = 6;
+
+// получение количества всех постов
+$query = "SELECT COUNT(id) FROM post" . ($type_id ? " WHERE content_type_id = $type_id" : '');
+$all_posts_count = get_data_from_db($db_connection, $query, 'one');
+
 // Формирование запроса для вывода постов с фильтром, сортировкой и ограничение на кол-во постов на странице
-$query = 'SELECT p.*,
+$query = '
+      SELECT p.*,
              u.user_avatar,
              u.user_name,
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
@@ -37,21 +53,17 @@ $query = 'SELECT p.*,
                 ON p.user_id = u.id';
 
 if ($type_id) {
-    $query .= " WHERE p.content_type_id = $type_id";
-} // фильтрация по типу
+    $query .= " WHERE p.content_type_id = $type_id"; // фильтрация по типу
+}
 
-// добавление префикса таблицы
-$query .= ' ORDER BY ' . ($sort_by_likes ? '' : 'p.') . $sort_by . ' DESC';
+// сортировка
+$query .= ' ORDER BY ' . ($sort_by_likes ? '' : 'p.') . $sort_by . ' DESC
+            LIMIT ' . $show_limit . '
+            OFFSET ' . $show_limit * ($current_page - 1);
 // запрос сформирован
 
 // список всех постов
-$all_posts = get_data_from_db($db_connection, $query);
-
-// кол-во всех постов
-$all_posts_count = count($all_posts);
-
-// лимит на кол-во постов на странице
-$show_limit = 6;
+$posts = get_data_from_db($db_connection, $query);
 
 // кол-во страниц с постами
 $page_count = ceil($all_posts_count / $show_limit);
@@ -59,18 +71,10 @@ $page_count = ceil($all_posts_count / $show_limit);
 // условие для отображения/скрытия кнопок пагинации
 $show_pagination = $all_posts_count > $show_limit;
 
-// текущая страница
-$current_page = filter_input(INPUT_GET, 'page', FILTER_SANITIZE_NUMBER_INT);
-
-// отсылаем к первой странице, если для page передано значение меньше допустимого, и к последней, если задано значение больше
-if ($current_page < 1) {
-    $current_page = 1;
-} elseif ($current_page > $page_count) {
+// отсылаем к последней странице, если задано значение больше кол-ва страниц
+if ($current_page > $page_count) {
     $current_page = $page_count;
 }
-
-// список публикаций к отображению на странице
-$posts = array_slice($all_posts, (($current_page - 1) * $show_limit), $show_limit, true);
 
 // параметры текущего адреса
 $url_param = array(
@@ -103,6 +107,9 @@ $type_filter_url = $type_id ? "&type_id=$type_id" : '';
 //foreach ($posts as $key => $post) { // добавляем постам в массиве рандомные даты - the-nepodarok
 //    $posts[$key]['date'] = generate_random_date($key);
 //}
+
+// сохранение адреса страницы для перенаправления на странице поиска
+$_SESSION['prev_page'] = 'popular.php';
 
 // массив с данными страницы
 $params = array(
