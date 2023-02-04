@@ -99,9 +99,12 @@ $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comm
 // записываем тип публикации
 $post_type = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
 
+// сохранение адреса страницы для перенаправления на странице поиска
+$_SESSION['prev_page'] = 'post.php?post_id=' . $post_id;
+
 // массив с данными страницы
 $params = array(
-    'page_title' => 'публикация. ' . $post['post_header']
+    'page_title' => 'публикация. ' . $post['post_header'],
 );
 
 // отображение поста

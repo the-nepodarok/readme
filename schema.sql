@@ -113,3 +113,5 @@ CREATE TABLE message
   INDEX (message_sender_id) COMMENT 'индекс для поиска по отправителю',
   INDEX (message_receiver_id) COMMENT 'индекс для поиска по получателю'
 ) COMMENT 'таблица личных сообщений';
+
+CREATE FULLTEXT INDEX post_search ON post(post_header, text_content);
