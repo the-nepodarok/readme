@@ -14,7 +14,6 @@ require_once 'db_config.php';
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 
 if ($post_id) {
-    $tmp_id = $post_id;
 
     // получаем оригинальный пост
     $query = "SELECT * FROM post WHERE id = $post_id";
@@ -57,7 +56,7 @@ if ($post_id) {
         mysqli_stmt_execute($stmt);
 
         // сохранение id нового поста для переадресации
-        $tmp_id = mysqli_insert_id($db_connection);
+        $post_id = mysqli_insert_id($db_connection);
 
         // получение хэштегов записи
         $post_hashtag_list = get_hashtags($db_connection, $post_id, 'all');
@@ -76,4 +75,4 @@ if ($post_id) {
     }
 }
 // переадресация на страницу с постом или в ленту
-header('Location: ' . ($tmp_id ? 'post.php?post_id=' . $tmp_id : 'feed.php'));
+header('Location: ' . ($post_id ? 'post.php?post_id=' . $post_id : 'feed.php'));

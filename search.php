@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 // Перенаправление анонимного пользователя
@@ -12,17 +13,16 @@ require_once 'utils.php';
 require_once 'db_config.php';
 
 // параметр поискового запроса
-$search_query = filter_input(INPUT_GET, SEARCH,FILTER_SANITIZE_SPECIAL_CHARS);
-$search_query = trim_extra_spaces($search_query); // обрезка лишних пробелов
+$search_text = filter_input(INPUT_GET, SEARCH, FILTER_SANITIZE_SPECIAL_CHARS);
+$search_text = trim_extra_spaces($search_text); // обрезка лишних пробелов
 $posts = []; // массив для заполнения постами по результатам поиска
 
-if ($search_query) {
-
+if ($search_text) {
     // производится ли поиск по хэштегу
-    $hashtag_search = mb_substr($search_query, 0,1) === '#';
+    $hashtag_search = mb_substr($search_text, 0, 1) === '#';
 
     if ($hashtag_search) {
-        $hashtag_query = substr($search_query, 1);
+        $hashtag_query = substr($search_text, 1);
         $query = "SELECT id FROM hashtag WHERE hashtag_name = '$hashtag_query'";
         $tag_id = get_data_from_db($db_connection, $query, 'one');
     }
@@ -35,7 +35,7 @@ if ($search_query) {
                      (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count';
 
     if (!$hashtag_search) {
-        $query .= ', MATCH(post_header, text_content) AGAINST(' . "'$search_query'" . ') ' . 'AS score';
+        $query .= ', MATCH(post_header, text_content) AGAINST(' . "'$search_text'" . ') AS score';
     }
 
     $query .= ' FROM post AS p
@@ -48,7 +48,7 @@ if ($search_query) {
                 WHERE phl.hashtag_id =' . $tag_id . '
                 ORDER BY phl.id DESC ';
     } else {
-        $query .= ' WHERE MATCH (post_header, text_content) AGAINST (' . "'$search_query'" . ')
+        $query .= ' WHERE MATCH (post_header, text_content) AGAINST (' . "'$search_text'" . ')
                    ORDER by score DESC';
     } // запрос сформирован
 
@@ -58,19 +58,23 @@ if ($search_query) {
 // массив с данными страницы
 $params = array(
     'page_title' => 'поиск',
-    'search_query' => $search_query ?? '',
+    'search_query' => $search_text ?? '',
 );
 
 // формирование страницы результатов поиска
 if ($posts) {
     array_walk_recursive($posts, 'secure'); // очистка от вредоносного кода
+
+    // сохранение адреса страницы для перенаправления при добавление лайка
+    $_SESSION['prev_page'] = 'search.php?' . SEARCH . '=' . $search_text;
+
     $main_content = include_template('search-results_template.php', [
-        'search_query' => $search_query,
+        'search_query' => $search_text,
         'posts' => $posts,
     ]);
 } else {
     $main_content = include_template('no-results_template.php', [
-        'search_query' => $search_query,
+        'search_query' => $search_text,
     ]);
 }
 

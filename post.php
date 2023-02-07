@@ -35,8 +35,11 @@ if ($post_id > 0) {
     die(build_page('layout.php', ['page_title' => 'Ошибка запроса'], $error_page));
 }
 
-// обработка ошибки несуществующей публикации
-if (!$post) {
+if ($post) {
+    $query = 'UPDATE post SET view_count = view_count + 1'; // увеличение счётчика просмотров
+    mysqli_query($db_connection, $query);
+} else {
+    // обработка ошибки несуществующей публикации
     $error_page = include_template('page-404.php', ['main_content' => 'Публикация не найдена']);
     die(build_page('layout.php', ['page_title' => 'Ошибка 404'], $error_page));
 }
@@ -96,11 +99,67 @@ array_walk_recursive($comment_list, 'secure'); // очистка коммент�
 // условие для скрытия комментариев при превышение лимита
 $hide_comments = $count_arr['comment_count'] > $comment_limit && !$show_all_comments;
 
+// добавление нового комментария
+$errors = []; // массив для заполнения ошибками
+$comment_text = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $comment_text = filter_input(INPUT_POST, 'comment-text', FILTER_SANITIZE_SPECIAL_CHARS);
+    $comment_text = str_replace('&#13;&#10;', " ", $comment_text);
+    $comment_text = trim($comment_text); // обрезка лишних пробелов
+
+    // проверка на пустой комментарий
+    if (empty($comment_text)) {
+        $err_type = 'Поле не заполнено';
+        $err_heading = 'Пустой комментарий';
+        $err_text = 'Напишите комментарий';
+    } elseif (mb_strlen($comment_text) < 4) { // проверка на количество символов
+        $err_type = 'Слишком короткий комментарий';
+        $err_heading = 'Длина меньше 4 символов';
+        $err_text = 'Добавьте ещё пару слов';
+    } else {
+        $query = 'SELECT id FROM post WHERE id = ' . $post_id;
+        $comment_post = get_data_from_db($db_connection, $query, 'one');
+
+        if ($comment_post && !$errors) {
+            // подготовка выражения
+            $query = "INSERT INTO comment (
+                                comment_content,
+                                user_id,
+                                post_id
+                             )
+                             VALUES (?, ?, ?)"; // 3 поля
+            $stmt = mysqli_prepare($db_connection, $query);
+
+            // данные для подстановки
+            $query_vars = array(
+                $comment_text,
+                $_SESSION['user']['id'],
+                $post_id,
+            );
+
+            // выполнение подготовленного выражения
+            mysqli_stmt_bind_param($stmt, 'sii', ...$query_vars);
+            mysqli_stmt_execute($stmt);
+
+            header('Location: profile.php?user_id=' . $post['user_id']);
+            exit;
+        }
+    }
+    if (isset($err_text)) { // заполнить массив с ошибками, если таковые возникли
+        $field_name = 'comment-text';
+        fill_errors($errors, $field_name, $err_type, $err_heading, $err_text);
+    }
+}
+
 // записываем тип публикации
 $post_type = $_SESSION['ct_types'][$post['content_type_id']]['type_val'];
 
 // сохранение адреса страницы для перенаправления на странице поиска
 $_SESSION['prev_page'] = 'post.php?post_id=' . $post_id;
+
+// класс для отображения ошибки рядом с полем
+$alert_class = 'form__input-section--error';
 
 // массив с данными страницы
 $params = array(
@@ -116,6 +175,9 @@ $main_content = include_template('post_template.php', [
     'post_type_template' => $post_type_template,
     'count_arr' => $count_arr,
     'post_hashtag_list' => $post_hashtag_list,
+    'errors' => $errors,
+    'alert_class' => $alert_class,
+    'comment_text' => $comment_text ?? '',
     'comment_list' => $comment_list,
     'hide_comments' => $hide_comments,
 ]);

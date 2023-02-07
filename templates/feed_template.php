@@ -12,10 +12,12 @@
               $post_link = 'post.php?post_id=' . $post['id']; // формирование ссылки на пост ?>
                     <article class="feed__post post post-<?= $type_val; ?>">
                         <header class="post__header post__author">
-                            <a class="post__author-link" href="#" title="Автор">
+                            <a class="post__author-link" href="profile.php?user_id=<?= $post['user_id']; ?>" title="Автор">
                                 <div class="post__avatar-wrapper">
                     <?php if ($post['user_avatar']) : ?>
                                     <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя" width="60" height="60">
+                    <?php else: ?>
+                                    <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
                     <?php endif; ?>
                                 </div>
                                 <div class="post__info">
@@ -98,7 +100,7 @@
                         </div>
                         <footer class="post__footer post__indicators">
                             <div class="post__buttons">
-                                <a class="post__indicator post__indicator--likes button" href="#" title="Лайк">
+                                <a class="post__indicator post__indicator--likes button" href="like.php?post_id=<?= $post['id']; ?>" title="Лайк">
                                     <svg class="post__indicator-icon" width="20" height="17">
                                         <use xlink:href="#icon-heart"></use>
                                     </svg>

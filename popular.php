@@ -49,8 +49,8 @@ $query = '
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
           FROM post AS p
-             INNER JOIN user AS u
-                ON p.user_id = u.id';
+              INNER JOIN user AS u
+                  ON p.user_id = u.id';
 
 if ($type_id) {
     $query .= " WHERE p.content_type_id = $type_id"; // фильтрация по типу
@@ -109,7 +109,7 @@ $type_filter_url = $type_id ? "&type_id=$type_id" : '';
 //}
 
 // сохранение адреса страницы для перенаправления на странице поиска
-$_SESSION['prev_page'] = 'popular.php';
+$_SESSION['prev_page'] = 'popular.php?type_id=' . $type_id . '&sort_by=' . $sort_by . '&page=' . $current_page;
 
 // массив с данными страницы
 $params = array(
