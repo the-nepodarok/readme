@@ -26,7 +26,7 @@ INSERT INTO post
     ('Наконец, обработал фотки!', '2022-11-29 23:33:17', 35, 3, 3, NULL, NULL, 'rock-medium.jpg', NULL),
     ('Моя мечта', '2022-10-02 12:20:35', 12, 1, 3, NULL, NULL, 'coast-medium.jpg', NULL),
     ('Лучшие курсы', '2022-07-14 16:23:09', 24, 2, 5, NULL, NULL, NULL, 'https://www.htmlacademy.ru/'),
-    ('PHP?', '2022-07-14 16:23:09', 24, 3, 5, NULL, NULL, NULL, 'www.php.net'),
+    ('PHP?', '2022-07-14 16:23:09', 24, 3, 5, NULL, NULL, NULL, 'https://www.php.net'),
     ('Получил свой первый сертификат', '2022-07-14 16:23:09', 24, 1, 5, NULL, NULL, NULL, 'https://htmlacademy.ru/profile/id1921613');
 
 -- заносим в таблицу хештеги

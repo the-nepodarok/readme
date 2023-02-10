@@ -13,7 +13,7 @@ require_once 'db_config.php';
 
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
-if (!key_exists($type_id, $_SESSION['ct_types'])) {
+if (!array_key_exists($type_id, $_SESSION['ct_types'])) {
     $type_id = 0; // default value
 }
 
@@ -103,10 +103,6 @@ array_walk_recursive($posts, 'secure');
 
 // формирование параметра запроса для фильтрации по типу
 $type_filter_url = $type_id ? "&type_id=$type_id" : '';
-
-//foreach ($posts as $key => $post) { // добавляем постам в массиве рандомные даты - the-nepodarok
-//    $posts[$key]['date'] = generate_random_date($key);
-//}
 
 // сохранение адреса страницы для перенаправления на странице поиска
 $_SESSION['prev_page'] = 'popular.php?type_id=' . $type_id . '&sort_by=' . $sort_by . '&page=' . $current_page;

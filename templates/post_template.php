@@ -5,7 +5,7 @@
       <h2 class="visually-hidden">Публикация</h2>
       <div class="post-details__wrapper post-<?= $post['type_val']; ?>">
         <div class="post-details__main-block post post--details">
-          <?=$post_type_template; ?>
+          <?= $post_type_template; ?>
           <div class="post__indicators">
             <div class="post__buttons">
               <a class="post__indicator post__indicator--likes button" href="like.php?post_id=<?= $post['id']; ?>" title="Лайк">
@@ -18,7 +18,7 @@
                 <span><?= $count_arr['like_count']; ?></span>
                 <span class="visually-hidden">количество лайков</span>
               </a>
-              <a class="post__indicator post__indicator--comments button" href="#" title="Комментарии">
+              <a class="post__indicator post__indicator--comments button" href="?post_id=<?= $post['id'] . '&show_all_comments'; ?>" title="Комментарии">
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-comment"></use>
                 </svg>
@@ -49,7 +49,7 @@
                 <?php endif; ?>
               </div>
               <div class="form__input-section <?= $errors['comment-text'] ? $alert_class : ''; ?>">
-                <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_text; ?></textarea>
+                <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_input; ?></textarea>
                 <label class="visually-hidden">Ваш комментарий</label>
                 <?= show_error_msg($errors, 'comment-text'); ?>
               </div>

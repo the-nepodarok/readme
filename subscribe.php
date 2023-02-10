@@ -17,26 +17,22 @@ $user_id = filter_input(INPUT_GET, 'user_id', FILTER_SANITIZE_NUMBER_INT);
 if ($user_id and $user_id !== $_SESSION['user']['id']) {
 
     // проверка, что такой пользователь существует
-    $query = 'SELECT id FROM user WHERE id = ' . $user_id;
-    $user_exists = get_data_from_db($db_connection, $query, 'one');
+    $user_exists = check_user($db_connection, $user_id);
 
     if ($user_exists) {
-
         // проверка на уже существующую пару в подписках
         $query = 'SELECT id
                       FROM follower_list
                   WHERE following_user_id = ' . $_SESSION['user']['id'] . '
                   AND followed_user_id = ' . $user_id;
-        $subscription = get_data_from_db($db_connection, $query, 'all');
+        $already_subscribed = get_data_from_db($db_connection, $query);
 
-        if ($subscription) {
-
+        if ($already_subscribed) {
             // запрос на отписку от пользователя
             $query = 'DELETE FROM follower_list
                       WHERE following_user_id = ' . $_SESSION['user']['id'] . '
                       AND followed_user_id = ' . $user_id;
         } else {
-
             // запрос на подписку на пользователя
             $query = 'INSERT INTO follower_list
                              (following_user_id, followed_user_id)

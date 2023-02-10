@@ -14,13 +14,11 @@ require_once 'db_config.php';
 $post_id = filter_input(INPUT_GET, 'post_id', FILTER_SANITIZE_NUMBER_INT);
 
 if ($post_id) {
-
-    // получаем оригинальный пост
+    // получение данных оригинальной публикации
     $query = "SELECT * FROM post WHERE id = $post_id";
     $post_data = get_data_from_db($db_connection, $query, 'row');
 
     if ($post_data and $post_data['user_id'] !== $_SESSION['user']['id']) {
-
         // подготовка выражения
         $query = "INSERT INTO post (
                       post_header,
@@ -68,7 +66,7 @@ if ($post_id) {
                 $query = "INSERT INTO post_hashtag_link
                             (post_id, hashtag_id)
                           VALUES
-                            ($tmp_id, {$tag['id']})";
+                            ($post_id, {$tag['id']})";
                 mysqli_query($db_connection, $query);
             }
         }

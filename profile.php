@@ -22,82 +22,52 @@ if (!$active_tab) {
     $active_tab = 'posts'; // вкладка по умолчанию
 }
 
+$comment_input = ''; // текст комментария
+$errors = []; // массив для ошибок валидации поля ввода комментария
+
 // добавление комментария
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $errors = []; // массив для ошибок валидации поля ввода комментария
-    $comment_data = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-    $comment_text = str_replace('&#13;&#10;', ' ', $comment_data['comment-text']);
-    $comment_text = trim($comment_text); // обрезка лишних пробелов
+    // ID публикации, к которой добавляется комментарий
+    $comment_post_id = filter_input(INPUT_POST, 'post-id', FILTER_SANITIZE_NUMBER_INT);
 
-    // проверка на пустой комментарий
-    if (empty($comment_text)) {
-        $err_type = 'Поле не заполнено';
-        $err_heading = 'Пустой комментарий';
-        $err_text = 'Напишите комментарий';
-    } elseif (mb_strlen($comment_text) < 4) { // проверка на количество символов
-        $err_type = 'Слишком короткий комментарий';
-        $err_heading = 'Длина меньше 4 символов';
-        $err_text = 'Добавьте ещё пару слов';
-    } else {
-        // проверка существования публикации
-        $query = 'SELECT id FROM post WHERE id = ' . $comment_data['post-id'];
-        $comment_post = get_data_from_db($db_connection, $query, 'one');
+    // запись комментария в таблицу
+    add_comment($db_connection, $errors[$comment_post_id], $user_id, $comment_post_id);
 
-        if ($comment_post && !$errors) {
-            // подготовка выражения
-            $query = "INSERT INTO comment (
-                                comment_content,
-                                user_id,
-                                post_id
-                             )
-                             VALUES (?, ?, ?)"; // 3 поля
-            $stmt = mysqli_prepare($db_connection, $query);
-
-            // данные для подстановки
-            $query_vars = array(
-                $comment_text,
-                $_SESSION['user']['id'],
-                $comment_data['post-id'],
-            );
-
-            // выполнение подготовленного выражения
-            mysqli_stmt_bind_param($stmt, 'sii', ...$query_vars);
-            mysqli_stmt_execute($stmt);
-            header('Location: profile.php?user_id=' . $user_id .
-                '&tab='. $active_tab . '&show_comments=' . $comment_post);
-            exit;
-        }
-    }
-    if (isset($err_text)) { // заполнить массив с ошибками, если таковые возникли
-        $field_name = 'comment-text';
-        fill_errors($errors, $field_name, $err_type, $err_heading, $err_text);
+    // показ текста комментария при ошибке
+    if ($errors[$comment_post_id]) {
+        $comment_input = filter_input(INPUT_POST, 'comment-text', FILTER_SANITIZE_STRING);
     }
 }
 
 $posts = []; // массив для публикаций в профиле
-$user_data = []; // данные профиля
-$subscription = false; // флаг подписки на этот профиль
+$already_subscribed = false; // флаг подписки на этот профиль
 
-if ($user_id) {
-    // запрос на получение данных профиля
-    $query = 'SELECT user_reg_dt,
-                     user_name,
-                     user_avatar,
-                     (SELECT COUNT(id) FROM post WHERE user_id = ' . $user_id . ') AS post_count,
-                     (SELECT COUNT(id) FROM follower_list WHERE followed_user_id = ' . $user_id . ') AS follower_count
-                  FROM user
-              WHERE id = ' . $user_id;
-    $user_data = get_data_from_db($db_connection, $query, 'row');
+// перенаправление в свой профиль
+if (!$user_id) {
+    header('Location: profile.php?user_id=' . $_SESSION['user']['id']);
+    exit;
+}
+
+// запрос на получение данных профиля
+$query = "SELECT user_reg_dt,
+                 user_name,
+                 user_avatar,
+                 (SELECT COUNT(id) FROM post WHERE user_id = user.id) AS post_count,
+                 (SELECT COUNT(id) FROM follower_list WHERE followed_user_id = user.id) AS follower_count
+              FROM user
+          WHERE id = $user_id";
+$user_data = get_data_from_db($db_connection, $query, 'row');
+
+if ($user_data) {
+    // очистка от возможного вредоносного кода
+    array_walk_recursive($user_data, 'secure');
 
     // запрос на получение данных о подписке аутент. польз-ля на этот профиль
     $query = 'SELECT id
-                  FROM follower_list
-              WHERE following_user_id = ' . $_SESSION['user']['id'] . '
-              AND followed_user_id = ' . $user_id;
-    $subscription = get_data_from_db($db_connection, $query, 'one') > 0;
-
-    if ($user_data) {
-    array_walk_recursive($user_data, 'secure'); // очистка от вредоносного кода
+              FROM follower_list
+          WHERE following_user_id = ' . $_SESSION['user']['id'] . '
+          AND followed_user_id = ' . $user_id;
+    $already_subscribed = (bool)get_data_from_db($db_connection, $query, 'one');
 
     // запрос для получения публикаций
     $query = 'SELECT p.*,
@@ -108,10 +78,6 @@ if ($user_id) {
               WHERE user_id = ' . $user_id .
             ' ORDER BY create_dt DESC';
     $posts = get_data_from_db($db_connection, $query);
-    } else {
-        header('Location: profile.php?user_id=' . $_SESSION['user']['id']);
-        exit;
-    }
 } else {
     header('Location: profile.php?user_id=' . $_SESSION['user']['id']);
     exit;
@@ -152,15 +118,7 @@ $show_comments = filter_input(INPUT_GET, 'show_comments', FILTER_SANITIZE_NUMBER
 if ($show_comments) { // если такой параметр передан
 
     // запрос на получение комментариев к публикации
-    $query = 'SELECT c.*,
-                     u.user_avatar,
-                     u.user_name
-                  FROM comment AS c
-                      INNER JOIN user AS u
-                          ON c.user_id = u.id
-              WHERE post_id = ' . $show_comments . '
-              ORDER BY c.comment_create_dt DESC LIMIT ' . $comment_limit;
-    $comment_list = get_data_from_db($db_connection, $query);
+    $comment_list = get_comments($db_connection, $show_comments, $comment_limit);
 }
 
 $likes = []; // массив для списка лайков
@@ -219,6 +177,12 @@ $_SESSION['prev_page'] = 'profile.php?user_id=' . $user_id . '&tab=' . $active_t
 // класс для отображения ошибки рядом с полем
 $alert_class = 'form__input-section--error';
 
+// данные комментариев для шаблона
+$comments = array(
+    'comment_list' => $comment_list,
+    'limit' => $comment_limit,
+);
+
 // массив с данными страницы
 $params = array(
     'page_title' => 'профиль пользователя',
@@ -226,17 +190,16 @@ $params = array(
 
 $main_content = include_template('profile_template.php', [
     'user_data' => $user_data,
-    'subscription' => $subscription,
+    'already_subscribed' => $already_subscribed,
     'user_id' => $user_id,
     'active_tab' => $active_tab,
     'posts' => $posts,
     'repost_author' => $repost_author ?? [],
+    'comments' => $comments,
     'show_comments' => $show_comments,
-    'comment_list' => $comment_list,
-    'comment_limit' => $comment_limit,
-    'errors' => $errors ?? [],
+    'errors' => $errors,
     'alert_class' => $alert_class,
-    'comment_text' => $comment_text ?? '',
+    'comment_input' => $comment_input,
     'likes' => $likes,
     'followers' => $followers,
 ]);

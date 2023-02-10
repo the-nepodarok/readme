@@ -583,3 +583,111 @@ function check_if_empty(&$err, $req, $post_data) {
         }
     }
 }
+
+/**
+ * Проверяет существование публикации в базе данных
+ *
+ * @param $db mysqli Подключение к базе данных
+ * @param $post_id int ID поста
+ * @return bool Значение проверки
+ */
+function check_post($db, $post_id) {
+    $query = "SELECT id FROM post WHERE id = $post_id";
+    return boolval(get_data_from_db($db, $query, 'one'));
+}
+
+/**
+ * Получает все комментарии к публикации
+ *
+ * @param $db mysqli Подключение к базе данных
+ * @param $post_id int ID публикации
+ * @param $limit int Ограничение количества получаемых комментариев
+ * @return array Все данные комментариев
+ */
+function get_comments($db, $post_id, $limit = 0) {
+    // запрос на получение комментариев к публикации
+    $query = 'SELECT c.*,
+                     u.user_avatar,
+                     u.user_name
+                  FROM comment AS c
+                      INNER JOIN user AS u
+                          ON c.user_id = u.id
+              WHERE post_id = ' . $post_id . '
+              ORDER BY c.comment_create_dt DESC';
+
+    if ($limit) {
+        $query .= " LIMIT $limit";
+    }
+
+    return get_data_from_db($db, $query);
+}
+
+/**
+ * Осуществляет добавление нового комментария к публикации
+ *
+ * @param $db mysqli Подключение к базе данных
+ * @param $err array Массив для заполнения ошибками
+ * @param $user_id int ID пользователя - автора публикации
+ * @param $post_id int ID публикации
+ */
+function add_comment($db, &$err, $user_id, $post_id) {
+    $comment_data = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+    $comment_text = str_replace('&#13;&#10;', ' ', $comment_data['comment-text']);
+    $comment_text = trim($comment_text); // обрезка лишних пробелов
+
+    // проверка на пустой комментарий
+    if (empty($comment_text)) {
+        $err_type = 'Поле не заполнено';
+        $err_heading = 'Пустой комментарий';
+        $err_text = 'Напишите комментарий';
+    } elseif (mb_strlen($comment_text) < 4) { // проверка на количество символов
+        $err_type = 'Слишком короткий комментарий';
+        $err_heading = 'Длина меньше 4 символов';
+        $err_text = 'Добавьте ещё пару слов';
+    } else {
+        // проверка существования публикации
+        $post_exists = check_post($db, $post_id);
+
+        if ($post_exists && !$err) {
+            // подготовка выражения
+            $query = "INSERT INTO comment (
+                                comment_content,
+                                user_id,
+                                post_id
+                             )
+                             VALUES (?, ?, ?)"; // 3 поля
+            $stmt = mysqli_prepare($db, $query);
+
+            // данные для подстановки
+            $query_vars = array(
+                $comment_text,
+                $_SESSION['user']['id'],
+                $post_id,
+            );
+
+            // выполнение подготовленного выражения
+            mysqli_stmt_bind_param($stmt, 'sii', ...$query_vars);
+            mysqli_stmt_execute($stmt);
+            header('Location: profile.php' .
+                          '?user_id=' . $user_id .
+                          '&show_comments=' . $post_id .
+                          '#post_id=' . $post_id);
+            exit;
+        }
+    }
+    if (isset($err_text)) { // заполнить массив с ошибками, если таковые возникли
+        $field_name = 'comment-text';
+        fill_errors($err, $field_name, $err_type, $err_heading, $err_text);
+    }
+}
+
+/**
+ * Проверяет существование пользователя в таблице базы данных
+ * @param $db mysqli Подключение к базе данных
+ * @param $user_id int ID пользователя
+ * @return bool Значение проверки
+ */
+function check_user($db, $user_id) {
+    $query = "SELECT id FROM user WHERE id = $user_id";
+    return (bool)get_data_from_db($db, $query, 'one');
+}

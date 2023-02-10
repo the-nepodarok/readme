@@ -1,3 +1,4 @@
+<?php $auth_user = $_SESSION['user']; // alias для аутентифицированного пользователя ?>
 <main class="page__main page__main--profile">
     <h1 class="visually-hidden">Профиль</h1>
     <div class="profile profile--default">
@@ -25,10 +26,10 @@
                     </p>
                 </div>
                 <div class="profile__user-buttons user__buttons">
-<?php if ($subscription): ?>
+<?php if ($already_subscribed): ?>
                     <a class="profile__user-button user__button user__button--subscription button button--quartz" href="subscribe.php?user_id=<?= $user_id; ?>">Отписаться</a>
                     <a class="profile__user-button user__button user__button--writing button button--green" href="#">Сообщение</a>
-<?php elseif ($_SESSION['user']['id'] === $user_id): ?>
+<?php elseif ($auth_user['id'] === $user_id): ?>
                     <div></div>
 <?php else: ?>
                     <a class="profile__user-button user__button user__button--subscription button button--main" href="subscribe.php?user_id=<?= $user_id; ?>">Подписаться</a>
@@ -196,8 +197,8 @@
                             <div class="comments">
                                 <div class="comments__list-wrapper">
                                     <ul class="comments__list">
-    <?php if ($show_comments === $post['id']) :
-        foreach ($comment_list as $comment): ?>
+    <?php if ($post['comment_count'] and $show_comments === $post['id']) :
+        foreach ($comments['comment_list'] as $comment): ?>
                                         <li class="comments__item user">
                                             <div class="comments__avatar">
                                                 <a class="user__avatar-link" href="profile.php?user_id=<?= $comment['user_id']; ?>">
@@ -210,7 +211,7 @@
                                             </div>
                                             <div class="comments__info">
                                                 <div class="comments__name-wrapper">
-                                                    <a class="comments__user-name" href="profile.php?<?= $comment['user_id']; ?>">
+                                                    <a class="comments__user-name" href="profile.php?user_id=<?= $comment['user_id']; ?>">
                                                         <span>
                                                             <?= $comment['user_name']; ?>
                                                         </span>
@@ -225,7 +226,7 @@
                                         </li>
         <?php endforeach; ?>
                                     </ul>
-        <?php if ($post['comment_count'] > $comment_limit): ?>
+        <?php if ($post['comment_count'] > $comments['limit']): ?>
                                     <a class="comments__more-link" href="post.php?post_id=<?= $post['id']; ?>&show_all_comments">
                                         <span>Показать все комментарии</span>
                                         <sup class="comments__amount"><?= $post['comment_count']; ?></sup>
@@ -233,21 +234,23 @@
         <?php endif; ?>
                                 </div>
                             </div>
+    <?php endif; ?>
                             <form class="comments__form form" action="#" method="post" style="margin-bottom: 0;">
                                 <div class="comments__my-avatar">
-                                    <?php if ($_SESSION['user']['user_avatar']): ?>
-                                        <img class="comments__picture" src="<?= UPLOAD_PATH . $_SESSION['user']['user_avatar']; ?>" alt="Аватар пользователя">
+                                    <?php if ($auth_user['user_avatar']): ?>
+                                        <img class="comments__picture" src="<?= UPLOAD_PATH . $auth_user['user_avatar']; ?>" alt="Аватар пользователя">
                                     <?php endif; ?>
                                 </div>
                                 <input type="hidden" name="post-id" value="<?= $post['id'] ?>">
-                                <div class="form__input-section <?= $errors['comment-text'] ? $alert_class : ''; ?>">
-                                    <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_text; ?></textarea>
+                                <div class="form__input-section <?= $errors[$post['id']] ? $alert_class : ''; ?>">
+                                    <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_input; ?></textarea>
                                     <label class="visually-hidden">Ваш комментарий</label>
-                                    <?= show_error_msg($errors, 'comment-text'); ?>
+        <?php if (isset($errors[$post['id']])): ?>
+                                    <?= show_error_msg($errors[$post['id']], 'comment-text'); ?>
+        <?php endif; ?>
                                 </div>
                                 <button class="comments__submit button button--green" type="submit">Отправить</button>
                             </form>
-    <?php endif; ?>
                         </article>
 <?php endforeach; ?>
                     </section>
@@ -255,7 +258,8 @@
                     <section class="profile__likes tabs__content <?= $active_tab === 'likes' ? 'tabs__content--active' : ''; ?>">
                         <h2 class="visually-hidden">Лайки</h2>
                         <ul class="profile__likes-list">
-<?php foreach ($likes as $like): ?>
+<?php foreach ($likes as $like):
+    $like_ct_type = $_SESSION['ct_types'][$like['content_type_id']]; ?>
                             <li class="post-mini post-mini--photo post user">
                                 <div class="post-mini__user-info user__info">
                                     <div class="post-mini__avatar user__avatar">
@@ -282,9 +286,9 @@
                                 </div>
                                 <div class="post-mini__preview">
                                     <a class="post-mini__link" href="post.php?post_id=<?= $like['post_id']; ?>" title="Перейти на публикацию">
-                                        <span class="visually-hidden"><?= $_SESSION['ct_types'][$like['content_type_id']]['type_name'] ?></span>
+                                        <span class="visually-hidden"><?= $like_ct_type['type_name'] ?></span>
     <?php
-          $type_val = $_SESSION['ct_types'][$like['content_type_id']]['type_val']; // добавление данных о типе публикаций
+          $type_val = $like_ct_type['type_val']; // добавление данных о типе публикаций
           switch ($type_val):
               case 'photo': ?>
                                         <div class="post-mini__image-wrapper">
@@ -304,7 +308,7 @@
         <?php break; ?>
 
         <?php default: ?>
-                                        <svg class="post-mini__preview-icon" width="<?= $_SESSION['ct_types'][$like['content_type_id']]['type_icon_width']; ?>" height="<?= $_SESSION['ct_types'][$like['content_type_id']]['type_icon_height']; ?>">
+                                        <svg class="post-mini__preview-icon" width="<?= $like_ct_type['type_icon_width']; ?>" height="<?= $like_ct_type['type_icon_height']; ?>">
                                             <use xlink:href="#icon-filter-<?= $type_val; ?>"></use>
                                         </svg>
     <?php endswitch; ?>
@@ -348,7 +352,7 @@
                                     </p>
                                 </div>
                                 <div class="post-mini__user-buttons user__buttons">
-    <?php if ($follower['user_id'] === $_SESSION['user']['id']): ?>
+    <?php if ($follower['user_id'] === $auth_user['id']): ?>
                                     <div class="post-mini__user-button"></div>
     <?php elseif ($follower['subscribed_to_follower']): ?>
                                     <a class="post-mini__user-button user__button user__button--subscription button button--quartz" href="subscribe.php?user_id=<?=$follower['user_id']; ?>">Отписаться</a>
