@@ -142,11 +142,13 @@
                 </div>
                 <footer class="post__footer">
                     <div class="post__author">
-                        <a class="post__author-link" href="#" title="Автор">
+                        <a class="post__author-link" href="profile.php?user_id=<?= $post['user_id']; ?>" title="Автор">
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
                                 <?php if ($post['user_avatar']): ?>
                                 <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
+                                <?php else: ?>
+                                <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
                                 <?php endif; ?>
                             </div>
                             <div class="post__info">
@@ -161,7 +163,7 @@
                     </div>
                     <div class="post__indicators">
                         <div class="post__buttons">
-                            <a class="post__indicator post__indicator--likes button" href="#" title="Лайк">
+                            <a class="post__indicator post__indicator--likes button" href="like.php?post_id=<?= $post['id']; ?>" title="Лайк">
                                 <svg class="post__indicator-icon" width="20" height="17">
                                     <use xlink:href="#icon-heart"></use>
                                 </svg>
@@ -171,7 +173,7 @@
                                 <span><?= $post['like_count']; ?></span>
                                 <span class="visually-hidden">количество лайков</span>
                             </a>
-                            <a class="post__indicator post__indicator--comments button" href="#" title="Комментарии">
+                            <a class="post__indicator post__indicator--comments button" href="post.php?post_id=<?= $post['id']; ?>" title="Комментарии">
                                 <svg class="post__indicator-icon" width="19" height="17">
                                     <use xlink:href="#icon-comment"></use>
                                 </svg>

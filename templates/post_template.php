@@ -5,10 +5,10 @@
       <h2 class="visually-hidden">Публикация</h2>
       <div class="post-details__wrapper post-<?= $post['type_val']; ?>">
         <div class="post-details__main-block post post--details">
-          <?=$post_type_template; ?>
+          <?= $post_type_template; ?>
           <div class="post__indicators">
             <div class="post__buttons">
-              <a class="post__indicator post__indicator--likes button" href="#" title="Лайк">
+              <a class="post__indicator post__indicator--likes button" href="like.php?post_id=<?= $post['id']; ?>" title="Лайк">
                 <svg class="post__indicator-icon" width="20" height="17">
                   <use xlink:href="#icon-heart"></use>
                 </svg>
@@ -18,7 +18,7 @@
                 <span><?= $count_arr['like_count']; ?></span>
                 <span class="visually-hidden">количество лайков</span>
               </a>
-              <a class="post__indicator post__indicator--comments button" href="#" title="Комментарии">
+              <a class="post__indicator post__indicator--comments button" href="?post_id=<?= $post['id'] . '&show_all_comments'; ?>" title="Комментарии">
                 <svg class="post__indicator-icon" width="19" height="17">
                   <use xlink:href="#icon-comment"></use>
                 </svg>
@@ -48,14 +48,10 @@
                 <img class="comments__picture" src="<?= UPLOAD_PATH . $_SESSION['user']['user_avatar']; ?>" alt="Аватар пользователя">
                 <?php endif; ?>
               </div>
-              <div class="form__input-section _form__input-section--error"> <!-- не забыть вернуть -->
-                <textarea class="comments__textarea form__textarea form__input" placeholder="Ваш комментарий"></textarea>
+              <div class="form__input-section <?= $errors['comment-text'] ? $alert_class : ''; ?>">
+                <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_input; ?></textarea>
                 <label class="visually-hidden">Ваш комментарий</label>
-                <button class="form__error-button button" type="button">!</button>
-                <div class="form__error-text">
-                  <h3 class="form__error-title">Ошибка валидации</h3>
-                  <p class="form__error-desc">Это поле обязательно к заполнению</p>
-                </div>
+                <?= show_error_msg($errors, 'comment-text'); ?>
               </div>
               <button class="comments__submit button button--green" type="submit">Отправить</button>
             </form>
@@ -64,15 +60,17 @@
               <?php foreach ($comment_list as $comment): ?>
                 <li class="comments__item user">
                   <div class="comments__avatar">
-                    <a class="user__avatar-link" href="#">
+                    <a class="user__avatar-link" href="profile.php?user_id=<?= $comment['user_id']; ?>">
                       <?php if ($comment['user_avatar']): ?>
                       <img class="comments__picture" src="<?= UPLOAD_PATH . $comment['user_avatar']; ?>" alt="Аватар пользователя">
+                      <?php else: ?>
+                      <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
                       <?php endif; ?>
                     </a>
                   </div>
                   <div class="comments__info">
                     <div class="comments__name-wrapper">
-                      <a class="comments__user-name" href="#">
+                      <a class="comments__user-name" href="profile.php?user_id=<?= $comment['user_id']; ?>">
                         <span>
                             <?= $comment['user_name']; ?>
                         </span>
@@ -99,14 +97,16 @@
         <div class="post-details__user user">
           <div class="post-details__user-info user__info">
             <div class="post-details__avatar user__avatar">
-              <a class="post-details__avatar-link user__avatar-link" href="#">
+              <a class="post-details__avatar-link user__avatar-link" href="profile.php?user_id=<?= $post['user_id']; ?>">
                 <?php if ($post['user_avatar']): ?>
                 <img class="post-details__picture user__picture" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
+                <?php else: ?>
+                <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
                 <?php endif; ?>
               </a>
             </div>
             <div class="post-details__name-wrapper user__name-wrapper">
-              <a class="post-details__name user__name" href="#">
+              <a class="post-details__name user__name" href="profile.php?user_id=<?= $post['user_id']; ?>">
                 <span><?= $post['user_name']; ?></span>
               </a>
               <time class="post-details__time user__time" datetime="<?= $post['reg_date']; ?>"><?= format_date($post['reg_date']); ?> на сайте</time>

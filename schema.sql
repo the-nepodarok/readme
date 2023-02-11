@@ -80,6 +80,7 @@ CREATE TABLE comment
 CREATE TABLE fav_list
 (
   id      INT AUTO_INCREMENT PRIMARY KEY,
+  like_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id INT COMMENT 'кто лайкает',
   post_id INT COMMENT 'что лайкают',
   FOREIGN KEY (user_id) REFERENCES user (id),

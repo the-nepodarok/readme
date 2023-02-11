@@ -1,3 +1,4 @@
+<?php $auth_user = $_SESSION['user']; // alias для аутентифицированного пользователя ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -22,7 +23,7 @@
                 micro blogging
             </p>
         </div>
-    <?php if (isset($_SESSION['user'])): ?>
+    <?php if (isset($auth_user)): ?>
         <form class="header__search-form form" action="search.php" method="get">
             <div class="header__search">
                 <label class="visually-hidden">Поиск</label>
@@ -58,16 +59,16 @@
                 <!-- здесь должен быть PHP код, который показывает следующий тег по условию -->
                 <ul class="header__user-nav">
                     <li class="header__profile">
-                        <a class="header__profile-link" href="#">
+                        <a class="header__profile-link" href="profile.php?user_id=<?= $auth_user['id']?>">
                             <div class="header__avatar-wrapper">
-                            <?php if ($_SESSION['user']['user_avatar']) : ?>
-                                <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $_SESSION['user']['user_avatar']; ?>" alt="Аватар профиля">
+                            <?php if ($auth_user['user_avatar']) : ?>
+                                <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $auth_user['user_avatar']; ?>" alt="Аватар профиля">
                             <?php endif; ?>
                             </div>
                             <div class="header__profile-name">
                                 <span>
                                     <!--здесь должно быть имя пользователя-->
-                                    <?= $_SESSION['user']['user_name']; ?>
+                                    <?= $auth_user['user_name']; ?>
                                 </span>
                                 <svg class="header__link-arrow" width="10" height="6">
                                     <use xlink:href="#icon-arrow-right-ad"></use>
@@ -78,7 +79,7 @@
                             <div class="header__profile-tooltip">
                                 <ul class="header__profile-nav">
                                     <li class="header__profile-nav-item">
-                                        <a class="header__profile-nav-link" href="#">
+                                        <a class="header__profile-nav-link" href="profile.php?user_id=<?= $auth_user['id']; ?>">
                                             <span class="header__profile-nav-text">Мой профиль</span>
                                         </a>
                                     </li>
@@ -167,7 +168,7 @@
                     </li>
                 </ul>
                 <div class="footer__copyright">
-                    <a class="footer__copyright-link" href="#">
+                    <a class="footer__copyright-link" href="https://www.htmlacademy.ru" target="_blank">
                         <span>Разработано HTML Academy</span>
                         <svg class="footer__copyright-logo" width="27" height="34">
                             <use xlink:href="#icon-htmlacademy"></use>
