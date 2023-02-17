@@ -53,8 +53,8 @@ function slice_string($string, $link = '', $use_target_blank = false, $max_post_
                 $result_string,
                 '/ :–-,;'
             ) . '...' . '<a class="post-text__more-link" href="' .
-                $link . '"' .
-                ($use_target_blank ? ' target="_blank"' : '') . '>Читать далее</a>';
+            $link . '"' .
+            ($use_target_blank ? ' target="_blank"' : '') . '>Читать далее</a>';
         // trim нужен здесь, потому что пробел в начале параграфа добавляется на этапе цикла и trim в начале (равно как и в конце) не поможет;
         // знаки препинания я всё-таки убираю, потому что в задании как бы требуется, чтобы строка обрезалась именно по слову;
     }
@@ -609,9 +609,9 @@ function get_comments($db, $post_id, $limit = 0) {
     $query = 'SELECT c.*,
                      u.user_avatar,
                      u.user_name
-                  FROM comment AS c
-                      INNER JOIN user AS u
-                          ON c.user_id = u.id
+              FROM comment AS c
+                  INNER JOIN user AS u
+                      ON c.user_id = u.id
               WHERE post_id = ' . $post_id . '
               ORDER BY c.comment_create_dt DESC';
 
@@ -669,9 +669,9 @@ function add_comment($db, &$err, $user_id, $post_id) {
             mysqli_stmt_bind_param($stmt, 'sii', ...$query_vars);
             mysqli_stmt_execute($stmt);
             header('Location: profile.php' .
-                          '?user_id=' . $user_id .
-                          '&show_comments=' . $post_id .
-                          '#post_id=' . $post_id);
+                '?user_id=' . $user_id .
+                '&show_comments=' . $post_id .
+                '#post_id=' . $post_id);
             exit;
         }
     }
@@ -690,4 +690,17 @@ function add_comment($db, &$err, $user_id, $post_id) {
 function check_user($db, $user_id) {
     $query = "SELECT id FROM user WHERE id = $user_id";
     return (bool)get_data_from_db($db, $query, 'one');
+}
+
+/**
+ * Записывает в сессию количество непрочитанных сообщений аутент. польз-ля
+ *
+ * @param $db mysqli Подключение к БД
+ */
+function get_unread_msg_count($db) {
+    $query = 'SELECT COUNT(id) FROM message
+              WHERE message_receiver_id =
+                ' . $_SESSION['user']['id'] .
+        ' AND is_read = 0';
+    $_SESSION['unread_counter'] = get_data_from_db($db, $query, 'one');
 }

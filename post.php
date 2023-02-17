@@ -11,6 +11,9 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
+// получение счётчика непрочитанных сообщений
+get_unread_msg_count($db_connection);
+
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
 // параметр запроса id поста
@@ -78,7 +81,7 @@ $show_all_comments = isset($_GET['show_all_comments']);
 $comment_list = get_comments(
     $db_connection,
     $post_id,
-    ($show_all_comments ? '' : $comment_limit)
+    ($show_all_comments ? 0 : $comment_limit)
 );
 
 array_walk_recursive($comment_list, 'secure'); // очистка комментариев от вредоносного кода

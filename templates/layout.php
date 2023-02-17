@@ -23,7 +23,7 @@
                 micro blogging
             </p>
         </div>
-    <?php if (isset($auth_user)): ?>
+        <?php if (isset($auth_user)): ?>
         <form class="header__search-form form" action="search.php" method="get">
             <div class="header__search">
                 <label class="visually-hidden">Поиск</label>
@@ -41,17 +41,17 @@
             <nav class="header__nav">
                 <ul class="header__my-nav">
                     <li class="header__my-page header__my-page--popular">
-                        <a class="header__page-link header__page-link<?= $active_page === 'popular' ? '--active' : '' ?>" title="Популярный контент" href="popular.php">
+                        <a class="header__page-link <?= $active_page === 'popular' ? 'header__page-link--active' : '' ?>" title="Популярный контент" href="popular.php">
                             <span class="visually-hidden">Популярный контент</span>
                         </a>
                     </li>
                     <li class="header__my-page header__my-page--feed">
-                        <a class="header__page-link header__page-link<?= $active_page === 'feed' ? '--active' : '' ?>" href="feed.php" title="Моя лента">
+                        <a class="header__page-link <?= $active_page === 'feed' ? 'header__page-link--active' : '' ?>" href="feed.php" title="Моя лента">
                             <span class="visually-hidden">Моя лента</span>
                         </a>
                     </li>
                     <li class="header__my-page header__my-page--messages">
-                        <a class="header__page-link" href="messages.html" title="Личные сообщения">
+                        <a class="header__page-link <?= $active_page === 'messages' ? 'header__page-link--active' : '' ?>" href="messages.php" title="Личные сообщения">
                             <span class="visually-hidden">Личные сообщения</span>
                         </a>
                     </li>
@@ -61,9 +61,9 @@
                     <li class="header__profile">
                         <a class="header__profile-link" href="profile.php?user_id=<?= $auth_user['id']?>">
                             <div class="header__avatar-wrapper">
-                            <?php if ($auth_user['user_avatar']) : ?>
-                                <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $auth_user['user_avatar']; ?>" alt="Аватар профиля">
-                            <?php endif; ?>
+                                <?php if ($auth_user['user_avatar']) : ?>
+                                    <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $auth_user['user_avatar']; ?>" alt="Аватар профиля">
+                                <?php endif; ?>
                             </div>
                             <div class="header__profile-name">
                                 <span>
@@ -84,10 +84,14 @@
                                         </a>
                                     </li>
                                     <li class="header__profile-nav-item">
-                                        <a class="header__profile-nav-link" href="#">
+                                        <a class="header__profile-nav-link" href="messages.php">
                                             <span class="header__profile-nav-text">
                                                   Сообщения
-                                                  <i class="header__profile-indicator">2</i>
+                                        <?php if ($_SESSION['unread_counter']): ?>
+                                            <i class="header__profile-indicator">
+                                                      <?= $_SESSION['unread_counter']; ?>
+                                                  </i>
+                                        <?php endif; ?>
                                             </span>
                                         </a>
                                     </li>
@@ -107,18 +111,18 @@
                     </li>
                 </ul>
             </nav>
-    <?php else: ?>
-            <nav class="header__nav">
-                <ul class="header__user-nav">
-                    <li class="header__authorization">
-                        <a class="header__user-button header__authorization-button button" href="/">Вход</a>
-                    </li>
-                    <li>
-                        <a class="header__user-button header__user-button--active header__register-button button">Регистрация</a>
-                    </li>
-                </ul>
-            </nav>
-    <?php endif; ?>
+            <?php else: ?>
+                <nav class="header__nav">
+                    <ul class="header__user-nav">
+                        <li class="header__authorization">
+                            <a class="header__user-button header__authorization-button button" href="/">Вход</a>
+                        </li>
+                        <li>
+                            <a class="header__user-button header__user-button--active header__register-button button">Регистрация</a>
+                        </li>
+                    </ul>
+                </nav>
+            <?php endif; ?>
         </div>
     </div>
 </header>

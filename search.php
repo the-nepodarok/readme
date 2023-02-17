@@ -12,6 +12,9 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
+// получение счётчика непрочитанных сообщений
+get_unread_msg_count($db_connection);
+
 // параметр поискового запроса
 $search_text = filter_input(INPUT_GET, SEARCH, FILTER_SANITIZE_SPECIAL_CHARS);
 $search_text = trim_extra_spaces($search_text); // обрезка лишних пробелов
