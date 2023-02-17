@@ -41,17 +41,17 @@
             <nav class="header__nav">
                 <ul class="header__my-nav">
                     <li class="header__my-page header__my-page--popular">
-                        <a class="header__page-link <?= $active_page === 'popular' ? 'header__page-link--active' : '' ?>" title="Популярный контент" href="popular.php">
+                        <a class="header__page-link header__page-link<?= $active_page === 'popular' ? '--active' : '' ?>" title="Популярный контент" href="popular.php">
                             <span class="visually-hidden">Популярный контент</span>
                         </a>
                     </li>
                     <li class="header__my-page header__my-page--feed">
-                        <a class="header__page-link <?= $active_page === 'feed' ? 'header__page-link--active' : '' ?>" href="feed.php" title="Моя лента">
+                        <a class="header__page-link header__page-link<?= $active_page === 'feed' ? '--active' : '' ?>" href="feed.php" title="Моя лента">
                             <span class="visually-hidden">Моя лента</span>
                         </a>
                     </li>
                     <li class="header__my-page header__my-page--messages">
-                        <a class="header__page-link <?= $active_page === 'messages' ? 'header__page-link--active' : '' ?>" href="messages.php" title="Личные сообщения">
+                        <a class="header__page-link" href="messages.html" title="Личные сообщения">
                             <span class="visually-hidden">Личные сообщения</span>
                         </a>
                     </li>
@@ -84,14 +84,10 @@
                                         </a>
                                     </li>
                                     <li class="header__profile-nav-item">
-                                        <a class="header__profile-nav-link" href="messages.php">
+                                        <a class="header__profile-nav-link" href="#">
                                             <span class="header__profile-nav-text">
                                                   Сообщения
-                                        <?php if ($_SESSION['unread_counter']): ?>
-                                                  <i class="header__profile-indicator">
-                                                      <?= $_SESSION['unread_counter']; ?>
-                                                  </i>
-                                        <?php endif; ?>
+                                                  <i class="header__profile-indicator">2</i>
                                             </span>
                                         </a>
                                     </li>

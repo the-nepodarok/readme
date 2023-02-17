@@ -1,8 +1,4 @@
 <?php
-
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mime\Email;
-
 session_start();
 
 // Перенаправление анонимного пользователя
@@ -14,10 +10,6 @@ if (!isset($_SESSION['user'])) {
 require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
-require_once 'email_config.php';
-
-// получение счётчика непрочитанных сообщений
-get_unread_msg_count($db_connection);
 
 $content_types = $_SESSION['ct_types']; // типы контента
 $post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
@@ -154,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Обработка полученных данных в случае правильного заполнения всех полей и добавление новой публикации в БД
     if (empty($errors)) {
+
         // получение id типа контента в зав-ти от формы
         $content_type_values = array_column($content_types, 'type_val', 'id');
         $content_type_id = array_search($post_type, $content_type_values);
@@ -224,33 +217,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_bind_param($stmt,'ii',...$query_vars);
                 mysqli_stmt_execute($stmt);
             }
-        }
-
-            // e-mail оповещение о новой публикации
-
-        // получение списка подписчиков пользователя для рассылки
-        $followers_query = 'SELECT user_name,
-                                   user_email
-                            FROM user
-                                INNER JOIN follower_list
-                                    ON following_user_id = user.id
-                            WHERE followed_user_id = ' . $_SESSION['user']['id'];
-        $followers = get_data_from_db($db_connection, $followers_query);
-
-        foreach ($followers as $follower) {
-            // Формирование e-mail сообщения
-            $message = new Email();
-            $message->to("the_lost_number@mail.ru");
-            $message->from("the_lost_number@mail.ru");
-            $message->subject('Новая публикация от пользователя ' . $_SESSION['user']['user_name']);
-            $message->text('Здравствуйте, ' . $follower['user_name'] .
-                                '. Пользователь ' . $_SESSION['user']['user_name'] .
-                                ' только что опубликовал новую запись „' . $post_data['post-heading'] . '“.
-                                 Посмотрите её на странице пользователя: readme/profile.php?user_id=' . $_SESSION['user']['id']);
-
-            // Отправка сообщения
-            $mailer = new Mailer($transport);
-            $mailer->send($message);
         }
 
         // переадресация на страницу с созданным постом

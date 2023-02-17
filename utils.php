@@ -609,9 +609,9 @@ function get_comments($db, $post_id, $limit = 0) {
     $query = 'SELECT c.*,
                      u.user_avatar,
                      u.user_name
-              FROM comment AS c
-                  INNER JOIN user AS u
-                      ON c.user_id = u.id
+                  FROM comment AS c
+                      INNER JOIN user AS u
+                          ON c.user_id = u.id
               WHERE post_id = ' . $post_id . '
               ORDER BY c.comment_create_dt DESC';
 
@@ -690,17 +690,4 @@ function add_comment($db, &$err, $user_id, $post_id) {
 function check_user($db, $user_id) {
     $query = "SELECT id FROM user WHERE id = $user_id";
     return (bool)get_data_from_db($db, $query, 'one');
-}
-
-/**
- * Записывает в сессию количество непрочитанных сообщений аутент. польз-ля
- *
- * @param $db mysqli Подключение к БД
- */
-function get_unread_msg_count($db) {
-    $query = 'SELECT COUNT(id) FROM message
-              WHERE message_receiver_id =
-                ' . $_SESSION['user']['id'] .
-            ' AND is_read = 0';
-    $_SESSION['unread_counter'] = get_data_from_db($db, $query, 'one');
 }
