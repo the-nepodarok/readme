@@ -11,9 +11,6 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// получение счётчика непрочитанных сообщений
-get_unread_msg_count($db_connection);
-
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
 if (!array_key_exists($type_id, $_SESSION['ct_types'])) {
@@ -114,6 +111,7 @@ $_SESSION['prev_page'] = 'popular.php?type_id=' . $type_id . '&sort_by=' . $sort
 $params = array(
     'page_title' => 'популярное',
     'active_page' => 'popular',
+    'db_connection' => $db_connection,
 );
 
 $main_content = include_template('main.php', [

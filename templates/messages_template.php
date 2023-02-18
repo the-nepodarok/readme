@@ -39,7 +39,7 @@
                 <?php endforeach; ?>
             </ul>
         </div>
-        <?php if ($user_id): ?>
+        <?php if ($user_id && $user_exists): ?>
             <div class="messages__chat">
                 <div class="messages__chat-wrapper">
                     <ul class="messages__list tabs__content tabs__content--active">

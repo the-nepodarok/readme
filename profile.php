@@ -11,9 +11,6 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// получение счётчика непрочитанных сообщений
-get_unread_msg_count($db_connection);
-
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
 // параметр ID пользователя профиля
@@ -79,7 +76,7 @@ if ($user_data) {
                      (SELECT COUNT(id) FROM post WHERE origin_post_id = p.id) AS repost_count
               FROM post AS p
               WHERE user_id = ' . $user_id .
-        ' ORDER BY create_dt DESC';
+            ' ORDER BY create_dt DESC';
     $posts = get_data_from_db($db_connection, $query);
 } else {
     header('Location: profile.php?user_id=' . $_SESSION['user']['id']);
@@ -190,6 +187,7 @@ $comments = array(
 $params = array(
     'page_title' => 'профиль пользователя',
     'active_page' => '',
+    'db_connection' => $db_connection,
 );
 
 $main_content = include_template('profile_template.php', [

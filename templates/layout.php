@@ -1,4 +1,4 @@
-<?php $auth_user = $_SESSION['user']; // alias для аутентифицированного пользователя ?>
+<?php $auth_user = $_SESSION['user'] ?? null; // alias для аутентифицированного пользователя ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -87,9 +87,10 @@
                                         <a class="header__profile-nav-link" href="messages.php">
                                             <span class="header__profile-nav-text">
                                                   Сообщения
-                                        <?php if ($_SESSION['unread_counter']): ?>
+                                        <?php $unread_counter = get_unread_msg_count($db_connection);
+                                        if ($unread_counter): ?>
                                             <i class="header__profile-indicator">
-                                                      <?= $_SESSION['unread_counter']; ?>
+                                                      <?= $unread_counter; ?>
                                                   </i>
                                         <?php endif; ?>
                                             </span>

@@ -11,9 +11,6 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// получение счётчика непрочитанных сообщений
-get_unread_msg_count($db_connection);
-
 $comment_limit = 2; // ограничение на кол-во показываемых комментариев
 
 // параметр запроса id поста
@@ -119,6 +116,7 @@ mysqli_query($db_connection, $query);
 // массив с данными страницы
 $params = array(
     'page_title' => 'публикация. ' . $post['post_header'],
+    'db_connection' => $db_connection,
 );
 
 // отображение поста

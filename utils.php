@@ -696,11 +696,12 @@ function check_user($db, $user_id) {
  * Записывает в сессию количество непрочитанных сообщений аутент. польз-ля
  *
  * @param $db mysqli Подключение к БД
+ * @return int Количество непрочитанных сообщений пользователя
  */
 function get_unread_msg_count($db) {
     $query = 'SELECT COUNT(id) FROM message
               WHERE message_receiver_id =
                 ' . $_SESSION['user']['id'] .
         ' AND is_read = 0';
-    $_SESSION['unread_counter'] = get_data_from_db($db, $query, 'one');
+    return get_data_from_db($db, $query, 'one');
 }

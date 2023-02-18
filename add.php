@@ -1,8 +1,5 @@
 <?php
 
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mime\Email;
-
 session_start();
 
 // Перенаправление анонимного пользователя
@@ -11,13 +8,13 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mime\Email;
+
 require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 require_once 'email_config.php';
-
-// получение счётчика непрочитанных сообщений
-get_unread_msg_count($db_connection);
 
 $content_types = $_SESSION['ct_types']; // типы контента
 $post_type_options = array_column($content_types, 'type_val'); // перечень допустимых параметров
@@ -240,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($followers as $follower) {
             // Формирование e-mail сообщения
             $message = new Email();
-            $message->to("the_lost_number@mail.ru");
+            $message->to($follower['user_email']);
             $message->from("the_lost_number@mail.ru");
             $message->subject('Новая публикация от пользователя ' . $_SESSION['user']['user_name']);
             $message->text('Здравствуйте, ' . $follower['user_name'] .
@@ -281,6 +278,7 @@ $_SESSION['prev_page'] = 'add.php';
 // массив с данными страницы
 $params = array(
     'page_title' => 'новая публикация',
+    'db_connection' => $db_connection,
 );
 
 // подключение шаблона для отображения поля ввода заголовка
