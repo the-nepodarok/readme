@@ -198,8 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // подготовка запроса для связки поста с тегами
                 $sql = 'INSERT INTO post_hashtag_link
                                  (post_id, hashtag_id)
-                               VALUES
-                                 (?, ?)';
+                               VALUES (?, ?)';
                 $stmt = mysqli_prepare($db_connection, $sql);
 
                 // проверка на уже существующие теги
@@ -238,16 +237,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Формирование e-mail сообщения
             $message = new Email();
             $message->to($follower['user_email']);
-            $message->from("the_lost_number@mail.ru");
+            $message->from('readme_blog_noreply@list.ru');
             $message->subject('Новая публикация от пользователя ' . $_SESSION['user']['user_name']);
             $message->text('Здравствуйте, ' . $follower['user_name'] .
-                '. Пользователь ' . $_SESSION['user']['user_name'] .
-                ' только что опубликовал новую запись „' . $post_data['post-heading'] . '“.
+                                 '. Пользователь ' . $_SESSION['user']['user_name'] .
+                                 ' только что опубликовал новую запись „' . $post_data['post-heading'] . '“.
                                  Посмотрите её на странице пользователя: readme/profile.php?user_id=' . $_SESSION['user']['id']);
 
             // Отправка сообщения
             $mailer = new Mailer($transport);
-            $mailer->send($message);
+            try {
+                $mailer->send($message);
+            } catch (TransportExceptionInterface $e) {
+                $_SESSION['errors'] = 'Cannot send message, ' . $e->getMessage();
+            }
         }
 
         // переадресация на страницу с созданным постом
@@ -266,6 +269,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $alert_class = 'form__input-section--error';
 
 // подключение шаблона для отображения блоков с ошибками заполнения справа от формы
+$error_list = '';
+
 if ($errors) {
     $error_list = include_template('form_error-list.php', [
         'errors' => $errors,
@@ -304,7 +309,7 @@ $main_content = include_template('add-post_template.php', [
     'errors' => $errors,
     'alert_class' => $alert_class,
     'post_data' => $post_data,
-    'error_list' => $error_list ?? '',
+    'error_list' => $error_list,
     'tag_field' => $tag_field,
 ]);
 

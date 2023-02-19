@@ -64,17 +64,17 @@
                                 <header class="post__header">
                                     <?php if ($post['is_repost']): ?>
                                     <div class="post__author">
-                                        <a class="post__author-link" href="profile.php?user_id=<?= $repost_author['id']; ?>" title="Автор">
+                                        <a class="post__author-link" href="profile.php?user_id=<?= $post['repost_author']['id']; ?>" title="Автор">
                                             <div class="post__avatar-wrapper post__avatar-wrapper--repost">
-                                                <?php if ($repost_author['user_avatar']): ?>
-                                                    <img class="post__author-avatar" src="<?= UPLOAD_PATH . $repost_author['user_avatar']; ?>" alt="Аватар пользователя">
+                                                <?php if ($post['repost_author']['user_avatar']): ?>
+                                                    <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['repost_author']['user_avatar']; ?>" alt="Аватар пользователя">
                                                 <?php else: ?>
                                                     <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
                                                 <?php endif; ?>
                                             </div>
                                             <div class="post__info">
-                                                <b class="post__author-name">Репост: <?= $repost_author['user_name']; ?></b>
-                                                <?php $dt = $repost_author['op_date']; // alias для post date ?>
+                                                <b class="post__author-name">Репост: <?= $post['repost_author']['user_name']; ?></b>
+                                                <?php $dt = $post['repost_author']['op_date']; // alias для post date ?>
                                                 <time class="post__time" title="<?= get_title_date($dt); ?>" datetime="<?= $dt; ?>"><?= format_date($dt); ?> назад</time>
                                             </div>
                                         </a>

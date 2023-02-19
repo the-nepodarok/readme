@@ -89,6 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $alert_class = 'form__input-section--error';
 
 // подключение шаблона для отображения блоков с ошибками заполнения справа от формы
+$error_list = '';
+
 if ($errors) {
     $error_list = include_template('form_error-list.php', [
         'errors' => $errors,
@@ -103,7 +105,7 @@ $params = array(
 $main_content = include_template('registration_template.php', [
     'errors' => $errors,
     'alert_class' => $alert_class,
-    'error_list' => $error_list ?? '',
+    'error_list' => $error_list,
     'reg_data' => $reg_data,
 ]);
 

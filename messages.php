@@ -14,18 +14,19 @@ require_once 'db_config.php';
 // параметр запроса ID пользователя для переписки
 $user_id = filter_input(INPUT_GET, 'user_id', FILTER_SANITIZE_NUMBER_INT);
 
+// проверка существования пользователя
+$user_exists = check_user($db_connection, $user_id ?? 0);
+
 // запрос для получения списка переписок
 $query = 'SELECT u.id,
                  u.user_name,
                  u.user_avatar
           FROM user AS u
               JOIN message AS ms
-                  ON ms.message_sender_id = u.id
-                      OR ms.message_receiver_id = u.id
-          WHERE ' . $_SESSION['user']['id'] . '
-              IN (ms.message_sender_id, ms.message_receiver_id)
-          GROUP BY u.id
-          HAVING u.id <> ' . $_SESSION['user']['id'];
+                  ON u.id IN (message_sender_id, message_receiver_id)
+          WHERE ' . $_SESSION['user']['id'] . ' IN (message_sender_id, message_receiver_id)
+              AND u.id <> ' . $_SESSION['user']['id'] . '
+          GROUP BY u.id';
 $dialogues = get_data_from_db($db_connection, $query);
 
 // реиндексация по id пользователей
@@ -37,13 +38,12 @@ if ($dialogues) {
         $query = 'SELECT message_create_dt,
                          message_content,
                          (SELECT COUNT(id) FROM message
-                             WHERE is_read = 0
-                               AND message_sender_id = ' . $dialogue['id'] . '
+                         WHERE is_read = 0
+                             AND message_sender_id = ' . $dialogue['id'] . '
                          ) AS unread_counter
                   FROM message
-                      WHERE message_receiver_id = ' . $dialogue['id'] .
-            ' OR message_sender_id = ' . $dialogue['id'] .
-            ' ORDER BY message_create_dt DESC
+                  WHERE ' . $dialogue['id'] . ' IN (message_sender_id, message_receiver_id)
+                  ORDER BY message_create_dt DESC
                   LIMIT 1';
         $last_message = get_data_from_db($db_connection, $query, 'row');
 
@@ -60,6 +60,7 @@ if ($dialogues) {
         $dialogue['format_date'] = $format_date;
         $dialogue += $last_message;
     }
+    unset($dialogue); // разорвать ссылку на последний элемент
 }
 
 // сортировка диалогов по дате последнего сообщения
@@ -74,40 +75,35 @@ $messages = []; // массив сообщений в диалоге
 $current_dialogue = 0; // номер текущего открытого диалога
 $new_dialogue = []; // массив для нового диалога с пользователем не из списка
 
-if ($user_id) {
-    // проверка существования пользователя
-    $user_exists = check_user($db_connection, $user_id);
+if ($user_exists) {
+    // проверка на существование переписки с пользователем
+    if (array_key_exists($user_id, $dialogues)) {
+        $current_dialogue = $dialogues[$user_id];
 
-    if ($user_exists) {
-        // проверка на существование переписки с пользователем
-        if (array_key_exists($user_id, $dialogues)) {
-            $current_dialogue = $dialogues[$user_id];
+        // получение всех сообщений из переписки с пользователем
+        $query = 'SELECT * FROM message
+                  WHERE ' . $user_id . '
+                      IN (message_sender_id, message_receiver_id)
+                  ORDER BY message_create_dt DESC';
+        $messages = get_data_from_db($db_connection, $query);
 
-            // получение всех сообщений из переписки с пользователем
-            $query = 'SELECT * FROM message
-                      WHERE message_sender_id = ' . $user_id .
-                        ' OR message_receiver_id = ' . $user_id .
-                    ' ORDER BY message_create_dt DESC';
-            $messages = get_data_from_db($db_connection, $query);
-
-            // обнуление счётчика непрочитанных сообщений
-            $unread_counter = $current_dialogue['unread_counter'];
-            if ($unread_counter) {
-                $unread_counter = 0;
-                $query = 'UPDATE message
-                          SET is_read = 1
-                          WHERE message_sender_id = ' . $user_id;
-                mysqli_query($db_connection, $query);
-            }
-        } else { // при открытии переписки с новым пользователем
-            // получение данных пользователя
-            $query = 'SELECT id,
-                         user_name,
-                         user_avatar
-                      FROM user
-                      WHERE id = ' . $user_id;
-            $new_dialogue = get_data_from_db($db_connection, $query, 'row');
+        // обнуление счётчика непрочитанных сообщений
+        $unread_counter = $current_dialogue['unread_counter'];
+        if ($unread_counter) {
+            $unread_counter = 0;
+            $query = 'UPDATE message
+                      SET is_read = 1
+                      WHERE message_sender_id = ' . $user_id;
+            mysqli_query($db_connection, $query);
         }
+    } else { // при открытии переписки с новым пользователем
+        // получение данных пользователя
+        $query = 'SELECT id,
+                     user_name,
+                     user_avatar
+                  FROM user
+                  WHERE id = ' . $user_id;
+        $new_dialogue = get_data_from_db($db_connection, $query, 'row');
     }
 }
 
@@ -131,8 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // запись нового сообщения в таблицу
         $query = 'INSERT into message
                     (message_content, message_sender_id, message_receiver_id)
-                  VALUES
-                    (?, ?, ?)';
+                  VALUES (?, ?, ?)';
         $stmt = mysqli_prepare($db_connection, $query);
 
         // данные для подстановки
@@ -176,7 +171,7 @@ $params = array(
 $main_content = include_template('messages_template.php', [
     'dialogues' => $dialogues,
     'user_id' => $user_id,
-    'user_exists' => $user_exists ?? false,
+    'user_exists' => $user_exists,
     'messages' => $messages,
     'current_dialogue' => $current_dialogue,
     'errors' => $errors,

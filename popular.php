@@ -48,9 +48,9 @@ $query = '
              u.user_name,
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
-          FROM post AS p
-              INNER JOIN user AS u
-                  ON p.user_id = u.id';
+      FROM post AS p
+          INNER JOIN user AS u
+              ON p.user_id = u.id';
 
 if ($type_id) {
     $query .= " WHERE p.content_type_id = $type_id"; // фильтрация по типу

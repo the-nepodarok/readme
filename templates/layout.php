@@ -1,4 +1,4 @@
-<?php $auth_user = $_SESSION['user'] ?? null; // alias для аутентифицированного пользователя ?>
+<?php $user = $_SESSION['user'] ?? false; // alias для аутентифицированного пользователя ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -23,7 +23,7 @@
                 micro blogging
             </p>
         </div>
-        <?php if (isset($auth_user)): ?>
+<?php if ($user): ?>
         <form class="header__search-form form" action="search.php" method="get">
             <div class="header__search">
                 <label class="visually-hidden">Поиск</label>
@@ -59,16 +59,16 @@
                 <!-- здесь должен быть PHP код, который показывает следующий тег по условию -->
                 <ul class="header__user-nav">
                     <li class="header__profile">
-                        <a class="header__profile-link" href="profile.php?user_id=<?= $auth_user['id']?>">
+                        <a class="header__profile-link" href="profile.php?user_id=<?= $user['id']?>">
                             <div class="header__avatar-wrapper">
-                                <?php if ($auth_user['user_avatar']) : ?>
-                                    <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $auth_user['user_avatar']; ?>" alt="Аватар профиля">
-                                <?php endif; ?>
+    <?php if ($user['user_avatar']) : ?>
+                                    <img class="header__profile-avatar" src="<?= UPLOAD_PATH . $user['user_avatar']; ?>" alt="Аватар профиля">
+    <?php endif; ?>
                             </div>
                             <div class="header__profile-name">
                                 <span>
                                     <!--здесь должно быть имя пользователя-->
-                                    <?= $auth_user['user_name']; ?>
+                                    <?= $user['user_name']; ?>
                                 </span>
                                 <svg class="header__link-arrow" width="10" height="6">
                                     <use xlink:href="#icon-arrow-right-ad"></use>
@@ -79,7 +79,7 @@
                             <div class="header__profile-tooltip">
                                 <ul class="header__profile-nav">
                                     <li class="header__profile-nav-item">
-                                        <a class="header__profile-nav-link" href="profile.php?user_id=<?= $auth_user['id']; ?>">
+                                        <a class="header__profile-nav-link" href="profile.php?user_id=<?= $user['id']; ?>">
                                             <span class="header__profile-nav-text">Мой профиль</span>
                                         </a>
                                     </li>
@@ -87,12 +87,12 @@
                                         <a class="header__profile-nav-link" href="messages.php">
                                             <span class="header__profile-nav-text">
                                                   Сообщения
-                                        <?php $unread_counter = get_unread_msg_count($db_connection);
-                                        if ($unread_counter): ?>
+    <?php $unread_counter = get_unread_msg_count($db_connection);
+    if ($unread_counter): ?>
                                             <i class="header__profile-indicator">
                                                       <?= $unread_counter; ?>
                                                   </i>
-                                        <?php endif; ?>
+    <?php endif; ?>
                                             </span>
                                         </a>
                                     </li>
@@ -112,18 +112,18 @@
                     </li>
                 </ul>
             </nav>
-            <?php else: ?>
-                <nav class="header__nav">
-                    <ul class="header__user-nav">
-                        <li class="header__authorization">
-                            <a class="header__user-button header__authorization-button button" href="/">Вход</a>
-                        </li>
-                        <li>
-                            <a class="header__user-button header__user-button--active header__register-button button">Регистрация</a>
-                        </li>
-                    </ul>
-                </nav>
-            <?php endif; ?>
+<?php else: ?>
+            <nav class="header__nav">
+                <ul class="header__user-nav">
+                    <li class="header__authorization">
+                        <a class="header__user-button header__authorization-button button" href="/">Вход</a>
+                    </li>
+                    <li>
+                        <a class="header__user-button header__user-button--active header__register-button button">Регистрация</a>
+                    </li>
+                </ul>
+            </nav>
+<?php endif; ?>
         </div>
     </div>
 </header>
@@ -161,6 +161,7 @@
                 </p>
             </div>
             <div class="footer__my-info">
+<?php if ($user): ?>
                 <ul class="footer__my-pages">
                     <li class="footer__my-page footer__my-page--feed">
                         <a class="footer__page-link" href="feed.php">Моя лента</a>
@@ -169,9 +170,10 @@
                         <a class="footer__page-link" href="popular.php">Популярный контент</a>
                     </li>
                     <li class="footer__my-page footer__my-page--messages">
-                        <a class="footer__page-link" href="messages.html">Личные сообщения</a>
+                        <a class="footer__page-link" href="messages.php">Личные сообщения</a>
                     </li>
                 </ul>
+<?php endif; ?>
                 <div class="footer__copyright">
                     <a class="footer__copyright-link" href="https://www.htmlacademy.ru" target="_blank">
                         <span>Разработано HTML Academy</span>

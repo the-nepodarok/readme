@@ -705,3 +705,17 @@ function get_unread_msg_count($db) {
         ' AND is_read = 0';
     return get_data_from_db($db, $query, 'one');
 }
+
+/**
+ * Проверяет наличие данных о подписке аутент. польз-ля на профиль user_id
+ * @param $db mysqli Подключение к БД
+ * @param $user_id int Идентификатор пользователя
+ * @return bool Значение проверки
+ */
+function check_subscription($db, $user_id) {
+    $query = 'SELECT id
+              FROM follower_list
+              WHERE following_user_id = ' . $_SESSION['user']['id'] . '
+                  AND followed_user_id = ' . $user_id;
+    return (bool)get_data_from_db($db, $query, 'one');
+}

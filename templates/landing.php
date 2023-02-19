@@ -19,7 +19,7 @@
             <a class="header__logo-link header__logo-link--active">
                 <img class="header__logo" src="/img/logo.svg" alt="Логотип readme" width="172" height="32">
             </a>
-            
+
             <p class="header__topic page__header-topic">
                 micro blogging
             </p>
@@ -121,13 +121,13 @@
             <div class="footer__my-info">
                 <ul class="footer__my-pages">
                     <li class="footer__my-page footer__my-page--feed">
-                        <a class="footer__page-link" href="../feed.html">Моя лента</a>
+                        <a class="footer__page-link" href="/feed.php">Моя лента</a>
                     </li>
                     <li class="footer__my-page footer__my-page--popular">
-                        <a class="footer__page-link" href="../popular.html">Популярный контент</a>
+                        <a class="footer__page-link" href="/popular.php">Популярный контент</a>
                     </li>
                     <li class="footer__my-page footer__my-page--messages">
-                        <a class="footer__page-link" href="../messages.html">Личные сообщения</a>
+                        <a class="footer__page-link" href="/messages.php">Личные сообщения</a>
                     </li>
                 </ul>
                 <div class="footer__copyright">

@@ -63,11 +63,7 @@ if ($user_data) {
     array_walk_recursive($user_data, 'secure');
 
     // запрос на получение данных о подписке аутент. польз-ля на этот профиль
-    $query = 'SELECT id
-              FROM follower_list
-              WHERE following_user_id = ' . $_SESSION['user']['id'] . '
-                  AND followed_user_id = ' . $user_id;
-    $already_subscribed = (bool)get_data_from_db($db_connection, $query, 'one');
+    $already_subscribed = check_subscription($db_connection, $user_id);
 
     // запрос для получения публикаций
     $query = 'SELECT p.*,
@@ -102,9 +98,10 @@ if ($posts) {
                           INNER JOIN post AS p
                               ON p.user_id = u.id
                       WHERE p.id = ' . $post['origin_post_id'];
-            $repost_author = get_data_from_db($db_connection, $query, 'row');
+            $post['repost_author'] = get_data_from_db($db_connection, $query, 'row');
         }
     }
+    unset($post); // разорвать ссылку на последний элемент
 
     // устранение вредоносного кода
     array_walk_recursive($posts, 'secure');
@@ -169,6 +166,7 @@ if ($active_tab === 'following') {
                       AND followed_user_id = ' . $follower['user_id'];
         $follower['subscribed_to_follower'] = get_data_from_db($db_connection, $query, 'one') > 0;
     }
+    unset($follower); // разорвать ссылку на последний элемент
 }
 
 // сохранение адреса страницы для перенаправления со страницы поиска
@@ -196,7 +194,6 @@ $main_content = include_template('profile_template.php', [
     'user_id' => $user_id,
     'active_tab' => $active_tab,
     'posts' => $posts,
-    'repost_author' => $repost_author ?? [],
     'comments' => $comments,
     'show_comments' => $show_comments,
     'errors' => $errors,
