@@ -11,7 +11,7 @@ require_once 'helpers.php';
 require_once 'utils.php';
 require_once 'db_config.php';
 
-// Параметр запроса фильтрации по типу контента; по умолчанию равен 0 
+// Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
 if (!array_key_exists($type_id, $_SESSION['ct_types'])) {
     $type_id = 0; // default value
@@ -48,9 +48,9 @@ $query = '
              u.user_name,
              (SELECT COUNT(id) FROM fav_list WHERE post_id = p.id) AS like_count,
              (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count
-          FROM post AS p
-              INNER JOIN user AS u
-                  ON p.user_id = u.id';
+      FROM post AS p
+          INNER JOIN user AS u
+              ON p.user_id = u.id';
 
 if ($type_id) {
     $query .= " WHERE p.content_type_id = $type_id"; // фильтрация по типу
@@ -111,6 +111,7 @@ $_SESSION['prev_page'] = 'popular.php?type_id=' . $type_id . '&sort_by=' . $sort
 $params = array(
     'page_title' => 'популярное',
     'active_page' => 'popular',
+    'db_connection' => $db_connection,
 );
 
 $main_content = include_template('main.php', [

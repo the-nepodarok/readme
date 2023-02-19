@@ -109,6 +109,7 @@ CREATE TABLE message
   message_content     TEXT,
   message_sender_id   INT COMMENT 'отправитель',
   message_receiver_id INT COMMENT 'получатель',
+  is_read             TINYINT DEFAULT 0 COMMENT 'статус прочтения',
   FOREIGN KEY (message_sender_id) REFERENCES user (id),
   FOREIGN KEY (message_receiver_id) REFERENCES user (id),
   INDEX (message_sender_id) COMMENT 'индекс для поиска по отправителю',

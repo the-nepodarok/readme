@@ -56,7 +56,7 @@
               <button class="comments__submit button button--green" type="submit">Отправить</button>
             </form>
             <div class="comments__list-wrapper">
-              <ul class="comments__list">
+              <ul class="comments__list" id="comments">
               <?php foreach ($comment_list as $comment): ?>
                 <li class="comments__item user">
                   <div class="comments__avatar">
@@ -123,8 +123,14 @@
             </p>
           </div>
           <div class="post-details__user-buttons user__buttons">
-            <button class="user__button user__button--subscription button button--main" type="button">Подписаться</button>
-            <a class="user__button user__button--writing button button--green" href="#">Сообщение</a>
+          <?php if ($already_subscribed): ?>
+            <a class="user__button user__button--subscription button button--quartz" href="subscribe.php?user_id=<?= $post['user_id']; ?>">Отписаться</a>
+            <a class="user__button user__button--writing button button--green" href="messages.php?user_id=<?= $post['user_id']; ?>">Сообщение</a>
+          <?php elseif ($post['user_id'] === $_SESSION['user']['id']): ?>
+            <div></div>
+          <?php else: ?>
+            <a class="user__button user__button--subscription button button--main" href="subscribe.php?user_id=<?= $post['user_id']; ?>">Подписаться</a>
+          <?php endif; ?>
           </div>
         </div>
       </div>

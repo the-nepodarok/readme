@@ -58,6 +58,7 @@ if ($search_text) {
 // массив с данными страницы
 $params = array(
     'page_title' => 'поиск',
+    'db_connection' => $db_connection,
     'search_query' => $search_text ?? '',
 );
 
