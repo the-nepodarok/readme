@@ -30,6 +30,7 @@ if ($post_id > 0) {
         WHERE p.id = $post_id
     ";
     $post = get_data_from_db($db_connection, $query, 'row');
+
 } else { // обработка ошибки запроса
     $error_page = include_template('page-404.php', ['main_content' => 'Запрос сформирован неверно!']);
     die(build_page('layout.php', ['page_title' => 'Ошибка запроса'], $error_page));
@@ -42,6 +43,9 @@ if (!$post) {
 }
 
 array_walk_recursive($post, 'secure'); // обезопасить данные страницы
+
+// проверка подписки аутент. польз-ля на профиль автора поста
+$already_subscribed = check_subscription($db_connection, $post['user_id']);
 
 // массив, собирающий в себя числовые значения для отображения количества лайков, репостов и т.д.
 $count_arr = [];
@@ -78,7 +82,7 @@ $show_all_comments = isset($_GET['show_all_comments']);
 $comment_list = get_comments(
     $db_connection,
     $post_id,
-    ($show_all_comments ? '' : $comment_limit)
+    ($show_all_comments ? 0 : $comment_limit)
 );
 
 array_walk_recursive($comment_list, 'secure'); // очистка комментариев от вредоносного кода
@@ -116,6 +120,7 @@ mysqli_query($db_connection, $query);
 // массив с данными страницы
 $params = array(
     'page_title' => 'публикация. ' . $post['post_header'],
+    'db_connection' => $db_connection,
 );
 
 // отображение поста
@@ -127,11 +132,12 @@ $main_content = include_template('post_template.php', [
     'post_type_template' => $post_type_template,
     'count_arr' => $count_arr,
     'post_hashtag_list' => $post_hashtag_list,
-    'errors' => $errors ?? [],
+    'errors' => $errors,
     'alert_class' => $alert_class,
     'comment_input' => $comment_input,
     'comment_list' => $comment_list,
     'hide_comments' => $hide_comments,
+    'already_subscribed' => $already_subscribed
 ]);
 
 // подключение layout

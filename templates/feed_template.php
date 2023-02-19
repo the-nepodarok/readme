@@ -7,29 +7,29 @@
             <h2 class="visually-hidden">Лента</h2>
             <div class="feed__main-wrapper">
                 <div class="feed__wrapper">
-    <?php foreach ($posts as $post):
+<?php foreach ($posts as $post):
               $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; // добавление данных о типе публикаций
               $post_link = 'post.php?post_id=' . $post['id']; // формирование ссылки на пост ?>
                     <article class="feed__post post post-<?= $type_val; ?>">
                         <header class="post__header post__author">
                             <a class="post__author-link" href="profile.php?user_id=<?= $post['user_id']; ?>" title="Автор">
                                 <div class="post__avatar-wrapper">
-                    <?php if ($post['user_avatar']) : ?>
+    <?php if ($post['user_avatar']) : ?>
                                     <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя" width="60" height="60">
-                    <?php else: ?>
+    <?php else: ?>
                                     <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                    <?php endif; ?>
+    <?php endif; ?>
                                 </div>
                                 <div class="post__info">
                                     <b class="post__author-name"><?= $post['user_name']; ?></b>
-                    <?php $dt = $post['create_dt']; // alias для post date ?>
+    <?php $dt = $post['create_dt']; // alias для post date ?>
                                     <time class="post__time" title="<?= get_title_date($dt); ?>" datetime="<?= $dt; ?>"><?= format_date($dt); ?> назад</time>
                                 </div>
                             </a>
                         </header>
                         <div class="post__main">
-                  <?php switch ($type_val):
-                      case 'photo': ?>
+    <?php switch ($type_val):
+        case 'photo': ?>
                             <h2>
                                 <a href="<?= $post_link; ?>">
                                     <?= $post['post_header']; ?>
@@ -38,9 +38,9 @@
                             <div class="post-photo__image-wrapper">
                                 <img src="<?= UPLOAD_PATH . $post['photo_content']; ?>" alt="Фото от пользователя" width="760" height="396">
                             </div>
-                      <?php break; ?>
+        <?php break; ?>
 
-                      <?php case 'text': ?>
+        <?php case 'text': ?>
                             <h2>
                                 <a href="<?= $post_link; ?>">
                                     <?= $post['post_header']; ?>
@@ -49,18 +49,18 @@
                             <p>
                                 <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
                             </p>
-                      <?php break; ?>
+        <?php break; ?>
 
-                      <?php case 'quote': ?>
+        <?php case 'quote': ?>
                             <blockquote>
                                 <p>
                                     <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id']); ?>
                                 </p>
                                 <cite><?= $post['quote_origin'] ?></cite>
                             </blockquote>
-                      <?php break; ?>
+        <?php break; ?>
 
-                      <?php case 'link': ?>
+        <?php case 'link': ?>
                             <div class="post-link__wrapper">
                                 <a class="post-link__external" href="<?= $post['link_text_content']; ?>" target="_blank" title="Перейти по ссылке">
                                     <div class="post-link__icon-wrapper">
@@ -79,9 +79,9 @@
                                     </svg>
                                 </a>
                             </div>
-                      <?php break; ?>
+        <?php break; ?>
 
-                      <?php case 'video': ?>
+        <?php case 'video': ?>
                             <div class="post-video__block">
                                 <div class="post-video__preview">
                                     <?= embed_youtube_cover($post['video_content']); ?>
@@ -93,10 +93,10 @@
                                     <span class="visually-hidden">Запустить проигрыватель</span>
                                 </button>
                             </div>
-                  <?php
-                            break;
-                        endswitch;
-                  ?>
+    <?php
+              break;
+    endswitch;
+    ?>
                         </div>
                         <footer class="post__footer post__indicators">
                             <div class="post__buttons">
@@ -110,7 +110,7 @@
                                     <span><?= $post['like_count']; ?></span>
                                     <span class="visually-hidden">количество лайков</span>
                                 </a>
-                                <a class="post__indicator post__indicator--comments button" href="<?= $post_link; ?>" title="Комментарии">
+                                <a class="post__indicator post__indicator--comments button" href="<?= $post_link . ($post['comment_count'] ? '#comments' : ''); ?>" title="Комментарии">
                                     <svg class="post__indicator-icon" width="19" height="17">
                                         <use xlink:href="#icon-comment"></use>
                                     </svg>
@@ -125,20 +125,20 @@
                                     <span class="visually-hidden">количество репостов</span>
                                 </a>
                             </div>
-                  <?php if (isset($post['hashtags'])): ?>
+    <?php if (isset($post['hashtags'])): ?>
                             <ul class="post__tags">
-                        <?php foreach ($post['hashtags'] as $hashtag): // отображение списка хэштегов ?>
+        <?php foreach ($post['hashtags'] as $hashtag): // отображение списка хэштегов ?>
                                 <li>
                                     <a href="search.php?<?= SEARCH . '=%23' . $hashtag; ?>">
                                         <?= '#' . $hashtag; ?>
                                     </a>
                                 </li>
-                        <?php endforeach; ?>
+        <?php endforeach; ?>
                             </ul>
-                  <?php endif; ?>
+    <?php endif; ?>
                         </footer>
                     </article>
-    <?php endforeach; ?>
+<?php endforeach; ?>
                 </div>
             </div>
             <ul class="feed__filters filters">
@@ -147,7 +147,7 @@
                         <span>Все</span>
                     </a>
                 </li>
-    <?php foreach ($_SESSION['ct_types'] as $type): ?>
+<?php foreach ($_SESSION['ct_types'] as $type): ?>
                 <li class="feed__filters-item filters__item">
                     <a class="filters__button filters__button--<?= $type['type_val']; ?> <?= $type_id === $type['id'] ? 'filters__button--active' : ''; ?> button" href="?type_id=<?= $type['id']; ?>">
                         <span class="visually-hidden"><?= $type['type_name']; ?></span>
@@ -156,7 +156,7 @@
                         </svg>
                     </a>
                 </li>
-    <?php endforeach; ?>
+<?php endforeach; ?>
             </ul>
         </section>
         <aside class="promo">

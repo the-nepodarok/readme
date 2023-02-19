@@ -54,7 +54,7 @@ $query = "SELECT user_reg_dt,
                  user_avatar,
                  (SELECT COUNT(id) FROM post WHERE user_id = user.id) AS post_count,
                  (SELECT COUNT(id) FROM follower_list WHERE followed_user_id = user.id) AS follower_count
-              FROM user
+          FROM user
           WHERE id = $user_id";
 $user_data = get_data_from_db($db_connection, $query, 'row');
 
@@ -63,18 +63,14 @@ if ($user_data) {
     array_walk_recursive($user_data, 'secure');
 
     // запрос на получение данных о подписке аутент. польз-ля на этот профиль
-    $query = 'SELECT id
-              FROM follower_list
-          WHERE following_user_id = ' . $_SESSION['user']['id'] . '
-          AND followed_user_id = ' . $user_id;
-    $already_subscribed = (bool)get_data_from_db($db_connection, $query, 'one');
+    $already_subscribed = check_subscription($db_connection, $user_id);
 
     // запрос для получения публикаций
     $query = 'SELECT p.*,
                      (SELECT COUNT(id) FROM fav_list WHERE fav_list.post_id = p.id) AS like_count,
                      (SELECT COUNT(id) FROM comment WHERE comment.post_id = p.id) AS comment_count,
                      (SELECT COUNT(id) FROM post WHERE origin_post_id = p.id) AS repost_count
-                  FROM post AS p
+              FROM post AS p
               WHERE user_id = ' . $user_id .
             ' ORDER BY create_dt DESC';
     $posts = get_data_from_db($db_connection, $query);
@@ -98,13 +94,14 @@ if ($posts) {
                              u.user_name,
                              u.user_avatar,
                              p.create_dt AS op_date
-                          FROM user AS u
-                              INNER JOIN post AS p
-                                  ON p.user_id = u.id
+                      FROM user AS u
+                          INNER JOIN post AS p
+                              ON p.user_id = u.id
                       WHERE p.id = ' . $post['origin_post_id'];
-            $repost_author = get_data_from_db($db_connection, $query, 'row');
+            $post['repost_author'] = get_data_from_db($db_connection, $query, 'row');
         }
     }
+    unset($post); // разорвать ссылку на последний элемент
 
     // устранение вредоносного кода
     array_walk_recursive($posts, 'secure');
@@ -134,11 +131,11 @@ if ($active_tab === 'likes') {
                      u.user_avatar,
                      fl.like_dt,
                      fl.user_id
-                  FROM post AS p
-                      INNER JOIN fav_list as fl
-                          ON fl.post_id = p.id
-                      INNER JOIN user AS u
-                          ON u.id = fl.user_id
+              FROM post AS p
+                  INNER JOIN fav_list as fl
+                      ON fl.post_id = p.id
+                  INNER JOIN user AS u
+                      ON u.id = fl.user_id
               WHERE p.user_id = ' . $user_id . '
               ORDER BY fl.like_dt DESC';
     $likes = get_data_from_db($db_connection, $query);
@@ -155,20 +152,21 @@ if ($active_tab === 'following') {
                      u.user_reg_dt,
                      (SELECT COUNT(id) FROM post WHERE user_id = u.id) AS post_count,
                      (SELECT COUNT(id) FROM follower_list WHERE followed_user_id = u.id) AS follower_count
-                  FROM user AS u
-                      INNER JOIN follower_list AS fl
-                          ON following_user_id = u.id
+              FROM user AS u
+                  INNER JOIN follower_list AS fl
+                      ON following_user_id = u.id
               WHERE followed_user_id = ' . $user_id;
     $followers = get_data_from_db($db_connection, $query);
 
     // проверка подписки аутент. польз-ля на подписанных на этот профиль
     foreach ($followers as &$follower) {
         $query = 'SELECT id
-                      FROM follower_list
+                  FROM follower_list
                   WHERE following_user_id = ' . $_SESSION['user']['id'] . '
-                  AND followed_user_id = ' . $follower['user_id'];
+                      AND followed_user_id = ' . $follower['user_id'];
         $follower['subscribed_to_follower'] = get_data_from_db($db_connection, $query, 'one') > 0;
     }
+    unset($follower); // разорвать ссылку на последний элемент
 }
 
 // сохранение адреса страницы для перенаправления со страницы поиска
@@ -186,6 +184,8 @@ $comments = array(
 // массив с данными страницы
 $params = array(
     'page_title' => 'профиль пользователя',
+    'active_page' => '',
+    'db_connection' => $db_connection,
 );
 
 $main_content = include_template('profile_template.php', [
@@ -194,7 +194,6 @@ $main_content = include_template('profile_template.php', [
     'user_id' => $user_id,
     'active_tab' => $active_tab,
     'posts' => $posts,
-    'repost_author' => $repost_author ?? [],
     'comments' => $comments,
     'show_comments' => $show_comments,
     'errors' => $errors,

@@ -72,5 +72,5 @@ if ($post_id) {
         }
     }
 }
-// переадресация на страницу с постом или в ленту
-header('Location: ' . ($post_id ? 'post.php?post_id=' . $post_id : 'feed.php'));
+// переадресация на страницу профиля текущего пользователя
+header('Location: profile.php?user_id=' . $_SESSION['user']['id']);

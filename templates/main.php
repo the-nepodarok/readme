@@ -41,7 +41,7 @@
                             <span>Все</span>
                         </a>
                     </li>
-        <?php foreach ($_SESSION['ct_types'] as $type): ?>
+<?php foreach ($_SESSION['ct_types'] as $type): ?>
                     <li class="popular__filters-item filters__item">
                         <a class="filters__button<?= $type_id === $type['id'] ? ' filters__button--active' : ''; ?> filters__button--<?= $type['type_val']; ?> button" href="?<?= 'sort_by=' . $sort_by . '&type_id=' . $type['id']; ?>">
                             <span class="visually-hidden"><?= $type['type_name']; ?></span>
@@ -50,15 +50,15 @@
                             </svg>
                         </a>
                     </li>
-        <?php endforeach; ?>
+<?php endforeach; ?>
                 </ul>
             </div>
         </div>
         <div class="popular__posts">
-        <?php if ($posts):
-                foreach ($posts as $post):
-                      // добавление данных о типе публикаций
-                      $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; ?>
+<?php if ($posts):
+        foreach ($posts as $post):
+            // добавление данных о типе публикаций
+            $type_val = $_SESSION['ct_types'][$post['content_type_id']]['type_val']; ?>
             <article class="popular__post post post-<?= $type_val; ?>">
                 <header class="post__header">
                     <h2>
@@ -69,94 +69,94 @@
                     </h2>
                 </header>
                 <div class="post__main">
-                <?php switch ($type_val):
-                        case 'quote': ?>
-                <!--содержимое для поста-цитаты-->
-                <blockquote>
+            <?php switch ($type_val):
+                case 'quote': ?>
+                    <!--содержимое для поста-цитаты-->
+                    <blockquote>
+                        <p>
+                            <!--здесь текст-->
+                            <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
+                        </p>
+                        <cite><?= $post['quote_origin'] ?></cite>
+                    </blockquote>
+                <?php break; ?>
+
+                <?php case 'text': ?>
+                    <!--содержимое для поста-текста-->
                     <p>
                         <!--здесь текст-->
                         <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
                     </p>
-                    <cite><?= $post['quote_origin'] ?></cite>
-                </blockquote>
-                        <?php break; ?>
+                <?php break; ?>
 
-                        <?php case 'text': ?>
-                <!--содержимое для поста-текста-->
-                <p>
-                    <!--здесь текст-->
-                    <?= slice_string($post['text_content'], 'post.php?post_id=' . $post['id'], true); ?>
-                </p>
-                        <?php break; ?>
-
-                        <?php case 'photo': ?>
-                <!--содержимое для поста-фото-->
-                <div class="post-photo__image-wrapper">
-                    <img src="<?= UPLOAD_PATH . $post['photo_content']; ?>" alt="Фото от пользователя" width="360" height="240">
-                </div>
-                        <?php break; ?>
-
-                        <?php case 'link': ?>
-                <!--содержимое для поста-ссылки-->
-                <div class="post-link__wrapper">
-                    <a class="post-link__external" href="<?= $post['link_text_content']; ?>" target="_blank" title="Перейти по ссылке">
-                        <div class="post-link__info-wrapper">
-                            <div class="post-link__icon-wrapper">
-                                <img src="https://www.google.com/s2/favicons?domain=<?= parse_url($post['link_text_content'], PHP_URL_HOST); ?>" alt="Иконка">
-                            </div>
-                            <div class="post-link__info">
-                                <h3>
-                                    <!--здесь заголовок-->
-                                    <?= $post['post_header']; ?>
-                                </h3>
-                            </div>
-                        </div>
-                        <span>
-                            <!--здесь ссылка-->
-                            <?= $post['link_text_content']; ?>
-                        </span>
-                    </a>
-                </div>
-                        <?php break; ?>
-
-                        <?php case 'video': ?>
-                <!--содержимое для поста-видео-->
-                <div class="post-video__block">
-                    <div class="post-video__preview">
-                        <?= embed_youtube_cover(
-                            /* вставьте ссылку на видео */
-                             $post['video_content']
-                        ); ?>
+                <?php case 'photo': ?>
+                    <!--содержимое для поста-фото-->
+                    <div class="post-photo__image-wrapper">
+                        <img src="<?= UPLOAD_PATH . $post['photo_content']; ?>" alt="Фото от пользователя" width="360" height="240">
                     </div>
-                    <a href="post.php?post_id=<?= $post['id']; ?>" class="post-video__play-big button">
-                        <svg class="post-video__play-big-icon" width="14" height="14">
-                            <use xlink:href="#icon-video-play-big"></use>
-                        </svg>
-                        <span class="visually-hidden">Запустить проигрыватель</span>
-                    </a>
-                </div>
-                <?php
-                        break;
-                endswitch;
-                ?>
+                <?php break; ?>
+
+                <?php case 'link': ?>
+                    <!--содержимое для поста-ссылки-->
+                    <div class="post-link__wrapper">
+                        <a class="post-link__external" href="<?= $post['link_text_content']; ?>" target="_blank" title="Перейти по ссылке">
+                            <div class="post-link__info-wrapper">
+                                <div class="post-link__icon-wrapper">
+                                    <img src="https://www.google.com/s2/favicons?domain=<?= parse_url($post['link_text_content'], PHP_URL_HOST); ?>" alt="Иконка">
+                                </div>
+                                <div class="post-link__info">
+                                    <h3>
+                                        <!--здесь заголовок-->
+                                        <?= $post['post_header']; ?>
+                                    </h3>
+                                </div>
+                            </div>
+                            <span>
+                                <!--здесь ссылка-->
+                                <?= $post['link_text_content']; ?>
+                            </span>
+                        </a>
+                    </div>
+                <?php break; ?>
+
+                <?php case 'video': ?>
+                    <!--содержимое для поста-видео-->
+                    <div class="post-video__block">
+                        <div class="post-video__preview">
+                            <?= embed_youtube_cover(
+                                /* вставьте ссылку на видео */
+                                 $post['video_content']
+                            ); ?>
+                        </div>
+                        <a href="post.php?post_id=<?= $post['id']; ?>" class="post-video__play-big button">
+                            <svg class="post-video__play-big-icon" width="14" height="14">
+                                <use xlink:href="#icon-video-play-big"></use>
+                            </svg>
+                            <span class="visually-hidden">Запустить проигрыватель</span>
+                        </a>
+                    </div>
+            <?php
+                      break;
+            endswitch;
+            ?>
                 </div>
                 <footer class="post__footer">
                     <div class="post__author">
                         <a class="post__author-link" href="profile.php?user_id=<?= $post['user_id']; ?>" title="Автор">
                             <div class="post__avatar-wrapper">
                                 <!--укажите путь к файлу аватара-->
-                                <?php if ($post['user_avatar']): ?>
-                                <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
-                                <?php else: ?>
-                                <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                                <?php endif; ?>
+            <?php if ($post['user_avatar']): ?>
+                              <img class="post__author-avatar" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
+            <?php else: ?>
+                              <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
+            <?php endif; ?>
                             </div>
                             <div class="post__info">
                                 <b class="post__author-name">
                                     <!--здесь имя пользоателя-->
                                     <?= $post['user_name']; ?>
                                 </b>
-                                <?php $pd = $post['create_dt']; // alias для post date ?>
+            <?php $pd = $post['create_dt']; // alias для post date ?>
                                 <time class="post__time" title="<?= get_title_date($pd); ?>" datetime="<?= $pd; ?>"><?= format_date($pd); ?> назад</time>
                             </div>
                         </a>
@@ -184,19 +184,19 @@
                     </div>
                 </footer>
             </article>
-            <?php
-                endforeach;
-        else: ?>
+        <?php
+        endforeach;
+else: ?>
             <div>
                 <p>Записей нет!</p>
             </div>
-        <?php endif; ?>
+<?php endif; ?>
         </div>
-        <?php if ($show_pagination): // кнопки скрыты, если страница всего одна ?>
+<?php if ($show_pagination): // кнопки скрыты, если страница всего одна ?>
         <div class="popular__page-links">
             <a class="popular__page-link popular__page-link--prev button button--gray" href="?<?= $pagination['prev_page']; ?>">Предыдущая страница</a>
             <a class="popular__page-link popular__page-link--next button button--gray" href="?<?= $pagination['next_page']; ?>">Следующая страница</a>
         </div>
-        <?php endif; ?>
+<?php endif; ?>
     </div>
 </section>

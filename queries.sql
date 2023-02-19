@@ -2,10 +2,10 @@
 INSERT INTO user
     (user_email, user_name, user_password, user_avatar, user_reg_dt)
   VALUES
-    ('vladik@gmail.com', 'Владик', 'oiuy45', 'userpic.jpg', '2020-11-04 17:58:52'),
-    ('larisa@yandex.com', 'Лариса', 'shj4-sk', 'userpic-larisa-small.jpg', '2016-02-09 09:18:22'),
-    ('viktor@yahoo.com', 'Виктор', 'fb2656', 'userpic-mark.jpg', '2022-10-11 11:18:22'),
-    ('a.glu@mail.ru', 'Антон Глуханько', 't7znf5', 'userpic-medium.jpg', '2019-01-21 13:18:45');
+    ('vladik@gmail.com', 'Владик', '$2y$10$paslQatqkSlBIuCk/hPmFeLAWjdTbd0v/MvtqHPiOR4LXNaoFmFJG', 'userpic.jpg', '2020-11-04 17:58:52'),
+    ('larisa@yandex.com', 'Лариса', '$2y$10$KGsjF3Zo57g8r0KZJvS5MeXbX.VVLTi83tSYSugUwDWbI6C4LsFvq', 'userpic-larisa-small.jpg', '2016-02-09 09:18:22'),
+    ('viktor@yahoo.com', 'Виктор', '$2y$10$0gMRM6OHQgxkzAyFVE82EucoBdLgXq7.u8XE/Uj95cNRrw0aFXtCu', 'userpic-mark.jpg', '2022-10-11 11:18:22'),
+    ('a.glu@mail.ru', 'Антон Глуханько', '$2y$10$hjrXdHUuDQEuJCptCTdp9eVLD5LaxP7JknvpNrLJV2gqdfDH3FAku', 'userpic-medium.jpg', '2019-01-21 13:18:45');
 
 -- заносим в таблицу постов пять записей разного типа, взятых из массива $posts
 INSERT INTO content_type
