@@ -5,20 +5,20 @@
         <h2 class="visually-hidden">Сообщения</h2>
         <div class="messages__contacts">
             <ul class="messages__contacts-list tabs__list">
-                <?php foreach ($dialogues as $dialogue): ?>
+<?php foreach ($dialogues as $dialogue): ?>
                     <li class="messages__contacts-item">
-                        <?php $is_active_dialogue = ($user_id === $dialogue['id']); ?>
+    <?php $is_active_dialogue = ($user_id === $dialogue['id']); ?>
                         <a class="messages__contacts-tab tabs__item <?= $is_active_dialogue ? 'messages__contacts-tab--active tabs__item--active' : ''; ?>" href="messages.php?user_id=<?= $dialogue['id']; ?>">
                             <div class="messages__avatar-wrapper">
-                                <?php if ($dialogue['user_avatar']): ?>
+    <?php if ($dialogue['user_avatar']): ?>
                                     <img class="messages__avatar" src="<?= UPLOAD_PATH . $dialogue['user_avatar']; ?>" alt="Аватар пользователя">
-                                <?php endif; ?>
+    <?php endif; ?>
 
-                                <?php if ($dialogue['unread_counter'] ?? 0): ?>
+    <?php if ($dialogue['unread_counter'] ?? 0): ?>
                                     <i class="messages__indicator">
                                         <?= $dialogue['unread_counter']; ?>
                                     </i>
-                                <?php endif; ?>
+    <?php endif; ?>
                             </div>
                             <div class="messages__info">
                             <span class="messages__contact-name">
@@ -28,7 +28,7 @@
                                     <p class="messages__preview-text">
                                         <?= $dialogue['message_content'] ?? ''; ?>
                                     </p>
-                                    <?php $last_msg_dt = $dialogue['message_create_dt'] ?? ''; ?>
+    <?php $last_msg_dt = $dialogue['message_create_dt'] ?? ''; ?>
                                     <time class="messages__preview-time" title="<?= get_title_date($last_msg_dt); ?>" datetime="<?= $last_msg_dt; ?>">
                                         <?= $dialogue['format_date'] ?? ''; ?>
                                     </time>
@@ -36,42 +36,42 @@
                             </div>
                         </a>
                     </li>
-                <?php endforeach; ?>
+<?php endforeach; ?>
             </ul>
         </div>
-        <?php if ($user_id && $user_exists): ?>
+<?php if ($user_id && $user_exists): ?>
             <div class="messages__chat">
                 <div class="messages__chat-wrapper">
                     <ul class="messages__list tabs__content tabs__content--active">
-                        <?php foreach ($messages as $message): ?>
+    <?php foreach ($messages as $message): ?>
                             <li class="messages__item <?= $message['message_sender_id'] == $user['id'] ? 'messages__item--my' : ''; ?>">
                                 <div class="messages__info-wrapper">
                                     <div class="messages__item-avatar">
                                         <a class="messages__author-link" href="profile.php?user_id=<?= $message['message_sender_id']; ?>">
-                                            <?php if ($message['message_sender_id'] === $user['id']):
-                                                if ($user['user_avatar']): ?>
+        <?php if ($message['message_sender_id'] === $user['id']):
+            if ($user['user_avatar']): ?>
                                                     <img class="messages__avatar" src="<?= UPLOAD_PATH . $user['user_avatar']; ?>" alt="Аватар пользователя">
-                                                <?php else: ?>
+            <?php else: ?>
                                                     <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                                                <?php endif; ?>
-                                            <?php else:
-                                                if ($current_dialogue['user_avatar']): ?>
+            <?php endif; ?>
+        <?php else:
+            if ($current_dialogue['user_avatar']): ?>
                                                     <img class="messages__avatar" src="<?= UPLOAD_PATH . $current_dialogue['user_avatar']; ?>" alt="Аватар пользователя">
-                                                <?php else: ?>
+            <?php else: ?>
                                                     <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
+            <?php endif; ?>
+        <?php endif; ?>
                                         </a>
                                     </div>
                                     <div class="messages__item-info">
                                         <a class="messages__author" href="profile.php?user_id=<?= $message['message_sender_id']; ?>">
-                                            <?php if ($message['message_sender_id'] === $user['id']): ?>
+        <?php if ($message['message_sender_id'] === $user['id']): ?>
                                                 <?= $user['user_name']; ?>
-                                            <?php else: ?>
+        <?php else: ?>
                                                 <?= $current_dialogue['user_name']; ?>
-                                            <?php endif; ?>
+        <?php endif; ?>
                                         </a>
-                                        <?php $msg_dt = $message['message_create_dt']; ?>
+        <?php $msg_dt = $message['message_create_dt']; ?>
                                         <time class="messages__time" title="<?= get_title_date($msg_dt); ?>" datetime="<?= $msg_dt; ?>">
                                             <?= format_date($msg_dt); ?> назад
                                         </time>
@@ -81,14 +81,14 @@
                                     <?= $message['message_content']; ?>
                                 </p>
                             </li>
-                        <?php endforeach; ?>
+    <?php endforeach; ?>
                 </div>
                 <div class="comments">
                     <form class="comments__form form" action="#" method="post">
                         <div class="comments__my-avatar">
-                            <?php if ($user['user_avatar']): ?>
+    <?php if ($user['user_avatar']): ?>
                                 <img class="comments__picture" src="<?= UPLOAD_PATH . $user['user_avatar']; ?>" alt="Аватар пользователя">
-                            <?php endif; ?>
+    <?php endif; ?>
                         </div>
                         <input type="hidden" name="receiver-id" value="<?= $user_id; ?>">
                         <div class="form__input-section <?= $errors ? $alert_class : ''; ?>">
@@ -100,8 +100,8 @@
                     </form>
                 </div>
             </div>
-        <?php else: ?>
+<?php else: ?>
             <div class="messages__chat" style="min-height: 680px;"></div>
-        <?php endif; ?>
+<?php endif; ?>
     </section>
 </main>
