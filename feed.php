@@ -13,7 +13,7 @@ require_once 'db_config.php';
 
 // Параметр запроса фильтрации по типу контента; по умолчанию равен 0
 $type_id = filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT);
-if (!key_exists($type_id, $_SESSION['ct_types'])) {
+if (!key_exists($type_id, $_SESSION['ct_types'])) { 
     $type_id = 0; // default value
 }
 
