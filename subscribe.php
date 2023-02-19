@@ -26,11 +26,7 @@ $user_exists = check_user($db_connection, $user_id ?? 0);
 if ($user_exists and $user_id !== $_SESSION['user']['id']) {
 
     // проверка на уже существующую пару в подписках
-    $query = 'SELECT id
-                  FROM follower_list
-              WHERE following_user_id = ' . $_SESSION['user']['id'] . '
-              AND followed_user_id = ' . $user_id;
-    $already_subscribed = get_data_from_db($db_connection, $query);
+    $already_subscribed = check_subscription($db_connection, $user_id);
 
     if ($already_subscribed) {
         // запрос на отписку от пользователя
