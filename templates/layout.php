@@ -160,7 +160,7 @@
                     При использовании любых материалов с сайта обязательно указание Readme в качестве источника. Все авторские и исключительные права в рамках проекта защищены в соответствии с положениями 4 части Гражданского Кодекса Российской Федерации.
                 </p>
             </div>
-            <div class="footer__my-info">
+            <div class="footer__my-info"> 
                 <ul class="footer__my-pages">
                     <li class="footer__my-page footer__my-page--feed">
                         <a class="footer__page-link" href="feed.php">Моя лента</a>
