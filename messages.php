@@ -105,6 +105,8 @@ if ($user_exists) {
                   WHERE id = ' . $user_id;
         $new_dialogue = get_data_from_db($db_connection, $query, 'row');
     }
+} else {
+    $user_id = 0;
 }
 
 // отображение нового пользователя вверху списка диалогов

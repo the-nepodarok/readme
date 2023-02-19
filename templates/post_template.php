@@ -33,20 +33,20 @@
                 <span class="visually-hidden">количество репостов</span>
               </a>
             </div>
-            <?php $vc = $post['view_count']; // alias для числа просмотров ?>
+<?php $vc = $post['view_count']; // alias для числа просмотров ?>
             <span class="post__view"><?= $vc . ' просмотр' . get_noun_plural_form($vc, '', 'а', 'ов'); ?></span>
           </div>
           <ul class="post__tags">
-            <?php foreach ($post_hashtag_list as $hashtag): // отображение списка хэштегов ?>
+<?php foreach ($post_hashtag_list as $hashtag): // отображение списка хэштегов ?>
             <li><a href="search.php?<?= SEARCH . '=%23' . $hashtag; ?>"><?= '#' . $hashtag; ?></a></li>
-            <?php endforeach; ?>
+<?php endforeach; ?>
           </ul>
           <div class="comments">
             <form class="comments__form form" action="#" method="post">
               <div class="comments__my-avatar">
-                <?php if ($_SESSION['user']['user_avatar']): ?>
+<?php if ($_SESSION['user']['user_avatar']): ?>
                 <img class="comments__picture" src="<?= UPLOAD_PATH . $_SESSION['user']['user_avatar']; ?>" alt="Аватар пользователя">
-                <?php endif; ?>
+<?php endif; ?>
               </div>
               <div class="form__input-section <?= $errors['comment-text'] ? $alert_class : ''; ?>">
                 <textarea class="comments__textarea form__textarea form__input" name="comment-text" placeholder="Ваш комментарий"><?= $comment_input; ?></textarea>
@@ -57,15 +57,15 @@
             </form>
             <div class="comments__list-wrapper">
               <ul class="comments__list" id="comments">
-              <?php foreach ($comment_list as $comment): ?>
+<?php foreach ($comment_list as $comment): ?>
                 <li class="comments__item user">
                   <div class="comments__avatar">
                     <a class="user__avatar-link" href="profile.php?user_id=<?= $comment['user_id']; ?>">
-                      <?php if ($comment['user_avatar']): ?>
+    <?php if ($comment['user_avatar']): ?>
                       <img class="comments__picture" src="<?= UPLOAD_PATH . $comment['user_avatar']; ?>" alt="Аватар пользователя">
-                      <?php else: ?>
+    <?php else: ?>
                       <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                      <?php endif; ?>
+    <?php endif; ?>
                     </a>
                   </div>
                   <div class="comments__info">
@@ -75,7 +75,7 @@
                             <?= $comment['user_name']; ?>
                         </span>
                       </a>
-                      <?php $cd = $comment['comment_create_dt']; // alias для даты комментария ?>
+    <?php $cd = $comment['comment_create_dt']; // alias для даты комментария ?>
                       <time class="comments__time" datetime="<?= $cd; ?>"><?= format_date($cd); ?> назад</time>
                     </div>
                     <p class="comments__text">
@@ -83,14 +83,14 @@
                     </p>
                   </div>
                 </li>
-              <?php endforeach; ?>
+<?php endforeach; ?>
               </ul>
-              <?php if ($hide_comments): ?>
+<?php if ($hide_comments): ?>
               <a class="comments__more-link" href="?<?= 'post_id=' . $post['id']; ?>&show_all_comments">
                 <span>Показать все комментарии</span>
                 <sup class="comments__amount"><?= $count_arr['comment_count']; ?></sup>
               </a>
-              <?php endif; ?>
+<?php endif; ?>
             </div>
           </div>
         </div>
@@ -98,11 +98,11 @@
           <div class="post-details__user-info user__info">
             <div class="post-details__avatar user__avatar">
               <a class="post-details__avatar-link user__avatar-link" href="profile.php?user_id=<?= $post['user_id']; ?>">
-                <?php if ($post['user_avatar']): ?>
+<?php if ($post['user_avatar']): ?>
                 <img class="post-details__picture user__picture" src="<?= UPLOAD_PATH . $post['user_avatar']; ?>" alt="Аватар пользователя">
-                <?php else: ?>
+<?php else: ?>
                 <svg src="img/icon-input-user.svg" width="60" height="60"></svg>
-                <?php endif; ?>
+<?php endif; ?>
               </a>
             </div>
             <div class="post-details__name-wrapper user__name-wrapper">
@@ -123,14 +123,14 @@
             </p>
           </div>
           <div class="post-details__user-buttons user__buttons">
-          <?php if ($already_subscribed): ?>
+<?php if ($already_subscribed): ?>
             <a class="user__button user__button--subscription button button--quartz" href="subscribe.php?user_id=<?= $post['user_id']; ?>">Отписаться</a>
             <a class="user__button user__button--writing button button--green" href="messages.php?user_id=<?= $post['user_id']; ?>">Сообщение</a>
-          <?php elseif ($post['user_id'] === $_SESSION['user']['id']): ?>
+<?php elseif ($post['user_id'] === $_SESSION['user']['id']): ?>
             <div></div>
-          <?php else: ?>
+<?php else: ?>
             <a class="user__button user__button--subscription button button--main" href="subscribe.php?user_id=<?= $post['user_id']; ?>">Подписаться</a>
-          <?php endif; ?>
+<?php endif; ?>
           </div>
         </div>
       </div>

@@ -7,9 +7,9 @@
             <div class="adding-post__tabs-wrapper tabs">
                 <div class="adding-post__tabs filters">
                     <ul class="adding-post__tabs-list filters__list tabs__list">
-                        <?php foreach ($_SESSION['ct_types'] as $content_type): ?>
+<?php foreach ($_SESSION['ct_types'] as $content_type): ?>
                         <li class="adding-post__tabs-item filters__item">
-                            <?php $active_class_suffix = $post_type === $content_type['type_val'] ? '--active' : ''; // alias ?>
+    <?php $active_class_suffix = $post_type === $content_type['type_val'] ? '--active' : ''; // alias ?>
                             <a class="adding-post__tabs-link filters__button filters__button--<?= $content_type['type_val']; ?> filters__button<?= $active_class_suffix; ?> tabs__item tabs__item<?= $active_class_suffix; ?> button" href="?post_type=<?= $content_type['type_val']; ?>">
                                 <svg class="filters__icon" width="<?= $content_type['type_icon_width']; ?>" height="<?= $content_type['type_icon_height']; ?>">
                                     <use xlink:href="#icon-filter-<?= $content_type['type_val']; ?>"></use>
@@ -17,7 +17,7 @@
                                 <span><?= $content_type['type_name']; ?></span>
                             </a>
                         </li>
-                        <?php endforeach; ?>
+<?php endforeach; ?>
                     </ul>
                 </div>
                 <div class="adding-post__tab-content">
