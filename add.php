@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = 'INSERT INTO post_hashtag_link
                                  (post_id, hashtag_id)
                                VALUES
-                                 (?, ?)';
+                                 (?, ?)'; 
                 $stmt = mysqli_prepare($db_connection, $sql);
 
                 // проверка на уже существующие теги
