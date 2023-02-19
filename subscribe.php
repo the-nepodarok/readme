@@ -22,7 +22,7 @@ $user_id = filter_input(INPUT_GET, 'user_id', FILTER_SANITIZE_NUMBER_INT);
 if ($user_id and $user_id !== $_SESSION['user']['id']) {
 
     // проверка, что такой пользователь существует
-    $user_exists = check_user($db_connection, $user_id);
+    $user_exists = check_user($db_connection, $user_id); 
 
     if ($user_exists) {
         // проверка на уже существующую пару в подписках
