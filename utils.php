@@ -269,7 +269,7 @@ function download_file_from_url(&$err, $url, $destination = UPLOAD_PATH)
             $file_path = $destination . $file_name;
 
             if (file_put_contents($file_path, $file_content)) {
-                $result = validate_file($err, $err_heading, $file_name, $file_path);
+                $result = validate_file($err, $err_heading, 'photo-url', $file_path) ? $file_name : false;
             } else {
                 $err_type = 'Ошибка копирования файла';
                 $err_text = 'Не удалось загрузить файл на сервер. Попробуйте снова позднее';
@@ -299,11 +299,11 @@ function download_file_from_url(&$err, $url, $destination = UPLOAD_PATH)
  *
  * @param &$err array Массив для заполнения ошибками валидации
  * @param $err_heading string Заголовок текста ошибки
- * @param $file_name string Имя валидируемого файла
+ * @param $field_name string Название поля формы
  * @param $file_path string Путь до файла
- * @return false|string Имя валидного файла или false при ошибке валидации
+ * @return boolean Значение валидации
  */
-function validate_file(&$err, $err_heading, $file_name, $file_path) {
+function validate_file(&$err, $err_heading, $field_name, $file_path) {
     $valid_file = false;
 
     // проверка настоящего типа файла
@@ -312,7 +312,7 @@ function validate_file(&$err, $err_heading, $file_name, $file_path) {
         // проверка размера файла
         if (filesize($file_path) < MAX_FILE_SIZE) {
             clearstatcache();
-            $valid_file = $file_name;
+            $valid_file = true;
         } else {
             $err_type = 'Размер файла';
             $err_text = 'Размер файла не должен превышать ' . MAX_FILE_SIZE_USER . ' Мб';
@@ -324,7 +324,7 @@ function validate_file(&$err, $err_heading, $file_name, $file_path) {
 
     // заполнение массива ошибками
     if (!$valid_file) {
-        fill_errors($err, 'photo-url', $err_type, $err_heading, $err_text);
+        fill_errors($err, $field_name, $err_type, $err_heading, $err_text);
     }
 
     return $valid_file;
